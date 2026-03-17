@@ -370,7 +370,7 @@ function StepBasics({ data, onChange, isExistingUser }) {
           {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select>
       </label>
-      <label>Instagram handle
+      <label>Instagram
         <input value={data.instagram_handle || ''} onChange={e => onChange('instagram_handle', e.target.value)} placeholder="@yourhandle" />
       </label>
     </div>
@@ -699,7 +699,7 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
             <span style={{ fontWeight: 600 }}>{pct}% complete</span>
             {missing && (
               <span style={{ color: '#7a8aaa' }}>
-                Adding <strong>{missing}</strong> improves your matches
+                Add <strong>{missing}</strong> to strengthen your profile
               </span>
             )}
           </div>
