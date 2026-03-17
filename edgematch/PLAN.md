@@ -509,22 +509,22 @@ Claude Code should always work in this order. Do not skip phases.
 ```
 Phase 0 — Data pipeline
   [done] 0.1 scrape.js — IcePartnerSearch scraper
-  [ ] 0.2 normalize.js — raw → staging
-  [ ] 0.3 001_schema.sql — all tables
-  [ ] 0.4 002_seed.sql — insert normalized data
-  [ ] 0.5 score_all.js — compute full matrix
-  [ ] 0.6 Verify: run SELECT COUNT(*) on all tables, print top 10 scores
+  [done] 0.2 normalize.js — raw → staging
+  [done] 0.3 001_schema.sql — all tables
+  [done] 0.4 002_seed.sql — insert normalized data
+  [done] 0.5 score_all.js — compute full matrix
+  [done] 0.6 Verify: run SELECT COUNT(*) on all tables, print top 10 scores
 
 Phase 1 — Auth + Profile
-  [ ] 1.1 Supabase auth setup (email + password, no OAuth yet)
-  [ ] 1.2 Multi-step signup form (Profile.jsx)
-  [ ] 1.3 useAuth.js hook
-  [ ] 1.4 RLS policies: athletes can only read/write their own row
+  [done] 1.1 Supabase auth setup (email + password, no OAuth yet)
+  [done] 1.2 Multi-step signup form (Profile.jsx)
+  [done] 1.3 useAuth.js hook
+  [done] 1.4 RLS policies: athletes can only read/write their own row
 
 Phase 2 — Matching UI
-  [ ] 2.1 /api/matches query
-  [ ] 2.2 Matches.jsx + AthleteCard.jsx + CompatibilityBar.jsx
-  [ ] 2.3 Filter sidebar (client-side filtering, no new queries)
+  [done] 2.1 /api/matches query
+  [done] 2.2 Matches.jsx + AthleteCard.jsx + CompatibilityBar.jsx
+  [done] 2.3 Filter sidebar (client-side filtering, no new queries)
 
 Phase 3 — Tryouts
   [ ] 3.1 TryoutModal.jsx
