@@ -8,7 +8,7 @@
  * email+password via the standard autocomplete="current-password" attribute.
  */
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 
@@ -18,8 +18,13 @@ export default function Signup() {
   const [password, setPass] = useState('');
   const [error, setError]   = useState(null);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { user, athlete, loading: authLoading, signIn } = useAuth();
   const navigate = useNavigate();
+
+  // Already signed in with a profile → skip this page entirely
+  if (!authLoading && user && athlete) return <Navigate to="/matches" replace />;
+  // Signed in but no profile yet → go finish the wizard
+  if (!authLoading && user && !athlete) return <Navigate to="/profile/new" replace />;
 
   function goToWizard(e) {
     e.preventDefault();

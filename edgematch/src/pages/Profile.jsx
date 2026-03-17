@@ -15,7 +15,7 @@
  *   3. Redirects to /matches
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -306,17 +306,48 @@ const REQUIRED = [
 ];
 
 export default function Profile() {
-  const { user, refetchAthlete } = useAuth();
+  const { user, athlete, refetchAthlete } = useAuth();
+  const isEdit = !!athlete; // true when editing an existing profile
   const navigate = useNavigate();
 
   const [step, setStep]   = useState(0);
   const [data, setData]   = useState(() => ({
     ...EMPTY,
-    // pre-fill email if user is already signed in
     email: user?.email ?? '',
   }));
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  // Pre-fill form when editing an existing profile
+  useEffect(() => {
+    if (!athlete) return;
+    const { ft, inches } = cmToFtIn(athlete.height_cm ?? 0);
+    setData({
+      name:                athlete.name ?? '',
+      email:               athlete.email ?? user?.email ?? '',
+      password:            '', // not used in edit mode
+      age:                 athlete.age ?? '',
+      discipline:          athlete.discipline ?? '',
+      partner_role:        athlete.partner_role ?? '',
+      height_cm:           athlete.height_cm ?? 0,
+      weight_kg:           athlete.weight_kg ?? null,
+      _ft:                 ft,
+      _inches:             inches,
+      skating_level:       athlete.skating_level ?? '',
+      club_name:           athlete.club_name ?? '',
+      coach_name:          athlete.coach_name ?? '',
+      training_hours_wk:   athlete.training_hours_wk ?? null,
+      goals:               athlete.goals ?? '',
+      preferred_level_min: athlete.preferred_level_min ?? '',
+      preferred_level_max: athlete.preferred_level_max ?? '',
+      max_distance_km:     athlete.max_distance_km ?? 500,
+      location_city:       athlete.location_city ?? '',
+      location_state:      athlete.location_state ?? '',
+      location_country:    athlete.location_country ?? 'United States',
+    });
+  // Only run when athlete first loads — don't re-run on every keystroke
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [athlete?.id]);
 
   function onChange(field, value) {
     setData(prev => ({ ...prev, [field]: value }));
@@ -348,18 +379,54 @@ export default function Profile() {
     setStep(s => s - 1);
   }
 
+  // Shared payload for both INSERT and UPDATE
+  function athletePayload() {
+    return {
+      name:                data.name,
+      email:               data.email || user?.email,
+      age:                 data.age ? parseInt(data.age) : null,
+      discipline:          data.discipline,
+      skating_level:       data.skating_level,
+      partner_role:        data.partner_role,
+      height_cm:           data.height_cm,
+      weight_kg:           data.weight_kg,
+      club_name:           data.club_name || null,
+      coach_name:          data.coach_name || null,
+      training_hours_wk:   data.training_hours_wk,
+      goals:               data.goals || null,
+      preferred_level_min: data.preferred_level_min || null,
+      preferred_level_max: data.preferred_level_max || null,
+      max_distance_km:     data.max_distance_km,
+      location_city:       data.location_city || null,
+      location_state:      data.location_state || null,
+      location_country:    data.location_country || 'United States',
+    };
+  }
+
   async function submit() {
     setSaving(true);
     setError(null);
     try {
+      if (isEdit) {
+        // UPDATE existing athlete row
+        const { error: updateError } = await supabase
+          .from('athletes')
+          .update(athletePayload())
+          .eq('id', athlete.id);
+        if (updateError) throw updateError;
+
+        await refetchAthlete();
+        navigate('/matches');
+        return;
+      }
+
+      // --- CREATE flow ---
       let userId;
 
       if (user) {
-        // Already authenticated (e.g. returning user whose athlete row was never
-        // created due to a prior RLS error). Skip signUp entirely.
+        // Auth user exists but no athlete row yet (prior signup failed mid-way)
         userId = user.id;
       } else {
-        // 1. Create auth user
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: data.email,
           password: data.password,
@@ -369,9 +436,6 @@ export default function Profile() {
         userId = authData.user?.id;
         if (!userId) throw new Error('Sign-up succeeded but no user ID returned');
 
-        // 2. Ensure session is active before the RLS-gated INSERT.
-        //    mailer_autoconfirm=true means signUp returns a session immediately;
-        //    sign in explicitly as a fallback.
         if (!authData.session) {
           const { error: signInError } = await supabase.auth.signInWithPassword({
             email: data.email,
@@ -381,40 +445,14 @@ export default function Profile() {
         }
       }
 
-      // 3. Insert athlete row (RLS: auth.uid() must equal user_id)
-      //    Use .select('id') to get the new athlete's PK (different from userId/user_id).
       const { data: inserted, error: insertError } = await supabase
         .from('athletes')
-        .insert({
-          user_id:             userId,
-          name:                data.name,
-          email:               data.email,
-          age:                 data.age ? parseInt(data.age) : null,
-          discipline:          data.discipline,
-          skating_level:       data.skating_level,
-          partner_role:        data.partner_role,
-          height_cm:           data.height_cm,
-          weight_kg:           data.weight_kg,
-          club_name:           data.club_name || null,
-          coach_name:          data.coach_name || null,
-          training_hours_wk:   data.training_hours_wk,
-          goals:               data.goals || null,
-          preferred_level_min: data.preferred_level_min || null,
-          preferred_level_max: data.preferred_level_max || null,
-          max_distance_km:     data.max_distance_km,
-          location_city:       data.location_city || null,
-          location_state:      data.location_state || null,
-          location_country:    data.location_country || 'United States',
-          source:              'self',
-          search_status:       'active',
-        })
+        .insert({ user_id: userId, source: 'self', search_status: 'active', ...athletePayload() })
         .select('id')
         .single();
       if (insertError) throw insertError;
 
-      // 4. Score this athlete against all existing athletes.
-      //    score_new_athlete takes the athlete's PK (athletes.id), not the auth user ID.
-      //    Don't throw on failure — scoring can be retried; don't block profile creation.
+      // Score against existing athletes (SECURITY DEFINER fn — won't block if it fails)
       await supabase.rpc('score_new_athlete', { new_athlete_id: inserted.id });
 
       await refetchAthlete();
@@ -454,7 +492,9 @@ export default function Profile() {
           )}
           {step === STEPS.length - 1 && (
             <button type="button" onClick={submit} disabled={saving}>
-              {saving ? 'Creating profile…' : 'Find my matches →'}
+              {saving
+                ? (isEdit ? 'Saving…' : 'Creating profile…')
+                : (isEdit ? 'Save changes →' : 'Find my matches →')}
             </button>
           )}
         </div>

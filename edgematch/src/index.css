@@ -189,6 +189,9 @@ input:focus, select:focus, textarea:focus {
   padding: 16px 12px; font-weight: 600; font-size: .85rem;
   border-bottom: 1px solid var(--border);
 }
+.matches-sidebar.collapsed .sidebar-header {
+  justify-content: center; padding: 12px 8px;
+}
 .sidebar-toggle {
   background: none; border: none; cursor: pointer;
   font-size: 1rem; color: var(--muted); padding: 2px 4px;

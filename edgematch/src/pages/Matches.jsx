@@ -79,8 +79,12 @@ export default function Matches() {
       {/* Filter sidebar */}
       <aside className={`matches-sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
         <div className="sidebar-header">
-          <span>Filters</span>
-          <button className="sidebar-toggle" onClick={() => setSidebarOpen(o => !o)}>
+          {sidebarOpen && <span>Filters</span>}
+          <button
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen(o => !o)}
+            title={sidebarOpen ? 'Collapse filters' : 'Expand filters'}
+          >
             {sidebarOpen ? '←' : '→'}
           </button>
         </div>
