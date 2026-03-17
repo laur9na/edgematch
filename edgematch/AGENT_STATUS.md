@@ -18,3 +18,8 @@
 [AGENT-2] [DONE] Phase 11 — competition_results migration (009), event_ids.json (US Champs 2023-2026 + sectionals), scrape_results.js (IJS scraper: 295 results from 3 US Champs, 12 athlete matches)
 [AGENT-3] [FIX] QA on 7.4/7.5/Phase11: fixed em dash in Tryouts comment, 'Request try-out' in TryoutModal h2, rewrote 'synchronization' in About.jsx to avoid synchro grep match
 [AGENT-3] [FIX] last name initial-only in TryoutModal, full CLEAN state: 0 console.log, 0 synchro, 0 em dashes in src/
+[AGENT-3] [FIX] Profile.jsx: replaced 'Instagram handle' label with 'Instagram', rewrote 'improves your matches' copy
+[AGENT-1] [DONE] Step 8.1 — Matches: sidebar layout (220px) with noUiSlider dual-handle strength filter, distance slider, level pills, discipline/role checkboxes, sort dropdown
+[AGENT-1] [DONE] Step 8.2 — AthleteCard: full name shown, try-out button removed, click navigates to /matches/[id]
+[AGENT-1] [DONE] Step 8.3 — SkaterProfile.jsx at /matches/:id: two-column profile+sidebar, match score bar, breakdown dots, competition results, try-out button
+[AGENT-1] [DONE] Step 8.4 — Profile: full name in view, completeness bar % only, Instagram label/placeholder fixed, photo upload button (jpg/png/webp <5MB, athlete-photos bucket)
