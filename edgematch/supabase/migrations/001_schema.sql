@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS athletes (
   club_name            text,
   -- source tracking
   source               text DEFAULT 'self',
-  source_url           text,
+  source_url           text UNIQUE,
   -- timestamps
   created_at           timestamptz DEFAULT now(),
   updated_at           timestamptz DEFAULT now(),
@@ -181,36 +181,8 @@ CREATE TABLE IF NOT EXISTS tryouts (
 );
 
 -- ---------------------------------------------------------------------------
--- Row-level security (Phase 1 will add policies; enable here so it's ready)
+-- Row-level security (policies defined in 004_rls_policies.sql)
 -- ---------------------------------------------------------------------------
 ALTER TABLE athletes             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE compatibility_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tryouts              ENABLE ROW LEVEL SECURITY;
-
--- Public read of athletes (all active listings are visible without login)
-CREATE POLICY IF NOT EXISTS "athletes_public_read"
-  ON athletes FOR SELECT
-  USING (search_status = 'active');
-
--- Athletes can update their own row
-CREATE POLICY IF NOT EXISTS "athletes_owner_write"
-  ON athletes FOR ALL
-  USING (auth.uid() = user_id);
-
--- Scores are readable by either athlete in the pair
-CREATE POLICY IF NOT EXISTS "scores_read_by_participant"
-  ON compatibility_scores FOR SELECT
-  USING (
-    athlete_a_id IN (SELECT id FROM athletes WHERE user_id = auth.uid())
-    OR
-    athlete_b_id IN (SELECT id FROM athletes WHERE user_id = auth.uid())
-  );
-
--- Tryouts: readable/writable by requester or recipient
-CREATE POLICY IF NOT EXISTS "tryouts_participant_access"
-  ON tryouts FOR ALL
-  USING (
-    requester_id IN (SELECT id FROM athletes WHERE user_id = auth.uid())
-    OR
-    recipient_id IN (SELECT id FROM athletes WHERE user_id = auth.uid())
-  );

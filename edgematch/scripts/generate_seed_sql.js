@@ -45,35 +45,6 @@ lines.push(`--`);
 lines.push(`-- Run AFTER 001_schema.sql.`);
 lines.push(`-- Safe to re-run: uses ON CONFLICT DO NOTHING on source_url.`);
 lines.push(``);
-lines.push(`-- Step 1: Insert into staging table`);
-lines.push(`INSERT INTO raw_athletes`);
-lines.push(`  (name, discipline, skating_level, partner_role,`);
-lines.push(`   height_cm, weight_kg,`);
-lines.push(`   location_city, location_state, location_country,`);
-lines.push(`   age, contact_note, source, source_url, review_flag, scraped_at)`);
-lines.push(`VALUES`);
-
-const valueRows = records.map((r) => {
-  return (
-    `  (${sqlStr(r.name)}, ${sqlStr(r.discipline)}, ${sqlStr(r.skating_level)}, ${sqlStr(r.partner_role)}, ` +
-    `${sqlNum(r.height_cm)}, ${sqlNum(r.weight_kg)}, ` +
-    `${sqlStr(r.location_city)}, ${sqlStr(r.location_state)}, ${sqlStr(r.location_country)}, ` +
-    `${sqlNum(r.age)}, ${sqlStr(r.contact_note)}, ${sqlStr(r.source)}, ${sqlStr(r.source_url)}, ` +
-    `${sqlBool(r.review_flag)}, ${sqlStr(r.scraped_at)})`
-  );
-});
-
-lines.push(valueRows.join(',\n') + ';');
-lines.push(``);
-lines.push(`-- ON CONFLICT clause — re-running this file skips already-inserted rows`);
-// Postgres doesn't support ON CONFLICT on INSERT ... VALUES with the above syntax
-// Rewrite as individual upserts or use a DO NOTHING approach via a CTE:
-lines.push(`-- (source_url has a UNIQUE constraint; duplicates silently ignored above`);
-lines.push(`--  because we split into individual inserts below)`);
-
-// Actually, rewrite as individual inserts with ON CONFLICT for safety
-lines.splice(lines.length - 5); // remove the bulk insert we built — replace with per-row upserts
-
 lines.push(`-- Step 1: Upsert into raw_athletes (idempotent)`);
 for (const r of records) {
   lines.push(
