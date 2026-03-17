@@ -469,6 +469,7 @@ input:focus, select:focus, textarea:focus {
   .landing-hero p  { font-size: 1rem; }
   .how-steps { grid-template-columns: 1fr; }
   .landing-stats { gap: 24px; }
+  .how-steps-grid { grid-template-columns: 1fr !important; }
 
   /* Matches — stack sidebar above cards */
   .matches-layout { flex-direction: column; }
