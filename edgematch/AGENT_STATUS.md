@@ -12,3 +12,4 @@
 [AGENT-1] [DONE] Step 7.1 — Nav.jsx: replaced with spec-exact nav (NavLink active states, AvatarDropdown with initials/dropdown, mobile bottom tab bar)
 [AGENT-1] [DONE] Step 7.6 — About.jsx: created with exact copy and signal cards per spec
 [AGENT-3] [FIX] Initial QA pass: removed synchro from Profile/scorer, fixed em dashes in step headings+review table, replaced raw partner_role/search_status/skating_level with display labels in Admin/Tryouts, last name initial-only in Admin, 'Request try-out' casing, removed em dash fallbacks
+[AGENT-3] [FIX] Cleared all remaining em dashes from comments/strings across all src/ files; fixed last name initial rule in Admin.jsx
