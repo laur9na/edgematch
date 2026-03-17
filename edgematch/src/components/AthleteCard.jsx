@@ -1,8 +1,7 @@
 /**
- * AthleteCard.jsx, Phase 7.3
- * Exact spec layout: avatar, name+level badge, score bar, sub-score dots, request button.
+ * AthleteCard.jsx, Phase 8.2
+ * Full name shown. No try-out button. Clicking card navigates to /matches/[id].
  */
-import { useState } from 'react';
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 const LEVEL_LABEL = {
@@ -14,7 +13,6 @@ const ROLE_LABEL = {
   lady: 'Skates as lady', man: 'Skates as man', either: 'Either role',
 };
 
-// Avatar color palette rotate by index
 const AVATAR_COLORS = [
   { bg: '#dce8fc', color: '#1a56db' },
   { bg: '#fce8dc', color: '#d85a30' },
@@ -27,13 +25,6 @@ function getInitials(name) {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0][0].toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function lastInitial(name) {
-  if (!name) return '';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
 function heightStr(cm) {
@@ -92,47 +83,59 @@ function DotIndicator({ label, value }) {
   );
 }
 
-export default function AthleteCard({ match, onRequestTryout, index }) {
+export default function AthleteCard({ match, index, onClick }) {
   const p = match.partner;
   const score = match.total_score;
-  const [hovered, setHovered] = useState(false);
 
   if (score < 0.40) return null;
 
   const avatarStyle = AVATAR_COLORS[(index ?? 0) % AVATAR_COLORS.length];
   const initials = getInitials(p.name);
-  const displayName = lastInitial(p.name);
   const loc = [p.location_city, p.location_state].filter(Boolean).join(', ');
   const ht = heightStr(p.height_cm);
 
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
       style={{
         background: '#fff',
-        border: `1px solid ${hovered ? '#7aaaf0' : '#d4e0f5'}`,
+        border: '1px solid #d4e0f5',
         borderRadius: 14, padding: 18,
         cursor: 'pointer',
         transition: 'border-color 0.15s, box-shadow 0.15s',
-        boxShadow: hovered ? '0 2px 12px rgba(26,86,219,0.08)' : 'none',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = '#7aaaf0';
+        e.currentTarget.style.boxShadow = '0 2px 12px rgba(26,86,219,0.08)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = '#d4e0f5';
+        e.currentTarget.style.boxShadow = 'none';
       }}
     >
       {/* Top row */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-        <div style={{
-          width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-          background: avatarStyle.bg, color: avatarStyle.color,
-          fontSize: 13, fontWeight: 700,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {initials}
-        </div>
+        {p.profile_photo_url ? (
+          <img
+            src={p.profile_photo_url}
+            alt=""
+            style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, objectFit: 'cover' }}
+          />
+        ) : (
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+            background: avatarStyle.bg, color: avatarStyle.color,
+            fontSize: 13, fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {initials}
+          </div>
+        )}
 
         <div>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e' }}>
-              {displayName}
+              {p.name}
             </span>
             {p.skating_level && (
               <span style={{
@@ -159,23 +162,11 @@ export default function AthleteCard({ match, onRequestTryout, index }) {
       <ScoreBar score={score} />
 
       {/* Sub-score dots */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: 14, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
         <DotIndicator label="Height"   value={match.height_score} />
         <DotIndicator label="Level"    value={match.level_score} />
         <DotIndicator label="Distance" value={match.location_score} />
       </div>
-
-      {/* Request button */}
-      <button
-        style={{
-          width: '100%', background: '#1a56db', color: '#fff', border: 'none',
-          padding: 9, borderRadius: 8, fontSize: 13, fontWeight: 600,
-          cursor: 'pointer',
-        }}
-        onClick={() => onRequestTryout(match)}
-      >
-        Request try-out
-      </button>
     </div>
   );
 }
