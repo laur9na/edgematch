@@ -1,0 +1,154 @@
+/* EdgeMatch — base styles */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:    #1B5DA8;
+  --blue-dk: #144a87;
+  --ice:     #e8f4fd;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #d1d5db;
+  --red:     #dc2626;
+  --green:   #16a34a;
+  --radius:  8px;
+  --shadow:  0 1px 3px rgba(0,0,0,.12);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+/* ---------- Nav ---------- */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: var(--blue);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-brand { color: #fff; font-weight: 700; font-size: 1.1rem; text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 20px; }
+.nav-links a { color: rgba(255,255,255,.85); text-decoration: none; font-size: .9rem; }
+.nav-links a:hover { color: #fff; }
+.nav-signout {
+  background: none; border: 1px solid rgba(255,255,255,.4);
+  color: rgba(255,255,255,.85); padding: 4px 12px; border-radius: var(--radius);
+  cursor: pointer; font-size: .85rem;
+}
+.nav-signout:hover { border-color: #fff; color: #fff; }
+
+/* ---------- Landing ---------- */
+.landing { max-width: 900px; margin: 0 auto; padding: 80px 24px 40px; }
+.landing-hero h1 { font-size: 2.8rem; line-height: 1.15; margin-bottom: 16px; color: var(--blue-dk); }
+.landing-hero p  { font-size: 1.1rem; color: var(--muted); max-width: 540px; margin-bottom: 32px; }
+.landing-ctas    { display: flex; gap: 12px; flex-wrap: wrap; }
+.landing-stats   { display: flex; gap: 40px; margin-top: 64px; flex-wrap: wrap; }
+.landing-stats div { display: flex; flex-direction: column; }
+.landing-stats strong { font-size: 2rem; color: var(--blue); }
+.landing-stats span   { font-size: .85rem; color: var(--muted); }
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+  background: var(--blue); color: #fff; border: none;
+  padding: 12px 24px; border-radius: var(--radius); font-size: 1rem;
+  cursor: pointer; text-decoration: none; display: inline-block;
+}
+.btn-primary:hover { background: var(--blue-dk); }
+.btn-secondary {
+  background: transparent; color: var(--blue); border: 2px solid var(--blue);
+  padding: 10px 22px; border-radius: var(--radius); font-size: 1rem;
+  cursor: pointer; text-decoration: none; display: inline-block;
+}
+.btn-secondary:hover { background: var(--ice); }
+.link-btn { background: none; border: none; color: var(--blue); cursor: pointer; text-decoration: underline; font-size: inherit; }
+
+/* ---------- Auth page ---------- */
+.auth-page {
+  max-width: 420px; margin: 60px auto; padding: 40px 32px;
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.auth-page h1 { margin-bottom: 8px; }
+.auth-page p  { color: var(--muted); margin-bottom: 24px; }
+.auth-switch  { margin-top: 20px; font-size: .9rem; color: var(--muted); }
+
+/* ---------- Forms ---------- */
+label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: .9rem; font-weight: 500; margin-bottom: 16px;
+}
+input, select, textarea {
+  padding: 9px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius); font-size: .95rem; width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27,93,168,.15);
+}
+.optional { font-weight: 400; color: var(--muted); font-size: .8rem; }
+.hint { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+.inline-inputs { display: flex; align-items: center; gap: 8px; }
+.inline-inputs input { width: auto; }
+.form-error { color: var(--red); font-size: .875rem; margin: 8px 0 12px; }
+
+/* ---------- Profile wizard ---------- */
+.profile-wizard {
+  max-width: 560px; margin: 40px auto; padding: 0 24px 60px;
+}
+.wizard-progress {
+  display: flex; justify-content: space-between; margin-bottom: 40px;
+  position: relative;
+}
+.wizard-progress::before {
+  content: ''; position: absolute; top: 10px; left: 0; right: 0;
+  height: 2px; background: var(--border); z-index: 0;
+}
+.wizard-step-dot {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 1;
+}
+.dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--border); border: 2px solid var(--border);
+}
+.wizard-step-dot.active .dot { background: var(--blue); border-color: var(--blue); }
+.wizard-step-dot.done .dot   { background: var(--green); border-color: var(--green); }
+.dot-label { font-size: .7rem; color: var(--muted); white-space: nowrap; }
+.wizard-step-dot.active .dot-label { color: var(--blue); font-weight: 600; }
+
+.step h2 { margin-bottom: 24px; font-size: 1.3rem; }
+
+.unit-toggle { display: flex; gap: 0; margin-bottom: 8px; }
+.unit-toggle button {
+  padding: 4px 12px; border: 1px solid var(--border); background: #fff;
+  cursor: pointer; font-size: .85rem;
+}
+.unit-toggle button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.unit-toggle button:last-child  { border-radius: 0 var(--radius) var(--radius) 0; border-left: none; }
+.unit-toggle button.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+.wizard-nav {
+  display: flex; justify-content: space-between; margin-top: 32px;
+}
+.wizard-nav button {
+  padding: 10px 28px; border-radius: var(--radius); font-size: 1rem; cursor: pointer;
+  border: 1px solid var(--border); background: #fff;
+}
+.wizard-nav button:last-child { background: var(--blue); color: #fff; border-color: var(--blue); }
+.wizard-nav button:last-child:hover { background: var(--blue-dk); }
+.wizard-nav button:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ---------- Review table ---------- */
+.review-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.review-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: .9rem; }
+.review-table td:first-child { color: var(--muted); width: 40%; }
+
+/* ---------- General page ---------- */
+.page-content { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+.loading { text-align: center; padding: 80px; color: var(--muted); }
