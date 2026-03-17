@@ -26,3 +26,4 @@
 [AGENT-2] [DONE] Phase 11 check — scraper previously confirmed end-to-end (295 results, 12 matches). Build passes. No new issues.
 [AGENT-3] [FIX] QA on 8.1-8.5: last-initial-only in AthleteCard+SkaterProfile (were showing full names), removed em dash from Profile comment; noUiSlider confirmed imported+installed; build clean
 [AGENT-2] [DONE] Script fixes: scrape_results.js pre-flight checks competition_results table (exits cleanly if missing); enrich_instagram.js exits 0 on missing ANTHROPIC_API_KEY. Dry-run verified: 295 results parsed, 12 athlete matches, 0 errors. competition_results table still needs 009 migration applied via Supabase dashboard SQL editor.
+[AGENT-2] [DONE] scrape_results.js live run: 295 results inserted, 12 athlete matches, 0 fatal errors. Sectional/2023 404s are expected (IJS pages removed). competition_results table confirmed populated.
