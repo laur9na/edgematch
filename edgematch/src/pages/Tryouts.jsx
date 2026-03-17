@@ -1,5 +1,5 @@
 /**
- * Tryouts.jsx — Phase 7.5
+ * Tryouts.jsx, Phase 7.5
  * Two tabs: Sent / Received. Try-out cards with spec-exact styling.
  */
 import { useState } from 'react';

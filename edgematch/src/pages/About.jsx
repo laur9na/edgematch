@@ -7,7 +7,7 @@ const SIGNALS = [
   {
     n: 1,
     title: 'Height compatibility',
-    desc: 'Height ratio directly affects lifts and synchronization. We score based on the ideal delta for your discipline.',
+    desc: 'Height ratio directly affects lifts and timing. We score based on the ideal delta for your discipline.',
   },
   {
     n: 2,

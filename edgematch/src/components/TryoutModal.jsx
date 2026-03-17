@@ -1,6 +1,6 @@
 /**
  * TryoutModal, Phase 3.1
- * Opens when athlete clicks "Request tryout" on a match card.
+ * Opens when athlete clicks "Request try-out" on a match card.
  * Inserts a row into the tryouts table with proposed date/time/location.
  * Email notification is handled server-side (Supabase Edge Function, Phase 3.2).
  */
@@ -47,7 +47,7 @@ export default function TryoutModal({ match, onClose, onSuccess }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Request tryout</h2>
+          <h2>Request try-out</h2>
           <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
         </div>
 
