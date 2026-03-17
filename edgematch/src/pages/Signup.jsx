@@ -31,13 +31,14 @@ export default function Signup() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await signIn(email, password);
+      // signIn() returns { user, session } directly (not wrapped in { data })
+      const signInData = await signIn(email, password);
       // If the auth user has no athlete row yet (prior signup failed mid-way),
       // send them to the profile wizard rather than the empty matches page.
       const { data: athleteRow } = await supabase
         .from('athletes')
         .select('id')
-        .eq('user_id', data.user.id)
+        .eq('user_id', signInData.user.id)
         .maybeSingle();
       navigate(athleteRow ? '/matches' : '/profile/new');
     } catch (err) {

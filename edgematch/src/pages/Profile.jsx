@@ -367,33 +367,40 @@ export default function Profile() {
       }
 
       // 3. Insert athlete row (RLS: auth.uid() must equal user_id)
-      const { error: insertError } = await supabase.from('athletes').insert({
-        user_id:             userId,
-        name:                data.name,
-        email:               data.email,
-        age:                 data.age ? parseInt(data.age) : null,
-        discipline:          data.discipline,
-        skating_level:       data.skating_level,
-        partner_role:        data.partner_role,
-        height_cm:           data.height_cm,
-        weight_kg:           data.weight_kg,
-        club_name:           data.club_name || null,
-        coach_name:          data.coach_name || null,
-        training_hours_wk:   data.training_hours_wk,
-        goals:               data.goals || null,
-        preferred_level_min: data.preferred_level_min || null,
-        preferred_level_max: data.preferred_level_max || null,
-        max_distance_km:     data.max_distance_km,
-        location_city:       data.location_city || null,
-        location_state:      data.location_state || null,
-        location_country:    data.location_country || 'United States',
-        source:              'self',
-        search_status:       'active',
-      });
+      //    Use .select('id') to get the new athlete's PK (different from userId/user_id).
+      const { data: inserted, error: insertError } = await supabase
+        .from('athletes')
+        .insert({
+          user_id:             userId,
+          name:                data.name,
+          email:               data.email,
+          age:                 data.age ? parseInt(data.age) : null,
+          discipline:          data.discipline,
+          skating_level:       data.skating_level,
+          partner_role:        data.partner_role,
+          height_cm:           data.height_cm,
+          weight_kg:           data.weight_kg,
+          club_name:           data.club_name || null,
+          coach_name:          data.coach_name || null,
+          training_hours_wk:   data.training_hours_wk,
+          goals:               data.goals || null,
+          preferred_level_min: data.preferred_level_min || null,
+          preferred_level_max: data.preferred_level_max || null,
+          max_distance_km:     data.max_distance_km,
+          location_city:       data.location_city || null,
+          location_state:      data.location_state || null,
+          location_country:    data.location_country || 'United States',
+          source:              'self',
+          search_status:       'active',
+        })
+        .select('id')
+        .single();
       if (insertError) throw insertError;
 
-      // 4. Score this athlete against all existing athletes
-      await supabase.rpc('score_new_athlete', { new_athlete_id: userId });
+      // 4. Score this athlete against all existing athletes.
+      //    score_new_athlete takes the athlete's PK (athletes.id), not the auth user ID.
+      //    Don't throw on failure — scoring can be retried; don't block profile creation.
+      await supabase.rpc('score_new_athlete', { new_athlete_id: inserted.id });
 
       await refetchAthlete();
       navigate('/matches');
