@@ -5,5 +5,6 @@
 
 <!-- agents append below this line -->
 [AGENT-2] [DONE] Step 9.1 — Audit scripts/: removed synchro return values in scrape.js and normalize.js (synchro athletes now get null discipline and are excluded via review_flag)
+[AGENT-2] [DONE] Step 9.2 — Daily cron edge function: supabase/functions/refresh_athlete_db/index.ts (scrape IPS, normalize, upsert raw_athletes, promote, score new athletes)
 [AGENT-1] [DONE] Step 7.1 — Nav.jsx: replaced with spec-exact nav (NavLink active states, AvatarDropdown with initials/dropdown, mobile bottom tab bar)
 [AGENT-1] [DONE] Step 7.6 — About.jsx: created with exact copy and signal cards per spec
