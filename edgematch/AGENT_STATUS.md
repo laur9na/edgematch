@@ -13,3 +13,6 @@
 [AGENT-1] [DONE] Step 7.6 — About.jsx: created with exact copy and signal cards per spec
 [AGENT-3] [FIX] Initial QA pass: removed synchro from Profile/scorer, fixed em dashes in step headings+review table, replaced raw partner_role/search_status/skating_level with display labels in Admin/Tryouts, last name initial-only in Admin, 'Request try-out' casing, removed em dash fallbacks
 [AGENT-3] [FIX] Cleared all remaining em dashes from comments/strings across all src/ files; fixed last name initial rule in Admin.jsx
+[AGENT-1] [DONE] Step 7.4 — Profile.jsx: Instagram-style view, edit form with completeness bar, competition results section (Phase 11 spec)
+[AGENT-1] [DONE] Step 7.5 — Tryouts.jsx: redesigned with spec-exact tab row, try-out cards, badge system, cancel confirm dialog
+[AGENT-2] [DONE] Phase 11 — competition_results migration (009), event_ids.json (US Champs 2023-2026 + sectionals), scrape_results.js (IJS scraper: 295 results from 3 US Champs, 12 athlete matches)

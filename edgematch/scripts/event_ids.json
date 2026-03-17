@@ -1,0 +1,15 @@
+[
+  { "year": 2026, "event_id": "36273", "event_name": "2026 US Championships" },
+  { "year": 2025, "event_id": "35539", "event_name": "2025 US Championships" },
+  { "year": 2024, "event_id": "33688", "event_name": "2024 US Championships" },
+  { "year": 2023, "event_id": "32116", "event_name": "2023 US Championships" },
+  { "year": 2025, "event_id": "35440", "event_name": "2025 Pacific Coast Sectional Championships" },
+  { "year": 2025, "event_id": "35441", "event_name": "2025 Midwestern Sectional Championships" },
+  { "year": 2025, "event_id": "35442", "event_name": "2025 Eastern Sectional Championships" },
+  { "year": 2024, "event_id": "33570", "event_name": "2024 Pacific Coast Sectional Championships" },
+  { "year": 2024, "event_id": "33571", "event_name": "2024 Midwestern Sectional Championships" },
+  { "year": 2024, "event_id": "33572", "event_name": "2024 Eastern Sectional Championships" },
+  { "year": 2023, "event_id": "32010", "event_name": "2023 Pacific Coast Sectional Championships" },
+  { "year": 2023, "event_id": "32011", "event_name": "2023 Midwestern Sectional Championships" },
+  { "year": 2023, "event_id": "32012", "event_name": "2023 Eastern Sectional Championships" }
+]
