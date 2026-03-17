@@ -1,5 +1,5 @@
 /**
- * Signup.jsx — Entry point that redirects to Profile wizard.
+ * Signup.jsx Entry point that redirects to Profile wizard.
  * Also handles the "Sign in" flow for existing users.
  *
  * Session persistence: Supabase stores the session in localStorage by default,

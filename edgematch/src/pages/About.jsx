@@ -1,5 +1,5 @@
 /**
- * About.jsx — Phase 7.6
+ * About.jsx, Phase 7.6
  * Two sections: builder story + matching signals.
  */
 

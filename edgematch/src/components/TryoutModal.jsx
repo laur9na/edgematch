@@ -1,8 +1,8 @@
 /**
- * TryoutModal — Phase 3.1
+ * TryoutModal, Phase 3.1
  * Opens when athlete clicks "Request tryout" on a match card.
  * Inserts a row into the tryouts table with proposed date/time/location.
- * Email notification is handled server-side (Supabase Edge Function — Phase 3.2).
+ * Email notification is handled server-side (Supabase Edge Function, Phase 3.2).
  */
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';

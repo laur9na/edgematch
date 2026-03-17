@@ -1,5 +1,5 @@
 /**
- * AthleteCard.jsx — Phase 7.3
+ * AthleteCard.jsx, Phase 7.3
  * Exact spec layout: avatar, name+level badge, score bar, sub-score dots, request button.
  */
 import { useState } from 'react';
@@ -14,7 +14,7 @@ const ROLE_LABEL = {
   lady: 'Skates as lady', man: 'Skates as man', either: 'Either role',
 };
 
-// Avatar color palette — rotate by index
+// Avatar color palette rotate by index
 const AVATAR_COLORS = [
   { bg: '#dce8fc', color: '#1a56db' },
   { bg: '#fce8dc', color: '#d85a30' },

@@ -1,5 +1,5 @@
 /**
- * Landing.jsx — Phase 7.2
+ * Landing.jsx, Phase 7.2
  * Hero + Stats strip + How it works. Three sections only.
  */
 import { useEffect, useState } from 'react';
@@ -49,7 +49,7 @@ export default function Landing() {
   return (
     <main style={{ background: '#f4f7fb' }}>
 
-      {/* Section 1 — Hero */}
+      {/* Section 1 Hero */}
       <section style={{ background: '#f4f7fb', padding: '52px 28px 40px' }}>
         <h1 style={{
           fontSize: 34, fontWeight: 800, color: '#0f2a5e',
@@ -87,7 +87,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Section 2 — Stats strip */}
+      {/* Section 2 Stats strip */}
       <section style={{
         background: '#f4f7fb',
         borderTop: '1px solid #d4e0f5',
@@ -119,7 +119,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Section 3 — How it works */}
+      {/* Section 3 How it works */}
       <section style={{ padding: '32px 28px' }}>
         <div style={{
           fontSize: 11, fontWeight: 700, letterSpacing: '1.2px',

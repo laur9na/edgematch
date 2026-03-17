@@ -1,5 +1,5 @@
 /**
- * Admin.jsx — Phase 4.2 + 4.3
+ * Admin.jsx, Phase 4.2 + 4.3
  * Club/coach dashboard. Requires athlete.is_admin = true.
  * Features: athlete table sorted by level/activity, endorse, CSV export.
  *

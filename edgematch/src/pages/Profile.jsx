@@ -1,5 +1,5 @@
 /**
- * Profile.jsx — Phase 7.4
+ * Profile.jsx, Phase 7.4
  * Default view: Instagram-style profile card (header, media grid, about, competition results).
  * Edit mode: same multi-step form with completeness bar.
  * New athletes (no athlete row): creation wizard only.
@@ -325,7 +325,7 @@ function ProfileView({ athlete, onEdit }) {
           )}
         </div>
 
-        {/* Competition results — only renders if athlete has matched results */}
+        {/* Competition results only renders if athlete has matched results */}
         <CompetitionResults athleteId={athlete.id} />
       </div>
     </div>
@@ -686,7 +686,7 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
 
   return (
     <div className="profile-wizard">
-      {/* Completeness bar — edit mode only */}
+      {/* Completeness bar edit mode only */}
       {isEdit && (
         <div style={{
           background: '#fff', border: '1px solid #d4e0f5', borderRadius: 10,

@@ -1,5 +1,5 @@
 /**
- * Tryouts.jsx — Phase 3.3
+ * Tryouts.jsx, Phase 3.3
  * Two tabs: Sent requests / Received requests.
  * Shows partner name, proposed date, status badge, and outcome controls.
  */

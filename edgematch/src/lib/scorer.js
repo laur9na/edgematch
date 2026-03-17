@@ -1,9 +1,9 @@
 /**
- * src/lib/scorer.js — Compatibility scoring algorithm (Phase 0, v1)
+ * src/lib/scorer.js Compatibility scoring algorithm, Phase 0, v1)
  *
  * All component scores return 0.0–1.0.
  * Final score = weighted sum of components.
- * Pure JS — no DB dependency.
+ * Pure JS no DB dependency.
  */
 
 export const WEIGHTS = {
@@ -11,7 +11,7 @@ export const WEIGHTS = {
   level:    0.30,
   role:     0.15,
   location: 0.15,
-  goals:    0.05,  // placeholder — embeddings added in Phase 2
+  goals:    0.05,  // placeholder embeddings added in Phase 2
 };
 
 export const SCORE_VERSION = 1;
@@ -77,7 +77,7 @@ export function roleScore(a, b) {
 
 /**
  * Location score via haversine distance.
- * 0 km = 1.0, 500 km = 0.5, 2000+ km = 0.1 (still shown — may relocate).
+ * 0 km = 1.0, 500 km = 0.5, 2000+ km = 0.1 (still shown may relocate).
  */
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;

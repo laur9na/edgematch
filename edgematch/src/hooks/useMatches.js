@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
  * Returns { matches, loading, error } where each match is:
  *   { ...score_row, partner: athlete_row }
  *
- * Uses the same query structure as the plan's /api/matches spec —
+ * Uses the same query structure as the plan's /api/matches spec
  * implemented as a direct Supabase client join since we don't have
  * Edge Functions yet. RLS ensures only the participant can see their scores.
  */

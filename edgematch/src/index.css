@@ -1,4 +1,4 @@
-/* EdgeMatch — base styles */
+/* EdgeMatch base styles */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -446,7 +446,7 @@ input:focus, select:focus, textarea:focus {
 
 /* ---------- Mobile responsive (≤ 640px) ---------- */
 @media (max-width: 640px) {
-  /* Nav — hide desktop links, show bottom tab bar */
+  /* Nav hide desktop links, show bottom tab bar */
   .nav-links-desktop { display: none !important; }
   .mobile-bottom-nav {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0;
@@ -472,7 +472,7 @@ input:focus, select:focus, textarea:focus {
   .how-steps-grid { grid-template-columns: 1fr !important; }
   .matches-card-grid { grid-template-columns: 1fr !important; }
 
-  /* Matches — stack sidebar above cards */
+  /* Matches stack sidebar above cards */
   .matches-layout { flex-direction: column; }
   .matches-sidebar {
     width: 100%; min-width: 0; border-right: none;

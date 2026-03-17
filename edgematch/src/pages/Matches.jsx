@@ -1,5 +1,5 @@
 /**
- * Matches.jsx — Phase 7.3
+ * Matches.jsx, Phase 7.3
  * Page header + filter pills + 2-column card grid.
  */
 import { useState, useMemo } from 'react';

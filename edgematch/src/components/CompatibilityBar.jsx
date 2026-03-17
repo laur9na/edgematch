@@ -1,5 +1,5 @@
 /**
- * CompatibilityBar — horizontal score bar with color coding.
+ * CompatibilityBar horizontal score bar with color coding.
  * green ≥ 0.8 · yellow ≥ 0.6 · orange ≥ 0.4 · red < 0.4
  */
 export default function CompatibilityBar({ score, showLabel = true }) {
