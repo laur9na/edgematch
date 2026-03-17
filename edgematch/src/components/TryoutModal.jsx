@@ -8,6 +8,13 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
+function lastInitial(fullName) {
+  if (!fullName) return 'Unknown';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 export default function TryoutModal({ match, onClose, onSuccess }) {
   const { athlete } = useAuth();
   const partner = match.partner;
@@ -52,7 +59,7 @@ export default function TryoutModal({ match, onClose, onSuccess }) {
         </div>
 
         <p className="modal-partner-name">
-          with <strong>{partner.name}</strong>
+          with <strong>{lastInitial(partner.name)}</strong>
         </p>
 
         <form onSubmit={handleSubmit}>
