@@ -342,7 +342,20 @@ async function insertResult(record) {
 // Main
 // ---------------------------------------------------------------------------
 
+async function checkTableExists() {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/competition_results?limit=0`,
+    { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+  );
+  if (res.status === 404) {
+    console.error('competition_results table is missing.');
+    console.error('Apply supabase/migrations/009_competition_results.sql via Supabase dashboard SQL editor, then re-run.');
+    process.exit(1);
+  }
+}
+
 async function main() {
+  if (!DRY_RUN) await checkTableExists();
   console.log(`Loading athletes from Supabase...`);
   const athletes = await loadAthletes();
   console.log(`Loaded ${athletes.length} active athletes for matching`);

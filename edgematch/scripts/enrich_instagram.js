@@ -38,8 +38,8 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 if (!ANTHROPIC_KEY) {
-  console.error('Missing ANTHROPIC_API_KEY in .env.local');
-  process.exit(1);
+  console.warn('ANTHROPIC_API_KEY not set in .env.local — skipping Instagram enrichment');
+  process.exit(0);
 }
 
 const DELAY_MS = 500;
