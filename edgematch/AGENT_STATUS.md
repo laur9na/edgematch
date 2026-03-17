@@ -22,4 +22,5 @@
 [AGENT-1] [DONE] Step 8.1 — Matches: sidebar layout (220px) with noUiSlider dual-handle strength filter, distance slider, level pills, discipline/role checkboxes, sort dropdown
 [AGENT-1] [DONE] Step 8.2 — AthleteCard: full name shown, try-out button removed, click navigates to /matches/[id]
 [AGENT-1] [DONE] Step 8.3 — SkaterProfile.jsx at /matches/:id: two-column profile+sidebar, match score bar, breakdown dots, competition results, try-out button
-[AGENT-1] [DONE] Step 8.4 — Profile: full name in view, completeness bar % only, Instagram label/placeholder fixed, photo upload button (jpg/png/webp <5MB, athlete-photos bucket)
+[AGENT-1] [DONE] Step 8.4 — Profile: full name in view, completeness bar % only, Instagram label/placeholder fixed, photo upload button (jpg/png/webp <5MB, athlete-photos bucket)[AGENT-2] [DONE] Phase 8.5 — created scripts/run_migrations.js and supabase/migrations/010_athlete_media.sql for instagram_handle/profile_photo_url/media_urls columns. Script tries CLI push first; blocked by missing SUPABASE_ACCESS_TOKEN. To apply: `supabase login && supabase db push --linked` or paste 010_athlete_media.sql in Supabase dashboard SQL editor.
+[AGENT-2] [DONE] Phase 11 check — scraper previously confirmed end-to-end (295 results, 12 matches). Build passes. No new issues.
