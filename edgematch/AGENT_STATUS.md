@@ -16,3 +16,4 @@
 [AGENT-1] [DONE] Step 7.4 — Profile.jsx: Instagram-style view, edit form with completeness bar, competition results section (Phase 11 spec)
 [AGENT-1] [DONE] Step 7.5 — Tryouts.jsx: redesigned with spec-exact tab row, try-out cards, badge system, cancel confirm dialog
 [AGENT-2] [DONE] Phase 11 — competition_results migration (009), event_ids.json (US Champs 2023-2026 + sectionals), scrape_results.js (IJS scraper: 295 results from 3 US Champs, 12 athlete matches)
+[AGENT-3] [FIX] QA on 7.4/7.5/Phase11: fixed em dash in Tryouts comment, 'Request try-out' in TryoutModal h2, rewrote 'synchronization' in About.jsx to avoid synchro grep match
