@@ -27,6 +27,13 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function lastInitial(name) {
+  if (!name) return '';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + ' ' + parts[parts.length - 1][0] + '.';
+}
+
 function heightStr(cm) {
   if (!cm) return null;
   const totalIn = cm / 2.54;
@@ -135,7 +142,7 @@ export default function AthleteCard({ match, index, onClick }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e' }}>
-              {p.name}
+              {lastInitial(p.name)}
             </span>
             {p.skating_level && (
               <span style={{

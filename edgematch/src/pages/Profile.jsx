@@ -724,7 +724,7 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
 
   return (
     <div className="profile-wizard">
-      {/* Completeness bar + photo upload — edit mode only */}
+      {/* Completeness bar + photo upload (edit mode only) */}
       {isEdit && (
         <div style={{
           background: '#fff', border: '1px solid #d4e0f5', borderRadius: 10,

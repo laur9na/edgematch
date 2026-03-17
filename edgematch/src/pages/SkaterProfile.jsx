@@ -26,6 +26,13 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function lastInitial(name) {
+  if (!name) return '';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + ' ' + parts[parts.length - 1][0] + '.';
+}
+
 function heightStr(cm) {
   if (!cm) return null;
   const totalIn = cm / 2.54;
@@ -255,7 +262,7 @@ export default function SkaterProfile() {
               )}
               <div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: '#0f2a5e', marginBottom: 2 }}>
-                  {partner.name}
+                  {lastInitial(partner.name)}
                 </div>
                 <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 2 }}>
                   {[
