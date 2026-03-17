@@ -26,7 +26,6 @@ import { useAuth } from '../hooks/useAuth';
 const DISCIPLINES = [
   { value: 'pairs',     label: 'Pairs Skating' },
   { value: 'ice_dance', label: 'Ice Dance' },
-  { value: 'synchro',   label: 'Synchronized Skating' },
 ];
 
 const ROLES = [
@@ -63,7 +62,7 @@ function cmToFtIn(cm) {
 function StepBasics({ data, onChange, isExistingUser }) {
   return (
     <div className="step">
-      <h2>Step 1 — Basics</h2>
+      <h2>Step 1: Basics</h2>
 
       <label>Full name *
         <input value={data.name} onChange={e => onChange('name', e.target.value)} placeholder="First Last" required />
@@ -126,7 +125,7 @@ function StepPhysical({ data, onChange }) {
 
   return (
     <div className="step">
-      <h2>Step 2 — Physical Info</h2>
+      <h2>Step 2: Physical Info</h2>
 
       <label>Height *
         <div className="unit-toggle">
@@ -159,7 +158,7 @@ function StepPhysical({ data, onChange }) {
 function StepSkating({ data, onChange }) {
   return (
     <div className="step">
-      <h2>Step 3 — Skating Background</h2>
+      <h2>Step 3: Skating Background</h2>
 
       <label>Skating level *
         <select value={data.skating_level} onChange={e => onChange('skating_level', e.target.value)} required>
@@ -186,7 +185,7 @@ function StepSkating({ data, onChange }) {
 function StepGoals({ data, onChange }) {
   return (
     <div className="step">
-      <h2>Step 4 — Goals & Preferences</h2>
+      <h2>Step 4: Goals and Preferences</h2>
 
       <label>What are your skating goals?
         <textarea
@@ -228,7 +227,7 @@ function StepGoals({ data, onChange }) {
 function StepLocation({ data, onChange }) {
   return (
     <div className="step">
-      <h2>Step 5 — Location</h2>
+      <h2>Step 5: Location</h2>
 
       <label>City
         <input value={data.location_city} onChange={e => onChange('location_city', e.target.value)} placeholder="e.g. San Jose" />
@@ -246,29 +245,29 @@ function StepLocation({ data, onChange }) {
 }
 
 function StepReview({ data }) {
-  const levelLabel = LEVELS.find(l => l.value === data.skating_level)?.label ?? '—';
-  const discLabel  = DISCIPLINES.find(d => d.value === data.discipline)?.label ?? '—';
-  const roleLabel  = ROLES.find(r => r.value === data.partner_role)?.label ?? '—';
+  const levelLabel = LEVELS.find(l => l.value === data.skating_level)?.label ?? 'Not set';
+  const discLabel  = DISCIPLINES.find(d => d.value === data.discipline)?.label ?? 'Not set';
+  const roleLabel  = ROLES.find(r => r.value === data.partner_role)?.label ?? 'Not set';
 
   return (
     <div className="step">
-      <h2>Step 6 — Review</h2>
+      <h2>Step 6: Review</h2>
       <table className="review-table">
         <tbody>
-          <tr><td>Name</td><td>{data.name || '—'}</td></tr>
-          <tr><td>Email</td><td>{data.email || '—'}</td></tr>
-          <tr><td>Age</td><td>{data.age || '—'}</td></tr>
+          <tr><td>Name</td><td>{data.name || 'Not set'}</td></tr>
+          <tr><td>Email</td><td>{data.email || 'Not set'}</td></tr>
+          <tr><td>Age</td><td>{data.age || 'Not set'}</td></tr>
           <tr><td>Discipline</td><td>{discLabel}</td></tr>
           <tr><td>Role</td><td>{roleLabel}</td></tr>
-          <tr><td>Height</td><td>{data.height_cm ? `${data.height_cm} cm` : '—'}</td></tr>
-          <tr><td>Weight</td><td>{data.weight_kg ? `${data.weight_kg} kg` : '—'}</td></tr>
+          <tr><td>Height</td><td>{data.height_cm ? `${data.height_cm} cm` : 'Not set'}</td></tr>
+          <tr><td>Weight</td><td>{data.weight_kg ? `${data.weight_kg} kg` : 'Not set'}</td></tr>
           <tr><td>Level</td><td>{levelLabel}</td></tr>
-          <tr><td>Club</td><td>{data.club_name || '—'}</td></tr>
-          <tr><td>Coach</td><td>{data.coach_name || '—'}</td></tr>
-          <tr><td>Training hrs/wk</td><td>{data.training_hours_wk || '—'}</td></tr>
-          <tr><td>Goals</td><td>{data.goals || '—'}</td></tr>
+          <tr><td>Club</td><td>{data.club_name || 'Not set'}</td></tr>
+          <tr><td>Coach</td><td>{data.coach_name || 'Not set'}</td></tr>
+          <tr><td>Training hrs/wk</td><td>{data.training_hours_wk || 'Not set'}</td></tr>
+          <tr><td>Goals</td><td>{data.goals || 'Not set'}</td></tr>
           <tr><td>Max distance</td><td>{data.max_distance_km} km</td></tr>
-          <tr><td>Location</td><td>{[data.location_city, data.location_state, data.location_country].filter(Boolean).join(', ') || '—'}</td></tr>
+          <tr><td>Location</td><td>{[data.location_city, data.location_state, data.location_country].filter(Boolean).join(', ') || 'Not set'}</td></tr>
         </tbody>
       </table>
     </div>

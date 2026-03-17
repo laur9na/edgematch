@@ -8,6 +8,12 @@ import { useAuth } from '../hooks/useAuth';
 import { useTryouts } from '../hooks/useTryouts';
 import { supabase } from '../lib/supabase';
 
+const LEVEL_LABELS = {
+  pre_juvenile: 'Pre-Juvenile', juvenile: 'Juvenile',
+  intermediate: 'Intermediate', novice: 'Novice',
+  junior: 'Junior', senior: 'Senior', adult: 'Adult',
+};
+
 const STATUS_LABELS = {
   requested:  { label: 'Pending',   cls: 'status-pending'   },
   confirmed:  { label: 'Confirmed', cls: 'status-confirmed' },
@@ -22,8 +28,15 @@ const OUTCOME_LABELS = {
   not_a_fit:   'Not a fit',
 };
 
+function displayName(fullName) {
+  if (!fullName) return 'Unknown';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 function formatDate(d) {
-  if (!d) return '—';
+  if (!d) return 'No date set';
   return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
   });
@@ -60,9 +73,9 @@ function TryoutRow({ tryout, role, onUpdate }) {
     <div className="tryout-row">
       <div className="tryout-row-main">
         <div className="tryout-partner">
-          <span className="tryout-name">{partner?.name ?? '—'}</span>
+          <span className="tryout-name">{displayName(partner?.name)}</span>
           {partner?.skating_level && (
-            <span className="tryout-meta">{partner.skating_level.replace('_', ' ')}</span>
+            <span className="tryout-meta">{LEVEL_LABELS[partner.skating_level] ?? partner.skating_level}</span>
           )}
           {(partner?.location_city || partner?.location_state) && (
             <span className="tryout-meta muted">

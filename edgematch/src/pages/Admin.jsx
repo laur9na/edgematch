@@ -17,6 +17,8 @@ const LEVEL_LABELS = {
   pre_juvenile: 'Pre-Juv', juvenile: 'Juvenile', intermediate: 'Intermediate',
   novice: 'Novice', junior: 'Junior', senior: 'Senior', adult: 'Adult',
 };
+const ROLE_LABELS = { lady: 'Lady', man: 'Man', either: 'Either' };
+const STATUS_LABELS = { active: 'Looking', matched: 'Matched', paused: 'Paused', inactive: 'Inactive' };
 
 // ---- Club invite gate ----
 function ClubAccessGate({ onGranted }) {
@@ -234,11 +236,11 @@ function Dashboard({ athlete }) {
                   <tr key={a.id} className={a.verified ? '' : 'row-unverified'}>
                     <td className="td-name">{a.name}</td>
                     <td>{LEVEL_LABELS[a.skating_level] ?? a.skating_level}</td>
-                    <td>{a.partner_role}</td>
-                    <td>{a.age ?? '—'}</td>
+                    <td>{ROLE_LABELS[a.partner_role] ?? a.partner_role}</td>
+                    <td>{a.age ?? 'N/A'}</td>
                     <td>
                       <span className={`status-badge ${a.search_status === 'active' ? 'status-confirmed' : 'status-cancelled'}`}>
-                        {a.search_status}
+                        {STATUS_LABELS[a.search_status] ?? a.search_status}
                       </span>
                     </td>
                     <td className="td-muted">

@@ -22,9 +22,8 @@ export const SCORE_VERSION = 1;
 
 /**
  * Height compatibility.
- * Pairs: ideal man 15–25cm taller than lady.
- * Ice dance: ideal man 8–18cm taller.
- * Synchro: height similarity preferred (delta < 5cm ideal).
+ * Pairs: ideal man 15-25cm taller than lady.
+ * Ice dance: ideal man 8-18cm taller.
  */
 export function heightScore(a, b, discipline) {
   if (a.height_cm == null || b.height_cm == null) return 0.5;
@@ -39,9 +38,6 @@ export function heightScore(a, b, discipline) {
     if (delta >= 8 && delta <= 18) return 1.0;
     if (delta < 8)  return Math.max(0, 1 - (8 - delta) / 10);
     return Math.max(0, 1 - (delta - 18) / 15);
-  }
-  if (discipline === 'synchro') {
-    return Math.max(0, 1 - delta / 15);
   }
   return 0.5;
 }

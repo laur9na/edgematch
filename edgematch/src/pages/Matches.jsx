@@ -1,6 +1,6 @@
 /**
- * Matches.jsx — Phase 2.2 + 2.3
- * Ranked match list with client-side filter sidebar.
+ * Matches.jsx — Phase 7.3
+ * Page header + filter pills + 2-column card grid.
  */
 import { useState, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
@@ -8,181 +8,116 @@ import { useMatches } from '../hooks/useMatches';
 import AthleteCard from '../components/AthleteCard';
 import TryoutModal from '../components/TryoutModal';
 
-const LEVELS = ['pre_juvenile', 'juvenile', 'intermediate', 'novice', 'junior', 'senior', 'adult'];
-const LEVEL_LABELS = {
-  pre_juvenile: 'Pre-Juv', juvenile: 'Juvenile', intermediate: 'Intermediate',
-  novice: 'Novice', junior: 'Junior', senior: 'Senior', adult: 'Adult',
-};
-const ROLE_LABELS = { lady: 'Lady', man: 'Man', either: 'Either' };
-
-const DEFAULT_FILTERS = {
-  minScore: 0.3,
-  levelMin: '',
-  levelMax: '',
-  role: '',
-  country: '',
-};
+const FILTERS = ['All', 'Nearby', 'Same level', 'Lady seeking man'];
 
 export default function Matches() {
   const { athlete, loading: authLoading } = useAuth();
   const { matches, loading, error } = useMatches(athlete?.id);
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [tryoutMatch, setTryoutMatch]   = useState(null);
 
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [tryoutMatch, setTryoutMatch] = useState(null); // match currently being requested
-
-  function setFilter(key, value) {
-    setFilters(f => ({ ...f, [key]: value }));
-  }
-
-  // Client-side filtering — no extra queries
   const filtered = useMemo(() => {
-    return matches.filter(m => {
-      const p = m.partner;
-      if (m.total_score < filters.minScore) return false;
-      if (filters.role && p.partner_role !== filters.role) return false;
-      if (filters.country && p.location_country !== filters.country) return false;
-      if (filters.levelMin) {
-        if (LEVELS.indexOf(p.skating_level) < LEVELS.indexOf(filters.levelMin)) return false;
-      }
-      if (filters.levelMax) {
-        if (LEVELS.indexOf(p.skating_level) > LEVELS.indexOf(filters.levelMax)) return false;
-      }
-      return true;
-    });
-  }, [matches, filters]);
+    const base = matches.filter(m => m.total_score >= 0.40);
+    if (activeFilter === 'All') return base;
+    if (activeFilter === 'Nearby') {
+      return base.filter(m =>
+        athlete?.location_state && m.partner.location_state === athlete.location_state
+      );
+    }
+    if (activeFilter === 'Same level') {
+      return base.filter(m => m.partner.skating_level === athlete?.skating_level);
+    }
+    if (activeFilter === 'Lady seeking man') {
+      return base.filter(m => m.partner.partner_role === 'man');
+    }
+    return base;
+  }, [matches, activeFilter, athlete]);
 
-  // Unique countries in result set for the country filter
-  const countries = useMemo(() => {
-    const s = new Set(matches.map(m => m.partner.location_country).filter(Boolean));
-    return [...s].sort();
-  }, [matches]);
-
-  function handleRequestTryout(match) {
-    setTryoutMatch(match);
-  }
-
-  // --- render states ---
-  if (authLoading) return <div className="loading">Loading…</div>;
+  if (authLoading) return <div className="loading">Loading...</div>;
 
   if (!athlete) {
     return (
-      <main className="page-content">
-        <h1>Your Matches</h1>
-        <p>You need a profile to see matches. <a href="/profile/new">Create one →</a></p>
+      <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f2a5e' }}>Your matches</h1>
+        <p style={{ color: '#7a8aaa', marginTop: 12 }}>
+          You need a profile to see matches.{' '}
+          <a href="/profile/new" style={{ color: '#1a56db' }}>Create one</a>
+        </p>
       </main>
     );
   }
 
+  const totalVisible = matches.filter(m => m.total_score >= 0.40).length;
+
   return (
-    <div className="matches-layout">
-      {/* Filter sidebar */}
-      <aside className={`matches-sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
-        <div className="sidebar-header">
-          {sidebarOpen && <span>Filters</span>}
-          <button
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(o => !o)}
-            title={sidebarOpen ? 'Collapse filters' : 'Expand filters'}
-          >
-            {sidebarOpen ? '←' : '→'}
-          </button>
-        </div>
+    <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
+      {/* Header row */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+        marginBottom: 20,
+      }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f2a5e', letterSpacing: '-0.3px' }}>
+          Your matches
+        </h1>
+        <span style={{ fontSize: 12, color: '#7a8aaa' }}>
+          {loading ? '...' : `${totalVisible} skaters · pairs + ice dance`}
+        </span>
+      </div>
 
-        {sidebarOpen && (
-          <div className="sidebar-body">
-            <label>Min score
-              <div className="filter-score-row">
-                <input
-                  type="range" min={0} max={1} step={0.05}
-                  value={filters.minScore}
-                  onChange={e => setFilter('minScore', parseFloat(e.target.value))}
-                />
-                <span>{Math.round(filters.minScore * 100)}%</span>
-              </div>
-            </label>
-
-            <label>Level — from
-              <select value={filters.levelMin} onChange={e => setFilter('levelMin', e.target.value)}>
-                <option value="">Any</option>
-                {LEVELS.map(l => <option key={l} value={l}>{LEVEL_LABELS[l]}</option>)}
-              </select>
-            </label>
-
-            <label>Level — to
-              <select value={filters.levelMax} onChange={e => setFilter('levelMax', e.target.value)}>
-                <option value="">Any</option>
-                {LEVELS.map(l => <option key={l} value={l}>{LEVEL_LABELS[l]}</option>)}
-              </select>
-            </label>
-
-            <label>Role
-              <select value={filters.role} onChange={e => setFilter('role', e.target.value)}>
-                <option value="">Any</option>
-                {Object.entries(ROLE_LABELS).map(([v, l]) =>
-                  <option key={v} value={v}>{l}</option>
-                )}
-              </select>
-            </label>
-
-            <label>Country
-              <select value={filters.country} onChange={e => setFilter('country', e.target.value)}>
-                <option value="">Any</option>
-                {countries.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </label>
-
+      {/* Filter pills */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+        {FILTERS.map(f => {
+          const isActive = activeFilter === f;
+          return (
             <button
-              className="btn-reset-filters"
-              onClick={() => setFilters(DEFAULT_FILTERS)}
+              key={f}
+              onClick={() => setActiveFilter(f)}
+              style={{
+                background: isActive ? '#1a56db' : '#fff',
+                border: `1px solid ${isActive ? '#1a56db' : '#d4e0f5'}`,
+                borderRadius: 20, padding: '5px 13px',
+                fontSize: 12, color: isActive ? '#fff' : '#4a5a7a',
+                cursor: 'pointer', transition: 'background 0.15s',
+              }}
             >
-              Reset filters
+              {f}
             </button>
-          </div>
-        )}
-      </aside>
+          );
+        })}
+      </div>
 
-      {/* Main results */}
-      <main className="matches-main">
-        <div className="matches-header">
-          <h1>Your Matches</h1>
-          <span className="matches-count">
-            {loading ? '…' : `${filtered.length} of ${matches.length}`}
-          </span>
+      {error && <p style={{ color: '#dc2626', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+
+      {loading && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="card-skeleton" style={{ height: 220 }} />
+          ))}
         </div>
+      )}
 
-        <p className="matches-subtitle">
-          {athlete.discipline === 'ice_dance' ? 'Ice Dance' : 'Pairs'} ·
-          Ranked by compatibility score
-        </p>
+      {!loading && filtered.length === 0 && (
+        <div style={{
+          textAlign: 'center', color: '#7a8aaa', fontSize: 14, marginTop: 60,
+        }}>
+          No matches yet. Finish your profile to see who&apos;s out there.
+        </div>
+      )}
 
-        {error && <p className="form-error">{error}</p>}
-
-        {loading && (
-          <div className="card-grid">
-            {[...Array(6)].map((_, i) => <div key={i} className="card-skeleton" />)}
-          </div>
-        )}
-
-        {!loading && filtered.length === 0 && (
-          <div className="empty-state">
-            <p>No matches found with the current filters.</p>
-            <button onClick={() => setFilters(DEFAULT_FILTERS)}>Clear filters</button>
-          </div>
-        )}
-
-        {!loading && filtered.length > 0 && (
-          <div className="card-grid">
-            {filtered.map(match => (
-              <AthleteCard
-                key={match.id}
-                match={match}
-                onRequestTryout={handleRequestTryout}
-              />
-            ))}
-          </div>
-        )}
-      </main>
+      {!loading && filtered.length > 0 && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14,
+        }} className="matches-card-grid">
+          {filtered.map((match, i) => (
+            <AthleteCard
+              key={match.id}
+              match={match}
+              index={i}
+              onRequestTryout={setTryoutMatch}
+            />
+          ))}
+        </div>
+      )}
 
       {tryoutMatch && (
         <TryoutModal
@@ -191,6 +126,6 @@ export default function Matches() {
           onSuccess={() => setTryoutMatch(null)}
         />
       )}
-    </div>
+    </main>
   );
 }
