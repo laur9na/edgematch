@@ -338,7 +338,7 @@ function ProfileView({ athlete, onEdit }) {
 function StepBasics({ data, onChange, isExistingUser }) {
   return (
     <div className="step">
-      <h2>Step 1 — Basics</h2>
+      <h2>Step 1: Basics</h2>
       <label>Full name *
         <input value={data.name} onChange={e => onChange('name', e.target.value)} placeholder="First Last" required />
       </label>
@@ -397,7 +397,7 @@ function StepPhysical({ data, onChange }) {
 
   return (
     <div className="step">
-      <h2>Step 2 — Physical Info</h2>
+      <h2>Step 2: Physical Info</h2>
       <label>Height *
         <div className="unit-toggle">
           <button type="button" className={unit === 'imperial' ? 'active' : ''} onClick={() => setUnit('imperial')}>ft / in</button>
@@ -428,7 +428,7 @@ function StepPhysical({ data, onChange }) {
 function StepSkating({ data, onChange }) {
   return (
     <div className="step">
-      <h2>Step 3 — Skating Background</h2>
+      <h2>Step 3: Skating Background</h2>
       <label>Skating level *
         <select value={data.skating_level} onChange={e => onChange('skating_level', e.target.value)} required>
           <option value="">Select...</option>
@@ -451,7 +451,7 @@ function StepSkating({ data, onChange }) {
 function StepGoals({ data, onChange }) {
   return (
     <div className="step">
-      <h2>Step 4 — Goals and Preferences</h2>
+      <h2>Step 4: Goals and Preferences</h2>
       <label>What are your skating goals?
         <textarea value={data.goals} onChange={e => onChange('goals', e.target.value)} rows={4} placeholder="e.g. Compete at Junior Nationals by 2027..." />
       </label>
@@ -479,7 +479,7 @@ function StepGoals({ data, onChange }) {
 function StepLocation({ data, onChange }) {
   return (
     <div className="step">
-      <h2>Step 5 — Location</h2>
+      <h2>Step 5: Location</h2>
       <label>City
         <input value={data.location_city} onChange={e => onChange('location_city', e.target.value)} placeholder="e.g. San Jose" />
       </label>
@@ -499,7 +499,7 @@ function StepReview({ data }) {
   const roleLabel  = ROLES.find(r => r.value === data.partner_role)?.label ?? 'Not set';
   return (
     <div className="step">
-      <h2>Step 6 — Review</h2>
+      <h2>Step 6: Review</h2>
       <table className="review-table">
         <tbody>
           <tr><td>Name</td><td>{data.name || 'Not set'}</td></tr>
