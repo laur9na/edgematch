@@ -1,5 +1,5 @@
 /**
- * src/lib/scorer.js Compatibility scoring algorithm, Phase 0, v1)
+ * src/lib/scorer.js: Compatibility scoring algorithm, Phase 0, v1
  *
  * All component scores return 0.0–1.0.
  * Final score = weighted sum of components.
