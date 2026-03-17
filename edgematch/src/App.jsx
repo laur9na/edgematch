@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import Matches from './pages/Matches';
 import Tryouts from './pages/Tryouts';
 import Admin from './pages/Admin';
+import About from './pages/About';
 import './index.css';
 
 // Guard: redirect to /signup if not authenticated
@@ -29,6 +30,7 @@ function AppRoutes() {
         <Route path="/profile"    element={<Protected><Profile /></Protected>} />
         <Route path="/matches"    element={<Protected><Matches /></Protected>} />
         <Route path="/tryouts"    element={<Protected><Tryouts /></Protected>} />
+        <Route path="/about"      element={<About />} />
         <Route path="/admin"      element={<Admin />} />
         <Route path="*"           element={<Navigate to="/" replace />} />
       </Routes>
