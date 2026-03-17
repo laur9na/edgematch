@@ -80,7 +80,7 @@ function normalizeDiscipline(raw) {
   const s = raw.toLowerCase().trim();
   if (s.includes('pairs')) return 'pairs';
   if (s.includes('dance')) return 'ice_dance';
-  if (s.includes('synchro') || s.includes('synchronized')) return 'synchro';
+  if (s.includes('synchro') || s.includes('synchronized')) return null;
   return null;
 }
 

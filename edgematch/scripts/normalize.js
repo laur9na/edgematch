@@ -89,7 +89,7 @@ function normalizeDiscipline(raw) {
   const s = raw.toLowerCase().trim();
   if (s === 'pairs' || s === 'pairs skating') return 'pairs';
   if (s === 'ice_dance' || s === 'ice dancing' || s === 'ice dance' || s === 'dance') return 'ice_dance';
-  if (s === 'synchro' || s.includes('synchronized') || s.includes('synchro')) return 'synchro';
+  if (s === 'synchro' || s.includes('synchronized') || s.includes('synchro')) return null;
   if (s === 'singles') return 'singles';
   return null;
 }
