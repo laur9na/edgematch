@@ -532,9 +532,9 @@ Phase 3 — Tryouts
   [done] 3.3 Tryouts.jsx (sent + received tabs)
 
 Phase 4 — Admin
-  [ ] 4.1 Club auth (separate invite flow)
-  [ ] 4.2 Admin.jsx dashboard
-  [ ] 4.3 Endorse + CSV export
+  [done] 4.1 Club auth (invite code → links athlete to club, sets is_admin=true)
+  [done] 4.2 Admin.jsx dashboard (athlete table, sort by level/activity/name)
+  [done] 4.3 Endorse (sets verified=true) + CSV export
 
 Phase 5 — Polish for pilot
   [ ] 5.1 Landing.jsx
