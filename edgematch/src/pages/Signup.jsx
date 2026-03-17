@@ -1,21 +1,26 @@
 /**
  * Signup.jsx — Entry point that redirects to Profile wizard.
  * Also handles the "Sign in" flow for existing users.
+ *
+ * Session persistence: Supabase stores the session in localStorage by default,
+ * so users stay signed in across page reloads/restarts without re-entering
+ * credentials. The browser's password manager / OS keychain can save
+ * email+password via the standard autocomplete="current-password" attribute.
  */
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
 export default function Signup() {
-  const [mode, setMode]   = useState('signup'); // 'signup' | 'signin'
-  const [email, setEmail] = useState('');
+  const [mode, setMode]     = useState('signup'); // 'signup' | 'signin'
+  const [email, setEmail]   = useState('');
   const [password, setPass] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError]   = useState(null);
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  // New user → go to full profile wizard
   function goToWizard(e) {
     e.preventDefault();
     navigate('/profile/new');
@@ -26,8 +31,15 @@ export default function Signup() {
     setLoading(true);
     setError(null);
     try {
-      await signIn(email, password);
-      navigate('/matches');
+      const { data } = await signIn(email, password);
+      // If the auth user has no athlete row yet (prior signup failed mid-way),
+      // send them to the profile wizard rather than the empty matches page.
+      const { data: athleteRow } = await supabase
+        .from('athletes')
+        .select('id')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+      navigate(athleteRow ? '/matches' : '/profile/new');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -52,12 +64,26 @@ export default function Signup() {
   return (
     <div className="auth-page">
       <h1>Sign in</h1>
-      <form onSubmit={handleSignIn}>
+      {/* autocomplete attributes let browser/OS keychain offer to save credentials */}
+      <form onSubmit={handleSignIn} autoComplete="on">
         <label>Email
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            autoComplete="username"
+            required
+            autoFocus
+          />
         </label>
         <label>Password
-          <input type="password" value={password} onChange={e => setPass(e.target.value)} required />
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPass(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
         </label>
         {error && <p className="form-error">{error}</p>}
         <button type="submit" className="btn-primary" disabled={loading}>

@@ -303,7 +303,7 @@ export default function Profile() {
   const [data, setData]   = useState(EMPTY);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
-  const { refetchAthlete } = useAuth();
+  const { user, refetchAthlete } = useAuth();
   const navigate = useNavigate();
 
   function onChange(field, value) {
@@ -337,25 +337,33 @@ export default function Profile() {
     setSaving(true);
     setError(null);
     try {
-      // 1. Create auth user
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-      });
-      if (signUpError) throw signUpError;
+      let userId;
 
-      const userId = authData.user?.id;
-      if (!userId) throw new Error('Sign-up succeeded but no user ID returned');
-
-      // 2. Ensure an active session exists before the RLS-gated INSERT.
-      //    With email confirmation disabled (mailer_autoconfirm=true) signUp()
-      //    returns a session; if for any reason it doesn't, sign in explicitly.
-      if (!authData.session) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+      if (user) {
+        // Already authenticated (e.g. returning user whose athlete row was never
+        // created due to a prior RLS error). Skip signUp entirely.
+        userId = user.id;
+      } else {
+        // 1. Create auth user
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: data.email,
           password: data.password,
         });
-        if (signInError) throw signInError;
+        if (signUpError) throw signUpError;
+
+        userId = authData.user?.id;
+        if (!userId) throw new Error('Sign-up succeeded but no user ID returned');
+
+        // 2. Ensure session is active before the RLS-gated INSERT.
+        //    mailer_autoconfirm=true means signUp returns a session immediately;
+        //    sign in explicitly as a fallback.
+        if (!authData.session) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+          });
+          if (signInError) throw signInError;
+        }
       }
 
       // 3. Insert athlete row (RLS: auth.uid() must equal user_id)
