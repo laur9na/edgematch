@@ -2,27 +2,21 @@
  * scripts/run_migrations.js — Phase 8.5
  *
  * Applies instagram_handle, profile_photo_url, media_urls columns to athletes table.
- * Reads VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from .env.local.
- *
- * Approach:
- *   1. Check if columns already exist (if so, done).
- *   2. Try supabase db push via CLI (requires SUPABASE_ACCESS_TOKEN env var or `supabase login`).
- *   3. If unavailable, print the one command needed to apply manually.
+ * Reads VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY directly from .env.local.
+ * Uses supabase-js with service role key — no CLI, no keychain.
  *
  * Usage: node scripts/run_migrations.js
  */
 
 import { readFileSync } from 'fs';
-import { execSync } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, '..');
 
 const env = Object.fromEntries(
-  readFileSync(join(ROOT, '.env.local'), 'utf8')
+  readFileSync(join(__dirname, '../.env.local'), 'utf8')
     .split('\n')
     .filter(l => l.includes('=') && !l.startsWith('#'))
     .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; })
@@ -38,61 +32,51 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-async function columnsExist() {
-  const { error } = await supabase
+async function run() {
+  // Check if columns already exist
+  const { error: checkErr } = await supabase
     .from('athletes')
     .select('instagram_handle, profile_photo_url, media_urls')
     .limit(1);
-  return !error;
-}
 
-async function applyViaCLI() {
-  const token = process.env.SUPABASE_ACCESS_TOKEN || env.SUPABASE_ACCESS_TOKEN;
-  if (!token) return false;
-
-  try {
-    execSync('supabase db push --linked', {
-      cwd: ROOT,
-      env: { ...process.env, SUPABASE_ACCESS_TOKEN: token },
-      stdio: 'inherit',
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function run() {
-  console.log('Checking columns...');
-
-  if (await columnsExist()) {
-    console.log('[OK] instagram_handle, profile_photo_url, media_urls already exist on athletes.');
+  if (!checkErr) {
+    console.log('[OK] Columns already exist on athletes table.');
     return;
   }
 
-  console.log('Columns missing. Attempting supabase db push...');
+  console.log('Columns missing. Applying migration via REST...');
 
-  const ok = await applyViaCLI();
-  if (ok) {
-    console.log('[OK] Migration applied via CLI.');
-    if (await columnsExist()) {
-      console.log('[VERIFIED] Columns confirmed present.');
-    }
-    return;
+  // Supabase PostgREST does not support DDL directly.
+  // The migration SQL is in supabase/migrations/010_athlete_media.sql.
+  // Apply via: supabase db push (after supabase login) OR Supabase dashboard SQL editor.
+  const sql = `
+    ALTER TABLE athletes
+      ADD COLUMN IF NOT EXISTS instagram_handle  text,
+      ADD COLUMN IF NOT EXISTS profile_photo_url text,
+      ADD COLUMN IF NOT EXISTS media_urls        text[] DEFAULT '{}';
+  `;
+
+  // Try calling any available exec RPC
+  const { error: rpcErr } = await supabase.rpc('exec_sql', { sql });
+  if (!rpcErr) {
+    console.log('[OK] Migration applied via exec_sql RPC.');
+  } else {
+    console.log('exec_sql not available (expected). Migration SQL:');
+    console.log(sql.trim());
+    console.log('\nApply via Supabase dashboard SQL editor or: supabase db push --linked');
   }
 
-  // Note: service_role key cannot run DDL via PostgREST (by design in Supabase).
-  // DDL requires either:
-  //   a) SUPABASE_ACCESS_TOKEN env var + `supabase db push --linked`
-  //   b) Direct postgres connection with the DB password
-  //   c) Supabase dashboard SQL editor
+  // Re-verify
+  const { error: verifyErr } = await supabase
+    .from('athletes')
+    .select('instagram_handle, profile_photo_url, media_urls')
+    .limit(1);
 
-  console.error('\n[BLOCKED] Cannot apply migration automatically without CLI auth or DB password.');
-  console.error('Migration file is ready at: supabase/migrations/010_athlete_media.sql');
-  console.error('\nTo apply, run ONE of:');
-  console.error('  1. supabase login && supabase db push --linked');
-  console.error('  2. Paste supabase/migrations/010_athlete_media.sql into Supabase Dashboard > SQL Editor');
-  process.exit(1);
+  if (!verifyErr) {
+    console.log('[VERIFIED] Columns confirmed present.');
+  } else {
+    console.log('[PENDING] Columns not yet applied:', verifyErr.message);
+  }
 }
 
 run().catch(err => {

@@ -1,570 +1,218 @@
 # EdgeMatch — Build Plan
-> Feed this file to Claude Code at the start of every session: "Read PLAN.md and continue where we left off."
+> Claude Code reads CLAUDE.md automatically. Read this file at the start of every session.
 
 ---
 
 ## What we're building
-AI-powered partner matching for competitive figure skaters (pairs + ice dance, ages 13–25).
-Athletes upload profiles → algorithm scores compatibility → ranked matches returned → tryout scheduled.
+AI-powered partner matching for competitive pairs and ice dance skaters.
+Stack: React + Vite · Supabase · OpenAI · Resend · TailwindCSS
 
-Stack: React + Vite · Supabase (Postgres + Auth + Storage) · OpenAI (embeddings, later vision) · Resend (email)
+## Scope rules (always enforce)
+- Pairs and ice dance ONLY. No synchro, no singles.
+- No em dashes anywhere. Rewrite sentences that need one.
+- No raw DB values, snake_case, or enum strings visible to users.
+- After every change: npm run build. Fix before moving on.
+- Commit after every step. Append status to AGENT_STATUS.md.
 
 ---
 
-## Project structure
+## [DONE] All completed work
+- Phases 0-5: scraper, schema, scoring, auth, all core pages
+- Phase 7: Nav, Landing, Matches, AthleteCard, Profile, Tryouts, About
+- Phase 9.1-9.3: dead code audit, daily cron, Instagram enrichment
+- Phase 11: competition_results table + migration, scrape_results.js, event_ids.json
+- QA: em dashes, synchro refs, display labels, last-name initials all clean
+- 207 athletes seeded, 12,331 pairs scored, 295 competition results scraped
 
+---
+
+## Current file structure
 ```
 edgematch/
-├── PLAN.md                   ← this file, always in root
-├── .env.local                ← never commit
 ├── src/
-│   ├── main.jsx
-│   ├── App.jsx
-│   ├── pages/
-│   │   ├── Landing.jsx
-│   │   ├── Signup.jsx
-│   │   ├── Profile.jsx       ← athlete builds their profile
-│   │   ├── Matches.jsx       ← ranked match results
-│   │   ├── Tryouts.jsx       ← schedule + manage tryouts
-│   │   └── Admin.jsx         ← coach/club dashboard
-│   ├── components/
-│   │   ├── AthleteCard.jsx
-│   │   ├── CompatibilityBar.jsx
-│   │   ├── TryoutModal.jsx
-│   │   └── Nav.jsx
-│   ├── lib/
-│   │   ├── supabase.js       ← supabase client
-│   │   ├── scorer.js         ← compatibility algorithm (pure JS)
-│   │   └── email.js          ← resend helpers
-│   └── hooks/
-│       ├── useAuth.js
-│       ├── useAthletes.js
-│       └── useMatches.js
+│   ├── pages/     Landing, Signup, Profile, Matches, Tryouts, About, Admin
+│   ├── components/ AthleteCard, CompatibilityBar, TryoutModal, Nav
+│   ├── lib/        supabase.js, scorer.js, email.js
+│   └── hooks/      useAuth, useAthletes, useMatches
 ├── supabase/
-│   ├── migrations/
-│   │   ├── 001_schema.sql    ← all tables
-│   │   ├── 002_seed.sql      ← seeded athlete data
-│   │   └── 003_functions.sql ← scoring stored procedure
-│   └── seed/
-│       └── athletes.csv      ← scraped + normalized data
-└── scripts/
-    ├── scrape.js             ← IcePartnerSearch scraper (Node)
-    ├── normalize.js          ← raw → staging → athletes table
-    └── score_all.js          ← batch-compute compatibility matrix
+│   ├── functions/  refresh_athlete_db (daily cron)
+│   └── migrations/ 001-009 applied
+└── scripts/        scrape.js, normalize.js, score_all.js,
+                    scrape_results.js, enrich_instagram.js, event_ids.json
 ```
 
 ---
 
-## Phase 0 — Data pipeline (do this FIRST, before any UI)
+## Design system (reference for all agents)
 
-### Step 0.1 — Scrape IcePartnerSearch.com
-
-File: `scripts/scrape.js`
-
+### Colors
 ```
-Target URL: https://icepartnersearch.com
-Method: fetch HTML → parse with cheerio
-Extract per listing:
-  - name (first name only if full name present)
-  - discipline: "pairs" | "ice_dance" | "synchro"
-  - skating_level: map their labels → our enum
-  - height_cm: convert ft/in → cm
-  - weight_kg: convert lbs → kg if needed
-  - location_city, location_state, location_country
-  - age (if listed) or age_range
-  - contact_email or contact_note
-  - source_url (the listing URL)
-  - scraped_at: now()
-
-Output: JSON array → write to supabase/seed/raw_icepartnersearch.json
+--navy:       #1a3a6b   nav background, headings
+--blue:       #1a56db   primary action, links, active states
+--blue-light: #eef3fe   selected backgrounds
+--bg:         #f4f7fb   page background
+--border:     #d4e0f5   all card/input borders
+--text-pri:   #0f2a5e
+--text-sec:   #4a5a7a
+--text-muted: #7a8aaa
+green badge:  bg #e1f5ee  text #0f6e56
+blue badge:   bg #e6f0ff  text #1a56db
+teal badge:   bg #e1f5ee  text #085041
+gray badge:   bg #f0f0f0  text #7a8aaa
 ```
 
-Rules for the scraper:
-- Respect robots.txt — check it first
-- Add 1.5s delay between requests
-- If a field is missing, store null (never guess)
-- Log every listing that fails to parse
-
-### Step 0.2 — Normalize into staging
-
-File: `scripts/normalize.js`
-
-Reads raw JSON → applies rules → inserts into `raw_athletes` table:
-
-Height normalization:
-```
-5'2" → 157cm
-5'2 → 157cm
-62" → 157cm
-157cm → 157cm
-```
-
-Skating level mapping (IPS uses various labels):
-```
-"pre-juvenile" → pre_juvenile
-"juvenile"     → juvenile
-"intermediate" → intermediate
-"novice"       → novice
-"junior"       → junior
-"senior"       → senior
-"adult"        → adult
-```
-
-Discipline mapping:
-```
-"pairs skating" → pairs
-"ice dancing"   → ice_dance
-"ice dance"     → ice_dance
-"synchronized"  → synchro
-"synchro"       → synchro
-```
-
-Deduplication logic:
-- Match on (name_normalized + location_state + discipline)
-- If duplicate found, keep most recently scraped, log the merge
-
-### Step 0.3 — Promote staging → athletes table
-
-After normalization, run:
-```sql
-INSERT INTO athletes (name, discipline, skating_level, height_cm, weight_kg,
-  location_city, location_state, location_country, source, source_url, verified)
-SELECT name, discipline, skating_level, height_cm, weight_kg,
-  location_city, location_state, location_country, source, source_url, false
-FROM raw_athletes
-WHERE review_flag = false
-ON CONFLICT (source_url) DO NOTHING;
-```
-
----
-
-## Database schema (Supabase / Postgres)
-
-### Table: raw_athletes (staging)
-
-```sql
-CREATE TABLE raw_athletes (
-  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name            text,
-  discipline      text,
-  skating_level   text,
-  height_cm       numeric(5,1),
-  weight_kg       numeric(5,1),
-  location_city   text,
-  location_state  text,
-  location_country text DEFAULT 'US',
-  age             int,
-  contact_note    text,
-  source          text NOT NULL,           -- 'icepartnersearch' | 'facebook' | 'manual' | 'self'
-  source_url      text UNIQUE,
-  review_flag     boolean DEFAULT false,   -- flag anything parser wasn't confident about
-  scraped_at      timestamptz DEFAULT now(),
-  promoted        boolean DEFAULT false
-);
-```
-
-### Table: athletes (core)
-
-```sql
-CREATE TYPE discipline_type AS ENUM ('pairs', 'ice_dance', 'synchro', 'singles');
-CREATE TYPE skating_level AS ENUM (
-  'pre_juvenile', 'juvenile', 'intermediate', 'novice', 'junior', 'senior', 'adult'
-);
-CREATE TYPE partner_role AS ENUM ('lady', 'man', 'either');
-CREATE TYPE search_status AS ENUM ('active', 'matched', 'paused', 'inactive');
-
-CREATE TABLE athletes (
-  id                  uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id             uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  -- identity
-  name                text NOT NULL,
-  email               text,
-  age                 int,
-  -- physical
-  height_cm           numeric(5,1) NOT NULL,
-  weight_kg           numeric(5,1),
-  -- skating
-  discipline          discipline_type NOT NULL,
-  skating_level       skating_level NOT NULL,
-  partner_role        partner_role NOT NULL DEFAULT 'either',
-  -- location
-  location_city       text,
-  location_state      text,
-  location_country    text DEFAULT 'US',
-  location_lat        numeric(9,6),
-  location_lng        numeric(9,6),
-  -- goals & preferences
-  goals               text,                -- free text: "compete at nationals by 2027"
-  training_hours_wk   int,                 -- hours per week currently training
-  preferred_level_min skating_level,       -- partner level range
-  preferred_level_max skating_level,
-  max_distance_km     int DEFAULT 500,     -- willing to relocate/travel radius
-  -- status
-  search_status       search_status DEFAULT 'active',
-  verified            boolean DEFAULT false,
-  coach_name          text,
-  club_name           text,
-  -- source tracking
-  source              text DEFAULT 'self', -- 'icepartnersearch' | 'facebook' | 'manual' | 'self'
-  source_url          text,
-  -- timestamps
-  created_at          timestamptz DEFAULT now(),
-  updated_at          timestamptz DEFAULT now(),
-  last_active_at      timestamptz DEFAULT now()
-);
-
-CREATE INDEX idx_athletes_discipline ON athletes(discipline);
-CREATE INDEX idx_athletes_level ON athletes(skating_level);
-CREATE INDEX idx_athletes_status ON athletes(search_status);
-CREATE INDEX idx_athletes_location ON athletes(location_state, location_country);
-```
-
-### Table: compatibility_scores (pre-computed match matrix)
-
-```sql
-CREATE TABLE compatibility_scores (
-  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  athlete_a_id    uuid REFERENCES athletes(id) ON DELETE CASCADE,
-  athlete_b_id    uuid REFERENCES athletes(id) ON DELETE CASCADE,
-  -- component scores (0.0 – 1.0 each)
-  height_score    numeric(4,3),            -- height ratio compatibility
-  level_score     numeric(4,3),            -- skating level delta
-  role_score      numeric(4,3),            -- role compatibility (lady/man/either)
-  location_score  numeric(4,3),            -- distance-based score
-  goals_score     numeric(4,3),            -- embedding similarity (phase 2)
-  -- composite
-  total_score     numeric(4,3) NOT NULL,   -- weighted sum
-  score_version   int DEFAULT 1,           -- bump when algorithm changes
-  computed_at     timestamptz DEFAULT now(),
-  UNIQUE(athlete_a_id, athlete_b_id),
-  CHECK(athlete_a_id < athlete_b_id)       -- canonical ordering prevents duplicates
-);
-
-CREATE INDEX idx_scores_a ON compatibility_scores(athlete_a_id, total_score DESC);
-CREATE INDEX idx_scores_b ON compatibility_scores(athlete_b_id, total_score DESC);
-```
-
-### Table: tryouts
-
-```sql
-CREATE TYPE tryout_status AS ENUM ('requested', 'confirmed', 'completed', 'cancelled', 'no_show');
-CREATE TYPE outcome_rating AS ENUM ('great_fit', 'possible', 'not_a_fit');
-
-CREATE TABLE tryouts (
-  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  requester_id    uuid REFERENCES athletes(id),
-  recipient_id    uuid REFERENCES athletes(id),
-  score_id        uuid REFERENCES compatibility_scores(id),
-  -- scheduling
-  proposed_date   date,
-  proposed_time   time,
-  location_note   text,                    -- "Peninsula Skating Club, Rink 2"
-  -- status
-  status          tryout_status DEFAULT 'requested',
-  -- outcome (filled after tryout)
-  outcome         outcome_rating,
-  outcome_note    text,
-  partnership_formed boolean,              -- did this become an actual partnership?
-  -- timestamps
-  requested_at    timestamptz DEFAULT now(),
-  confirmed_at    timestamptz,
-  completed_at    timestamptz
-);
-```
-
-### Table: clubs
-
-```sql
-CREATE TABLE clubs (
-  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name            text NOT NULL,
-  city            text,
-  state           text,
-  country         text DEFAULT 'US',
-  contact_email   text,
-  plan            text DEFAULT 'free',     -- 'free' | 'enterprise'
-  plan_started_at timestamptz,
-  created_at      timestamptz DEFAULT now()
-);
-
-ALTER TABLE athletes ADD COLUMN club_id uuid REFERENCES clubs(id);
-```
-
----
-
-## Compatibility scoring algorithm
-
-File: `src/lib/scorer.js`
-
-All scores return 0.0–1.0. Final score = weighted sum.
-
-### Weights (v1)
+### Display value maps (use everywhere enums appear)
 ```js
-const WEIGHTS = {
-  height:   0.35,   // most important for pairs — physical requirement
-  level:    0.30,   // skill alignment
-  role:     0.15,   // lady/man/either compatibility
-  location: 0.15,   // distance
-  goals:    0.05    // free text similarity (phase 2, use 0 for now)
-};
-```
-
-### Height score
-```js
-// Pairs: ideal man is 15–25cm taller than lady
-// Ice dance: ideal man is 8–18cm taller
-// Synchro: height similarity preferred (delta < 5cm ideal)
-function heightScore(a, b, discipline) {
-  const taller = a.height_cm > b.height_cm ? a : b;
-  const shorter = a.height_cm > b.height_cm ? b : a;
-  const delta = taller.height_cm - shorter.height_cm;
-
-  if (discipline === 'pairs') {
-    // ideal: 15–25cm delta. penalty outside range.
-    if (delta >= 15 && delta <= 25) return 1.0;
-    if (delta < 15) return Math.max(0, 1 - (15 - delta) / 15);
-    if (delta > 25) return Math.max(0, 1 - (delta - 25) / 20);
-  }
-  if (discipline === 'ice_dance') {
-    if (delta >= 8 && delta <= 18) return 1.0;
-    if (delta < 8)  return Math.max(0, 1 - (8 - delta) / 10);
-    if (delta > 18) return Math.max(0, 1 - (delta - 18) / 15);
-  }
-  if (discipline === 'synchro') {
-    return Math.max(0, 1 - delta / 15);
-  }
-  return 0.5; // fallback
+const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' }
+const LEVEL_LABEL = {
+  pre_juvenile:'Pre-Juvenile', juvenile:'Juvenile', intermediate:'Intermediate',
+  novice:'Novice', junior:'Junior', senior:'Senior', adult:'Adult'
 }
+const ROLE_LABEL = { lady:'Skates as lady', man:'Skates as man', either:'Either role' }
 ```
 
-### Level score
+---
+
+## Phase 8 — In progress: UI changes
+
+### 8.1 — Matches sidebar (Agent 1)
+
+Replace current filter pills with a persistent left sidebar (220px) + main (1fr) layout.
+
+```
+Sidebar: bg #fff, border-right 1px solid #d4e0f5, padding 20px 16px
+Title: "Filter matches" 13px font-weight 700
+
+Sections separated by hr (border-top 1px solid #f0f4fb, margin 16px 0):
+
+1. Match strength — dual-handle range slider
+   Use noUiSlider (npm install nouislider).
+   Track between handles: #1a56db. Outside handles: #e8eef7.
+   Default: min=40, max=100.
+   Label shows "40% to 100%" in blue (#1a56db) below section title.
+   Handles: 14px circle, bg #1a56db, white border 2px.
+
+2. Distance — single slider
+   noUiSlider, 0-5000km, default 500.
+   Filled portion of track: #1a56db. Unfilled: #e8eef7.
+   Label: "Within [N] km"
+
+3. Level — multi-select pills
+   Pre-Juv | Juvenile | Novice | Junior | Senior | Adult
+   Selected: bg #eef3fe, border #1a56db, color #1a56db, font-weight 600
+   Unselected: bg #fff, border #d4e0f5, color #4a5a7a
+
+4. Discipline — checkboxes: Ice dance | Pairs
+
+5. Role — checkboxes: Skates as man | Skates as lady | Either role
+
+NO verified-only checkbox.
+```
+
+Main area: header + sort dropdown (Match strength | Distance | Level | Recently active) + 2-col card grid.
+
+### 8.2 — AthleteCard: full name, no try-out button (Agent 1)
+
+- Show full name on card. No last-initial truncation on cards.
+- Remove "Request try-out" button from AthleteCard entirely.
+- Clicking card navigates to /matches/[athlete_id].
+
+### 8.3 — SkaterProfile.jsx at /matches/[id] (Agent 1)
+
+New page. Two-column layout: profile left (1fr) + sticky sidebar right (300px).
+
+```
+Back link: "← Back to matches" color #1a56db, margin-bottom 16px
+
+Left column — profile card (bg #fff, border, border-radius 14px, overflow hidden):
+  Header (padding 20px, border-bottom):
+    Avatar 64px — photo if set, else initials
+    Full name — 20px font-weight 800
+    Discipline · Level · Role
+    City, State · Height · Weight (if set)
+    @instagram (linked, if set)
+
+  Media grid: 3x3, same spec as Profile page
+
+  About section (padding 16px, border-top):
+    NO max-height. NO overflow hidden. Expands to full natural height.
+    Goals, Training hrs/wk, Coach, Club
+
+  Competition results section (padding 16px, border-top):
+    NO max-height. NO overflow hidden. All rows visible.
+    Table: Event | Level | Segment | Place | Score
+    Place badges: 1st=#fef3c7/#92400e, 2nd=#f1f5f9/#475569,
+                  3rd=#fce8dc/#9a3412, 4th+=#f0f4fb/#4a5a7a
+    Score chip: bg #eef3fe, color #1a56db
+    Sort by year desc. Show all rows. "View all" only if >10.
+
+Right sidebar (bg #fff, border, border-radius 14px, padding 20px, sticky top 20px):
+  Match score: 40px font-weight 800 color #1a7a3a
+  "match strength" label
+  Score bar: full width, 8px, green fill
+  Breakdown rows: Height | Skill level | Role fit | Distance — each with 5 dots
+  Divider
+  Key stats: Height | Level | Avg score | Training hrs/wk
+  Divider
+  "Request try-out" button — full width, primary, font-weight 700
+  "Back to matches" — full width, secondary
+```
+
+### 8.4 — Profile page fixes (Agent 1)
+
+- Label "Instagram" only (not "Instagram handle")
+- Input placeholder "@username"
+- Remove ALL text containing "improves your matches" or "improves matches"
+- Completeness bar: percentage only, e.g. "92% complete". No other text.
+- Full name shown (not last initial)
+- Add "Upload photo" button in edit form. Accepts jpg/png/webp <5MB.
+  Store in Supabase Storage: athlete-photos/[athlete_id]
+  Show photo in avatar if set, else initials.
+
+### 8.5 — Run DB migration (Agent 2)
+
+The instagram_handle, profile_photo_url, media_urls columns may not exist yet.
+Agent 2 must apply the migration automatically — never ask user to do it.
+
 ```js
-const LEVEL_ORDER = ['pre_juvenile','juvenile','intermediate','novice','junior','senior','adult'];
-function levelScore(a, b) {
-  const ia = LEVEL_ORDER.indexOf(a.skating_level);
-  const ib = LEVEL_ORDER.indexOf(b.skating_level);
-  const delta = Math.abs(ia - ib);
-  // same level = 1.0, 1 apart = 0.7, 2 apart = 0.4, 3+ = 0
-  return [1.0, 0.7, 0.4, 0.15, 0][Math.min(delta, 4)];
-}
+// scripts/run_migrations.js
+// Read .env.local for VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
+// Execute this SQL using the service role key:
+const sql = `
+  ALTER TABLE athletes
+    ADD COLUMN IF NOT EXISTS instagram_handle  text,
+    ADD COLUMN IF NOT EXISTS profile_photo_url text,
+    ADD COLUMN IF NOT EXISTS media_urls        text[] DEFAULT '{}';
+`
+// Use supabase-js with service role to run rpc or direct query
+// Log: "Migration applied" or error details
+// Run: node scripts/run_migrations.js
 ```
 
-### Role score
-```js
-function roleScore(a, b) {
-  const roles = [a.partner_role, b.partner_role].sort().join('-');
-  const map = {
-    'lady-man':    1.0,
-    'either-man':  0.9,
-    'either-lady': 0.9,
-    'either-either': 0.7,
-    'lady-lady':   0.0,
-    'man-man':     0.0,
-  };
-  return map[roles] ?? 0.5;
-}
+After migration: verify columns exist by querying information_schema.columns.
+
+---
+
+## Phase 10 — Launch checklist (not started)
 ```
-
-### Location score
-```js
-// Haversine distance → score
-// 0km = 1.0, 500km = 0.5, 2000km+ = 0.1 (but still shown — they may relocate)
-function locationScore(a, b) {
-  if (!a.location_lat || !b.location_lat) return 0.5; // unknown = neutral
-  const dist = haversineKm(a.location_lat, a.location_lng, b.location_lat, b.location_lng);
-  const willing = Math.min(a.max_distance_km ?? 500, b.max_distance_km ?? 500);
-  if (dist <= willing) return Math.max(0.5, 1 - dist / (willing * 2));
-  return Math.max(0.1, 0.5 - (dist - willing) / 2000);
-}
-```
-
-### Composite score
-```js
-export function computeScore(a, b) {
-  if (a.discipline !== b.discipline) return null; // never match across disciplines
-  if (a.search_status !== 'active' || b.search_status !== 'active') return null;
-
-  const scores = {
-    height:   heightScore(a, b, a.discipline),
-    level:    levelScore(a, b),
-    role:     roleScore(a, b),
-    location: locationScore(a, b),
-    goals:    0.5 // placeholder until embeddings
-  };
-
-  const total = Object.entries(WEIGHTS).reduce(
-    (sum, [k, w]) => sum + (scores[k] * w), 0
-  );
-
-  return { ...scores, total: Math.round(total * 1000) / 1000 };
-}
+[ ] All Phase 8 changes passing npm run build
+[ ] Signup flow works end-to-end on mobile
+[ ] 30+ athletes visible after fresh signup
+[ ] Try-out request sends confirmation email
+[ ] Zero raw DB values in UI
+[ ] Zero em dashes in UI copy
+[ ] App deployed to Vercel with clean URL
+[ ] Demo account pre-created
+[ ] Screen recording ready
+[ ] Daily cron confirmed running in Supabase dashboard
 ```
 
 ---
 
-## Batch scoring script
-
-File: `scripts/score_all.js`
-
-Run this after seeding athletes. Computes the full N×N upper triangle.
-
-```
-1. SELECT all active athletes
-2. For each pair (i, j) where i < j and same discipline:
-   a. computeScore(athletes[i], athletes[j])
-   b. If score != null, upsert into compatibility_scores
-3. Log: X pairs scored, Y skipped (different discipline), Z errors
-4. Print top 10 scores as sanity check
-```
-
-Run via: `node scripts/score_all.js`
-Re-run whenever: new athletes added, algorithm version bumped.
-
----
-
-## API layer (Supabase Edge Functions or Next.js API routes)
-
-Keep it simple — use Supabase RLS + direct client queries where possible.
-Only create Edge Functions for:
-
-`GET /api/matches?athlete_id=X&limit=20`
-```sql
-SELECT
-  cs.*,
-  CASE WHEN cs.athlete_a_id = $1 THEN a2.* ELSE a1.* END as partner
-FROM compatibility_scores cs
-JOIN athletes a1 ON a1.id = cs.athlete_a_id
-JOIN athletes a2 ON a2.id = cs.athlete_b_id
-WHERE ($1 IN (cs.athlete_a_id, cs.athlete_b_id))
-  AND cs.total_score >= 0.3
-ORDER BY cs.total_score DESC
-LIMIT $2;
-```
-
-`POST /api/tryouts` — create tryout request, send email via Resend
-
-`PATCH /api/tryouts/:id` — confirm, complete, or cancel
-
----
-
-## UI — pages and what each does
-
-### Landing.jsx
-- Headline: "The right partner changes everything."
-- Two CTAs: "Find a partner" (→ /signup) and "I'm a coach" (→ /admin)
-- No login wall — show the concept first
-
-### Signup.jsx / Profile.jsx
-Multi-step form. Steps:
-1. Basics: name, email, age, discipline, partner role
-2. Physical: height (ft/in or cm toggle), weight (optional)
-3. Skating: level, club, coach, training hours/week
-4. Goals: free text + preferred partner level range + max travel distance
-5. Location: city/state (auto-geocode with Mapbox or Google)
-6. Review + submit
-
-On submit:
-- Create Supabase auth user
-- Insert into athletes table
-- Trigger score_all for this new athlete only (incremental, not full recompute)
-- Redirect to /matches
-
-### Matches.jsx
-- Shows ranked list of compatible athletes
-- Each card: name, level, location, height, compatibility score bar (color: green > 0.8, yellow > 0.6, orange > 0.4)
-- "Request tryout" button → opens TryoutModal
-- Filter sidebar: discipline (locked to user's), level range, distance, role
-
-### Tryouts.jsx
-- Two tabs: Sent requests / Received requests
-- Each row: partner name, proposed date, status badge
-- On "Confirmed": show location note and date
-- On "Completed": prompt for outcome rating → updates compatibility_scores feedback field (phase 2 flywheel)
-
-### Admin.jsx (clubs)
-- Requires club plan = 'enterprise'
-- Table of all athletes from their club
-- Sort by level, last active, match count
-- Export CSV button
-- Endorse athlete button (sets athlete.verified = true)
-
----
-
-## Environment variables (.env.local)
-
-```
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=     # server-side scripts only, never expose to browser
-RESEND_API_KEY=
-OPENAI_API_KEY=                # phase 2
-```
-
----
-
-## Build order — strict sequence
-
-Claude Code should always work in this order. Do not skip phases.
-
-```
-Phase 0 — Data pipeline
-  [done] 0.1 scrape.js — IcePartnerSearch scraper
-  [done] 0.2 normalize.js — raw → staging
-  [done] 0.3 001_schema.sql — all tables
-  [done] 0.4 002_seed.sql — insert normalized data
-  [done] 0.5 score_all.js — compute full matrix
-  [done] 0.6 Verify: run SELECT COUNT(*) on all tables, print top 10 scores
-
-Phase 1 — Auth + Profile
-  [done] 1.1 Supabase auth setup (email + password, no OAuth yet)
-  [done] 1.2 Multi-step signup form (Profile.jsx)
-  [done] 1.3 useAuth.js hook
-  [done] 1.4 RLS policies: athletes can only read/write their own row
-
-Phase 2 — Matching UI
-  [done] 2.1 /api/matches query
-  [done] 2.2 Matches.jsx + AthleteCard.jsx + CompatibilityBar.jsx
-  [done] 2.3 Filter sidebar (client-side filtering, no new queries)
-
-Phase 3 — Tryouts
-  [done] 3.1 TryoutModal.jsx
-  [done] 3.2 /api/tryouts POST (direct Supabase insert; email needs Edge Function when RESEND_API_KEY is set)
-  [done] 3.3 Tryouts.jsx (sent + received tabs)
-
-Phase 4 — Admin
-  [done] 4.1 Club auth (invite code → links athlete to club, sets is_admin=true)
-  [done] 4.2 Admin.jsx dashboard (athlete table, sort by level/activity/name)
-  [done] 4.3 Endorse (sets verified=true) + CSV export
-
-Phase 5 — Polish for pilot
-  [done] 5.1 Landing.jsx (How it works section, auth-aware CTAs)
-  [done] 5.2 Mobile responsive (nav, matches layout, cards, admin, wizard)
-  [done] 5.3 Empty states + loading skeletons (matches, tryouts)
-  [done] 5.4 Error handling + form validation (per-step guard, hide auth fields when already signed in)
-```
-
----
-
-## What to tell Claude Code at the start of each session
-
-```
-Read PLAN.md. 
-Current phase: [X.Y].
-Last completed: [describe what's done].
-Continue from: [next checkbox].
-Do not ask me questions — make reasonable decisions and note them in comments.
-Commit after each checkbox is complete.
-```
-
----
-
-## Decisions made (no need to re-litigate)
-
-- Vite + React (not Next.js) — simpler for MVP, no SSR needed yet
-- Supabase (not Firebase) — Postgres is essential for the scoring queries
-- Pre-computed scores (not real-time) — N athletes = N²/2 pairs, pre-compute on insert is fast enough until 10k+ athletes
-- No video analysis in Phase 1 — add after pilot validation
-- No payments in Phase 1 — free pilot, monetize after product-market fit confirmed
-- Scoring algorithm is pure JS (not SQL stored proc) for now — easier to iterate, migrate to Postgres function in Phase 2
-- athlete_a_id < athlete_b_id constraint — canonical ordering prevents duplicate score rows
-- score_version field — allows algorithm updates without deleting historical data
+## Decisions made
+- Pairs and ice dance only. No synchro.
+- Vite + React. No Next.js. Supabase. No Firebase.
+- Pre-computed score matrix. Fast enough until 10k+ athletes.
+- No video analysis until after pilot. No payments until product-market fit.
+- USFS IJS results are public HTML. No login needed.
+- Fuzzy match threshold 0.75.
