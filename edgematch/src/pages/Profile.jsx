@@ -60,7 +60,7 @@ function cmToFtIn(cm) {
 // Step components
 // ---------------------------------------------------------------------------
 
-function StepBasics({ data, onChange }) {
+function StepBasics({ data, onChange, isExistingUser }) {
   return (
     <div className="step">
       <h2>Step 1 — Basics</h2>
@@ -69,13 +69,20 @@ function StepBasics({ data, onChange }) {
         <input value={data.name} onChange={e => onChange('name', e.target.value)} placeholder="First Last" required />
       </label>
 
-      <label>Email *
-        <input type="email" value={data.email} onChange={e => onChange('email', e.target.value)} placeholder="you@example.com" required />
-      </label>
+      {!isExistingUser && (
+        <>
+          <label>Email *
+            <input type="email" value={data.email} onChange={e => onChange('email', e.target.value)} placeholder="you@example.com" required />
+          </label>
 
-      <label>Password *
-        <input type="password" value={data.password} onChange={e => onChange('password', e.target.value)} placeholder="At least 8 characters" minLength={8} required />
-      </label>
+          <label>Password *
+            <input type="password" value={data.password} onChange={e => onChange('password', e.target.value)} placeholder="At least 8 characters" minLength={8} required />
+          </label>
+        </>
+      )}
+      {isExistingUser && (
+        <p className="hint" style={{ marginBottom: 12 }}>Signed in as <strong>{data.email}</strong></p>
+      )}
 
       <label>Age
         <input type="number" value={data.age} onChange={e => onChange('age', e.target.value)} min={8} max={99} placeholder="e.g. 17" />
@@ -299,24 +306,32 @@ const REQUIRED = [
 ];
 
 export default function Profile() {
-  const [step, setStep]   = useState(0);
-  const [data, setData]   = useState(EMPTY);
-  const [error, setError] = useState(null);
-  const [saving, setSaving] = useState(false);
   const { user, refetchAthlete } = useAuth();
   const navigate = useNavigate();
+
+  const [step, setStep]   = useState(0);
+  const [data, setData]   = useState(() => ({
+    ...EMPTY,
+    // pre-fill email if user is already signed in
+    email: user?.email ?? '',
+  }));
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   function onChange(field, value) {
     setData(prev => ({ ...prev, [field]: value }));
   }
 
   function validateStep() {
-    for (const field of REQUIRED[step]) {
+    const required = step === 0 && user
+      ? REQUIRED[0].filter(f => f !== 'email' && f !== 'password')
+      : REQUIRED[step];
+    for (const field of required) {
       if (!data[field] && data[field] !== 0) {
         return `${field.replace(/_/g, ' ')} is required`;
       }
     }
-    if (step === 0 && data.password.length < 8) return 'Password must be at least 8 characters';
+    if (step === 0 && !user && data.password.length < 8) return 'Password must be at least 8 characters';
     if (step === 1 && data.height_cm < 100) return 'Please enter a valid height';
     return null;
   }
@@ -426,7 +441,7 @@ export default function Profile() {
       </div>
 
       <form onSubmit={e => e.preventDefault()}>
-        <StepComponent data={data} onChange={onChange} />
+        <StepComponent data={data} onChange={onChange} isExistingUser={!!user} />
 
         {error && <p className="form-error">{error}</p>}
 

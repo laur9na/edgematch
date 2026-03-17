@@ -56,6 +56,25 @@ body {
 .landing-stats strong { font-size: 2rem; color: var(--blue); }
 .landing-stats span   { font-size: .85rem; color: var(--muted); }
 
+.landing-how { margin-top: 64px; }
+.landing-how h2 { font-size: 1.5rem; margin-bottom: 28px; color: var(--blue-dk); }
+.how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.how-step {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; display: flex; flex-direction: column; gap: 8px;
+}
+.how-step-n {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--blue); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .9rem; margin-bottom: 4px;
+}
+.how-step h3 { font-size: 1rem; margin: 0; }
+.how-step p  { font-size: .875rem; color: var(--muted); margin: 0; }
+
+.landing-footer-note { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
+.landing-footer-note p { font-size: .875rem; color: var(--muted); line-height: 1.6; }
+.landing-footer-note a { color: var(--blue); }
+
 /* ---------- Buttons ---------- */
 .btn-primary {
   background: var(--blue); color: #fff; border: none;
@@ -421,3 +440,59 @@ input:focus, select:focus, textarea:focus {
 }
 .btn-endorse:hover { background: var(--ice); }
 .btn-endorse:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---------- Mobile responsive (≤ 640px) ---------- */
+@media (max-width: 640px) {
+  /* Nav */
+  .nav { padding: 0 16px; }
+  .nav-links { gap: 12px; }
+  .nav-links a { font-size: .8rem; }
+
+  /* Landing */
+  .landing { padding: 40px 16px 32px; }
+  .landing-hero h1 { font-size: 2rem; }
+  .landing-hero p  { font-size: 1rem; }
+  .how-steps { grid-template-columns: 1fr; }
+  .landing-stats { gap: 24px; }
+
+  /* Matches — stack sidebar above cards */
+  .matches-layout { flex-direction: column; }
+  .matches-sidebar {
+    width: 100%; min-width: 0; border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .matches-sidebar.collapsed { width: 100%; }
+  .matches-main { padding: 20px 16px; }
+  .card-grid { grid-template-columns: 1fr; }
+
+  /* Profile wizard */
+  .profile-wizard { padding: 0 16px 40px; }
+  .wizard-progress { gap: 4px; }
+  .dot-label { font-size: .6rem; }
+  .wizard-nav button { padding: 10px 18px; font-size: .9rem; }
+
+  /* Auth page */
+  .auth-page { margin: 24px 16px; padding: 28px 20px; }
+
+  /* Modal */
+  .modal { padding: 20px 16px; }
+
+  /* Tryouts */
+  .tryout-row-main { flex-direction: column; gap: 8px; }
+  .tryouts-tabs { overflow-x: auto; }
+
+  /* Admin */
+  .admin-header { flex-direction: column; }
+  .admin-toolbar { flex-direction: column; align-items: flex-start; }
+  .admin-gate { margin: 24px 16px; padding: 28px 20px; }
+
+  /* Page content */
+  .page-content { padding: 24px 16px; }
+}
+
+/* Tablet (641–1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .how-steps { grid-template-columns: repeat(3, 1fr); }
+  .matches-sidebar { width: 180px; min-width: 180px; }
+  .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+}

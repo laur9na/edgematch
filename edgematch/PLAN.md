@@ -537,10 +537,10 @@ Phase 4 — Admin
   [done] 4.3 Endorse (sets verified=true) + CSV export
 
 Phase 5 — Polish for pilot
-  [ ] 5.1 Landing.jsx
-  [ ] 5.2 Mobile responsive
-  [ ] 5.3 Empty states + loading skeletons
-  [ ] 5.4 Error handling + form validation
+  [done] 5.1 Landing.jsx (How it works section, auth-aware CTAs)
+  [done] 5.2 Mobile responsive (nav, matches layout, cards, admin, wizard)
+  [done] 5.3 Empty states + loading skeletons (matches, tryouts)
+  [done] 5.4 Error handling + form validation (per-step guard, hide auth fields when already signed in)
 ```
 
 ---
