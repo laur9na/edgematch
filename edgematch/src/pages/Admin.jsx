@@ -20,6 +20,13 @@ const LEVEL_LABELS = {
 const ROLE_LABELS = { lady: 'Lady', man: 'Man', either: 'Either' };
 const STATUS_LABELS = { active: 'Looking', matched: 'Matched', paused: 'Paused', inactive: 'Inactive' };
 
+function lastInitial(fullName) {
+  if (!fullName) return '';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 // ---- Club invite gate ----
 function ClubAccessGate({ onGranted }) {
   const { athlete, refetchAthlete } = useAuth();
@@ -234,7 +241,7 @@ function Dashboard({ athlete }) {
               <tbody>
                 {sorted.map(a => (
                   <tr key={a.id} className={a.verified ? '' : 'row-unverified'}>
-                    <td className="td-name">{a.name}</td>
+                    <td className="td-name">{lastInitial(a.name)}</td>
                     <td>{LEVEL_LABELS[a.skating_level] ?? a.skating_level}</td>
                     <td>{ROLE_LABELS[a.partner_role] ?? a.partner_role}</td>
                     <td>{a.age ?? 'N/A'}</td>
@@ -246,7 +253,7 @@ function Dashboard({ athlete }) {
                     <td className="td-muted">
                       {a.last_active_at
                         ? new Date(a.last_active_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                        : '—'}
+                        : 'Never'}
                     </td>
                     <td>
                       {a.verified
