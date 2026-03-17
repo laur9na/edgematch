@@ -245,6 +245,113 @@ input:focus, select:focus, textarea:focus {
 .compat-bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
 .compat-bar-label { font-size: .8rem; font-weight: 600; min-width: 34px; text-align: right; }
 
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: 16px;
+}
+.modal {
+  background: #fff; border-radius: var(--radius); width: 100%; max-width: 440px;
+  padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,.18);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h2 { margin: 0; font-size: 1.2rem; }
+.modal-close {
+  background: none; border: none; font-size: 1.4rem; cursor: pointer;
+  color: var(--muted); line-height: 1; padding: 0 4px;
+}
+.modal-close:hover { color: var(--text); }
+.modal-partner-name { color: var(--muted); font-size: .9rem; margin: -8px 0 0; }
+.modal-footer {
+  display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px;
+}
+.modal form { display: flex; flex-direction: column; gap: 0; }
+
+/* ---------- Tryouts page ---------- */
+.tryouts-header { margin-bottom: 20px; }
+.tryouts-header h1 { margin: 0; }
+
+.tryouts-tabs {
+  display: flex; gap: 0; border-bottom: 2px solid var(--border);
+  margin-bottom: 24px;
+}
+.tab-btn {
+  background: none; border: none; padding: 10px 20px;
+  font-size: .95rem; cursor: pointer; color: var(--muted);
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+}
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+.tab-btn:hover:not(.active) { color: var(--text); }
+.tab-count {
+  background: var(--blue); color: #fff;
+  font-size: .7rem; padding: 1px 6px; border-radius: 999px; font-weight: 600;
+}
+
+.tryout-list { display: flex; flex-direction: column; gap: 12px; }
+
+.tryout-row {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.tryout-row-main {
+  display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+}
+.tryout-partner { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 120px; }
+.tryout-name { font-weight: 600; font-size: .95rem; }
+.tryout-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 120px; }
+.tryout-date { font-size: .9rem; }
+.tryout-meta { font-size: .8rem; color: var(--muted); }
+.tryout-meta.muted { color: #9ca3af; }
+.tryout-outcome { font-size: .75rem; color: var(--muted); margin-top: 4px; font-style: italic; }
+.tryout-status-col { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.tryout-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Status badges */
+.status-badge {
+  font-size: .72rem; padding: 2px 8px; border-radius: 999px; font-weight: 600;
+}
+.status-pending   { background: #fef9c3; color: #713f12; }
+.status-confirmed { background: #d1fae5; color: #065f46; }
+.status-done      { background: #e0e7ff; color: #3730a3; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
+
+/* Action buttons in tryout rows */
+.btn-action {
+  padding: 5px 14px; border-radius: var(--radius); font-size: .82rem;
+  cursor: pointer; border: 1px solid var(--border); background: #fff;
+}
+.btn-confirm  { border-color: var(--green); color: var(--green); }
+.btn-confirm:hover  { background: #d1fae5; }
+.btn-decline  { border-color: var(--red); color: var(--red); }
+.btn-decline:hover  { background: #fee2e2; }
+.btn-complete { border-color: var(--blue); color: var(--blue); }
+.btn-complete:hover { background: var(--ice); }
+
+/* Outcome picker */
+.outcome-picker {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 12px; background: var(--ice); border-radius: var(--radius);
+  font-size: .85rem;
+}
+.btn-outcome {
+  padding: 4px 14px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: #fff; cursor: pointer; font-size: .82rem;
+}
+.btn-outcome:hover { border-color: var(--blue); color: var(--blue); }
+
+/* Tryout skeletons */
+.tryout-skeleton-list { display: flex; flex-direction: column; gap: 12px; }
+.tryout-skeleton {
+  height: 80px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%; border-radius: var(--radius);
+  animation: shimmer 1.4s infinite;
+}
+
 /* ---------- Skeleton / empty ---------- */
 .card-skeleton {
   height: 200px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);

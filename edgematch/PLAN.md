@@ -527,9 +527,9 @@ Phase 2 — Matching UI
   [done] 2.3 Filter sidebar (client-side filtering, no new queries)
 
 Phase 3 — Tryouts
-  [ ] 3.1 TryoutModal.jsx
-  [ ] 3.2 /api/tryouts POST + email via Resend
-  [ ] 3.3 Tryouts.jsx (sent + received tabs)
+  [done] 3.1 TryoutModal.jsx
+  [done] 3.2 /api/tryouts POST (direct Supabase insert; email needs Edge Function when RESEND_API_KEY is set)
+  [done] 3.3 Tryouts.jsx (sent + received tabs)
 
 Phase 4 — Admin
   [ ] 4.1 Club auth (separate invite flow)

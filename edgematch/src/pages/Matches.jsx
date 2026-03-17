@@ -3,10 +3,10 @@
  * Ranked match list with client-side filter sidebar.
  */
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useMatches } from '../hooks/useMatches';
 import AthleteCard from '../components/AthleteCard';
+import TryoutModal from '../components/TryoutModal';
 
 const LEVELS = ['pre_juvenile', 'juvenile', 'intermediate', 'novice', 'junior', 'senior', 'adult'];
 const LEVEL_LABELS = {
@@ -26,10 +26,10 @@ const DEFAULT_FILTERS = {
 export default function Matches() {
   const { athlete, loading: authLoading } = useAuth();
   const { matches, loading, error } = useMatches(athlete?.id);
-  const navigate = useNavigate();
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [tryoutMatch, setTryoutMatch] = useState(null); // match currently being requested
 
   function setFilter(key, value) {
     setFilters(f => ({ ...f, [key]: value }));
@@ -59,8 +59,7 @@ export default function Matches() {
   }, [matches]);
 
   function handleRequestTryout(match) {
-    // Phase 3 will open TryoutModal — navigate to tryouts for now
-    navigate('/tryouts');
+    setTryoutMatch(match);
   }
 
   // --- render states ---
@@ -180,6 +179,14 @@ export default function Matches() {
           </div>
         )}
       </main>
+
+      {tryoutMatch && (
+        <TryoutModal
+          match={tryoutMatch}
+          onClose={() => setTryoutMatch(null)}
+          onSuccess={() => setTryoutMatch(null)}
+        />
+      )}
     </div>
   );
 }
