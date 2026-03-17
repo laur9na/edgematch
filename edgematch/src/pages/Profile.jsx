@@ -347,7 +347,18 @@ export default function Profile() {
       const userId = authData.user?.id;
       if (!userId) throw new Error('Sign-up succeeded but no user ID returned');
 
-      // 2. Insert athlete row
+      // 2. Ensure an active session exists before the RLS-gated INSERT.
+      //    With email confirmation disabled (mailer_autoconfirm=true) signUp()
+      //    returns a session; if for any reason it doesn't, sign in explicitly.
+      if (!authData.session) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        if (signInError) throw signInError;
+      }
+
+      // 3. Insert athlete row (RLS: auth.uid() must equal user_id)
       const { error: insertError } = await supabase.from('athletes').insert({
         user_id:             userId,
         name:                data.name,
@@ -372,6 +383,9 @@ export default function Profile() {
         search_status:       'active',
       });
       if (insertError) throw insertError;
+
+      // 4. Score this athlete against all existing athletes
+      await supabase.rpc('score_new_athlete', { new_athlete_id: userId });
 
       await refetchAthlete();
       navigate('/matches');
