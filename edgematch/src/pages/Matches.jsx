@@ -205,14 +205,14 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
         Discipline
       </div>
       {['ice_dance', 'pairs'].map(val => (
-        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', marginBottom: 6, cursor: 'pointer' }}>
+        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', cursor: 'pointer', marginBottom: 6 }}>
           <input
             type="checkbox"
             checked={disciplines.includes(val)}
             onChange={() => toggleDiscipline(val)}
-            style={{ accentColor: '#1a56db' }}
+            style={{ accentColor: '#1a56db', width: 13, height: 13, flexShrink: 0, margin: 0 }}
           />
-          {DISCIPLINE_LABEL[val]}
+          <span>{DISCIPLINE_LABEL[val]}</span>
         </label>
       ))}
 
@@ -223,14 +223,14 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
         Role
       </div>
       {['man', 'lady', 'either'].map(val => (
-        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', marginBottom: 6, cursor: 'pointer' }}>
+        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', cursor: 'pointer', marginBottom: 6 }}>
           <input
             type="checkbox"
             checked={roles.includes(val)}
             onChange={() => toggleRole(val)}
-            style={{ accentColor: '#1a56db' }}
+            style={{ accentColor: '#1a56db', width: 13, height: 13, flexShrink: 0, margin: 0 }}
           />
-          {ROLE_LABEL[val]}
+          <span>{ROLE_LABEL[val]}</span>
         </label>
       ))}
     </aside>
