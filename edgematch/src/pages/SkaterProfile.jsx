@@ -42,7 +42,11 @@ function PlaceBadge({ place }) {
   else if (p === 2) { bg = '#f1f5f9'; color = '#475569'; }
   else if (p === 3) { bg = '#fce8dc'; color = '#9a3412'; }
   return (
-    <span style={{ background: bg, color, padding: '2px 7px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>
+    <span style={{
+      background: bg, color, fontSize: 11, fontWeight: 700,
+      width: 24, height: 24, borderRadius: '50%', display: 'inline-flex',
+      alignItems: 'center', justifyContent: 'center',
+    }}>
       {place}
     </span>
   );
@@ -159,7 +163,7 @@ export default function SkaterProfile() {
     if (!id) return;
     supabase
       .from('competition_results')
-      .select('event_name, event_year, level, segment, placement, total_score')
+      .select('*')
       .eq('athlete_id', id)
       .order('event_year', { ascending: false })
       .then(({ data }) => setResults(data ?? []));
