@@ -50,3 +50,4 @@ VERCEL DEPLOYMENT — 4 manual steps:
   4. Click Deploy. vercel.json handles SPA routing automatically.
 [AGENT-2] [DONE] Phase 15.5 — scripts/create_storage_bucket.js created and ran: bucket "athlete-media" created in Supabase Storage (private, jpg/png/webp, 5MB limit). Git remote verified: https://github.com/laur9na/edgematch.git. All commits pushed.
 [AGENT-3] [FIX] QA pass: removed photo upload (handlePhotoUpload, athlete-photos refs, Upload photo button) from Profile.jsx; added sessionStorage persistence for Matches filter state (survives navigate(-1)); removed em dash from SkaterProfile Phase 15.6 header; checkboxes confirmed left-aligned; build+push clean
+[AGENT-1] [DONE] SkaterProfile: competition results query by skater_name fuzzy ilike match (firstName+lastName fallback to lastName only); club lookup via joined clubs(*) then ilike clubs.name then raw club_name text fallback; build+push clean
