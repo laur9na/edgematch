@@ -349,7 +349,7 @@ export default function Matches() {
         {error && <p style={{ color: '#dc2626', fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
         {loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
             {[...Array(4)].map((_, i) => (
               <div key={i} className="card-skeleton" style={{ height: 200 }} />
             ))}
@@ -363,7 +363,7 @@ export default function Matches() {
         )}
 
         {!loading && filtered.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
             {filtered.map((match, i) => (
               <AthleteCard
                 key={match.id}
