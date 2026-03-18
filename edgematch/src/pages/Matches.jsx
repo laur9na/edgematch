@@ -242,12 +242,18 @@ export default function Matches() {
   const { athlete, loading: authLoading } = useAuth();
   const { matches, loading, error } = useMatches(athlete?.id);
 
-  const [strength, setStrength]       = useState([40, 100]);
-  const [distance, setDistance]       = useState(500);
-  const [levels, setLevels]           = useState([]);
-  const [disciplines, setDisciplines] = useState([]);
-  const [roles, setRoles]             = useState([]);
-  const [sort, setSort]               = useState('score');
+  // Restore filter state from sessionStorage so it survives navigate(-1)
+  const saved = (() => { try { return JSON.parse(sessionStorage.getItem('matchFilters') || 'null'); } catch { return null; } })();
+  const [strength, setStrength]       = useState(saved?.strength       ?? [40, 100]);
+  const [distance, setDistance]       = useState(saved?.distance       ?? 500);
+  const [levels, setLevels]           = useState(saved?.levels         ?? []);
+  const [disciplines, setDisciplines] = useState(saved?.disciplines    ?? []);
+  const [roles, setRoles]             = useState(saved?.roles          ?? []);
+  const [sort, setSort]               = useState(saved?.sort           ?? 'score');
+
+  useEffect(() => {
+    sessionStorage.setItem('matchFilters', JSON.stringify({ strength, distance, levels, disciplines, roles, sort }));
+  }, [strength, distance, levels, disciplines, roles, sort]);
 
   const filtered = useMemo(() => {
     let list = matches.filter(m => {

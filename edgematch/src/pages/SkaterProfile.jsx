@@ -1,5 +1,5 @@
 /**
- * SkaterProfile.jsx — Phase 15.6
+ * SkaterProfile.jsx (Phase 15.6)
  * Single-column, full-width card. No right sidebar.
  * Header: avatar + name + try-out button / meta row / score bar / dot row.
  */

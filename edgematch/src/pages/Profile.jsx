@@ -586,8 +586,6 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
   });
   const [error,  setError]      = useState(null);
   const [saving, setSaving]     = useState(false);
-  const [photoUrl, setPhotoUrl] = useState(athlete?.profile_photo_url ?? null);
-  const [photoUploading, setPhotoUploading] = useState(false);
 
   const { pct } = completeness(isEdit ? { ...athlete, ...data } : null);
 
@@ -595,33 +593,6 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
     setData(prev => ({ ...prev, [field]: value }));
   }
 
-  async function handlePhotoUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError('Photo must be under 5MB'); return; }
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setError('Photo must be JPG, PNG, or WebP');
-      return;
-    }
-    if (!athlete?.id) { setError('Save your profile first, then upload a photo'); return; }
-    setPhotoUploading(true);
-    setError(null);
-    const ext = file.name.split('.').pop();
-    const path = `${athlete.id}.${ext}`;
-    const { error: uploadErr } = await supabase.storage
-      .from('athlete-photos')
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (uploadErr) { setError(uploadErr.message); setPhotoUploading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from('athlete-photos').getPublicUrl(path);
-    const { error: updateErr } = await supabase
-      .from('athletes')
-      .update({ profile_photo_url: publicUrl })
-      .eq('id', athlete.id);
-    if (updateErr) { setError(updateErr.message); setPhotoUploading(false); return; }
-    setPhotoUrl(publicUrl);
-    await refetchAthlete();
-    setPhotoUploading(false);
-  }
 
   function validateStep() {
     const required = step === 0 && user
@@ -725,46 +696,12 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
 
   return (
     <div className="profile-wizard">
-      {/* Completeness bar + photo upload (edit mode only) */}
+      {/* Completeness bar (edit mode only) */}
       {isEdit && (
         <div style={{
           background: '#fff', border: '1px solid #d4e0f5', borderRadius: 10,
           padding: '12px 16px', marginBottom: 24,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-            {photoUrl ? (
-              <img
-                src={photoUrl}
-                alt=""
-                style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-              />
-            ) : (
-              <div style={{
-                width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                background: '#dce8fc', color: '#1a56db',
-                fontSize: 14, fontWeight: 700,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {getInitials(data.name)}
-              </div>
-            )}
-            <label style={{
-              background: '#f0f4fb', color: '#1a3a6b',
-              border: '1px solid #d4e0f5', borderRadius: 7,
-              padding: '6px 12px', fontSize: 12, fontWeight: 600,
-              cursor: photoUploading ? 'not-allowed' : 'pointer',
-              opacity: photoUploading ? 0.6 : 1,
-            }}>
-              {photoUploading ? 'Uploading...' : 'Upload photo'}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handlePhotoUpload}
-                style={{ display: 'none' }}
-                disabled={photoUploading}
-              />
-            </label>
-          </div>
           <div style={{ fontSize: 12, color: '#4a5a7a', marginBottom: 6 }}>
             <span style={{ fontWeight: 600 }}>{pct}% complete</span>
           </div>
