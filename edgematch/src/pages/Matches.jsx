@@ -19,18 +19,20 @@ const ROLE_LABEL = {
   man: 'Skates as man', lady: 'Skates as lady', either: 'Either role',
 };
 
-const SORT_OPTIONS = [
-  { value: 'score',    label: 'Match strength' },
-  { value: 'distance', label: 'Distance' },
-  { value: 'level',    label: 'Level' },
-  { value: 'recent',   label: 'Recently active' },
-];
-
 const LEVEL_ORDER = ['pre_juvenile','juvenile','intermediate','novice','junior','senior','adult'];
+
+const KNOB = {
+  width: 16, height: 16, borderRadius: '50%', background: '#fff',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08)',
+  position: 'absolute', top: '50%', transform: 'translate(-50%,-50%)',
+  pointerEvents: 'none',
+};
 
 // Dual-handle range slider using two overlapping native inputs
 function DualRangeSlider({ min, max, value, onChange }) {
   const [lo, hi] = value;
+  const loPct = ((lo - min) / (max - min)) * 100;
+  const hiPct = ((hi - min) / (max - min)) * 100;
   return (
     <div style={{ position: 'relative', height: 20, margin: '8px 4px 4px' }}>
       <div style={{
@@ -39,10 +41,11 @@ function DualRangeSlider({ min, max, value, onChange }) {
       }}>
         <div style={{
           position: 'absolute', height: '100%', background: '#1a56db', borderRadius: 99,
-          left: `${((lo - min) / (max - min)) * 100}%`,
-          right: `${((max - hi) / (max - min)) * 100}%`,
+          left: `${loPct}%`, right: `${100 - hiPct}%`,
         }} />
       </div>
+      <div style={{ ...KNOB, left: `${loPct}%` }} />
+      <div style={{ ...KNOB, left: `${hiPct}%` }} />
       <input type="range" min={min} max={max} value={lo}
         onChange={e => onChange([Math.min(+e.target.value, hi), hi])}
         style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0 }}
@@ -57,6 +60,7 @@ function DualRangeSlider({ min, max, value, onChange }) {
 
 // Single-handle range slider
 function SingleRangeSlider({ min, max, step, value, onChange }) {
+  const pct = ((value - min) / (max - min)) * 100;
   return (
     <div style={{ position: 'relative', height: 20, margin: '8px 4px 4px' }}>
       <div style={{
@@ -65,9 +69,10 @@ function SingleRangeSlider({ min, max, step, value, onChange }) {
       }}>
         <div style={{
           position: 'absolute', height: '100%', background: '#1a56db', borderRadius: 99,
-          left: 0, right: `${((max - value) / (max - min)) * 100}%`,
+          left: 0, right: `${100 - pct}%`,
         }} />
       </div>
+      <div style={{ ...KNOB, left: `${pct}%` }} />
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(+e.target.value)}
         style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0 }}
@@ -158,13 +163,8 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
         Discipline
       </div>
       {['ice_dance', 'pairs'].map(val => (
-        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', cursor: 'pointer', marginBottom: 6 }}>
-          <input
-            type="checkbox"
-            checked={disciplines.includes(val)}
-            onChange={() => toggleDiscipline(val)}
-            style={{ accentColor: '#1a56db', width: 13, height: 13, flexShrink: 0, margin: 0 }}
-          />
+        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', marginBottom: 6, cursor: 'pointer' }}>
+          <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#1a56db' }} checked={disciplines.includes(val)} onChange={() => toggleDiscipline(val)} />
           <span>{DISCIPLINE_LABEL[val]}</span>
         </label>
       ))}
@@ -176,13 +176,8 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
         Role
       </div>
       {['man', 'lady', 'either'].map(val => (
-        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', cursor: 'pointer', marginBottom: 6 }}>
-          <input
-            type="checkbox"
-            checked={roles.includes(val)}
-            onChange={() => toggleRole(val)}
-            style={{ accentColor: '#1a56db', width: 13, height: 13, flexShrink: 0, margin: 0 }}
-          />
+        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', marginBottom: 6, cursor: 'pointer' }}>
+          <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#1a56db' }} checked={roles.includes(val)} onChange={() => toggleRole(val)} />
           <span>{ROLE_LABEL[val]}</span>
         </label>
       ))}
@@ -202,11 +197,10 @@ export default function Matches() {
   const [levels, setLevels]           = useState(saved?.levels         ?? []);
   const [disciplines, setDisciplines] = useState(saved?.disciplines    ?? []);
   const [roles, setRoles]             = useState(saved?.roles          ?? []);
-  const [sort, setSort]               = useState(saved?.sort           ?? 'score');
 
   useEffect(() => {
-    sessionStorage.setItem('matchFilters', JSON.stringify({ strength, distance, levels, disciplines, roles, sort }));
-  }, [strength, distance, levels, disciplines, roles, sort]);
+    sessionStorage.setItem('matchFilters', JSON.stringify({ strength, distance, levels, disciplines, roles }));
+  }, [strength, distance, levels, disciplines, roles]);
 
   const filtered = useMemo(() => {
     let list = matches.filter(m => {
@@ -227,23 +221,10 @@ export default function Matches() {
       return true;
     });
 
-    if (sort === 'score') {
-      list = [...list].sort((a, b) => b.total_score - a.total_score);
-    } else if (sort === 'distance') {
-      list = [...list].sort((a, b) => (b.location_score ?? 0) - (a.location_score ?? 0));
-    } else if (sort === 'level') {
-      list = [...list].sort((a, b) => {
-        const ai = LEVEL_ORDER.indexOf(a.partner?.skating_level);
-        const bi = LEVEL_ORDER.indexOf(b.partner?.skating_level);
-        return ai - bi;
-      });
-    } else if (sort === 'recent') {
-      // Proxy: sort by partner id desc (no last_active field)
-      list = [...list].sort((a, b) => (b.partner?.id ?? 0) - (a.partner?.id ?? 0));
-    }
+    list = [...list].sort((a, b) => b.total_score - a.total_score);
 
     return list;
-  }, [matches, strength, distance, levels, disciplines, roles, sort]);
+  }, [matches, strength, distance, levels, disciplines, roles]);
 
   if (authLoading) return <div className="loading">Loading...</div>;
 
@@ -259,8 +240,6 @@ export default function Matches() {
     );
   }
 
-  const totalVisible = matches.filter(m => m.total_score >= 0.40).length;
-
   return (
     <div style={{ display: 'flex', background: '#f4f7fb', minHeight: 'calc(100vh - 56px)', alignItems: 'flex-start' }}>
       <Sidebar
@@ -272,32 +251,9 @@ export default function Matches() {
       />
 
       <main style={{ flex: 1, padding: '24px 24px' }}>
-        {/* Header row */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          marginBottom: 18,
-        }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f2a5e', letterSpacing: '-0.3px' }}>
-              Your matches
-            </h1>
-            <span style={{ fontSize: 12, color: '#7a8aaa' }}>
-              {loading ? '...' : `${totalVisible} skaters`}
-            </span>
-          </div>
-          <select
-            value={sort}
-            onChange={e => setSort(e.target.value)}
-            style={{
-              border: '1px solid #d4e0f5', borderRadius: 7, padding: '6px 10px',
-              fontSize: 12, color: '#4a5a7a', background: '#fff', cursor: 'pointer',
-            }}
-          >
-            {SORT_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f2a5e', letterSpacing: '-0.3px', marginBottom: 18 }}>
+          Your matches
+        </h1>
 
         {error && <p style={{ color: '#dc2626', fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
