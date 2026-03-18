@@ -35,6 +35,8 @@
 [AGENT-2] [DONE] Phase 12.3 — scripts/enrich_clubs.js: exits cleanly when OPENAI_API_KEY not set; pre-flights 011 migration.
 [AGENT-2] [DONE] Phase 14 — .env.local.example updated (added ANTHROPIC_API_KEY), vite.config.js explicit outDir:dist, build passes. vercel.json already correct.
 
+[AGENT-3] [FIX] QA on Phase 13+12.4: removed 3 em dashes from SkaterProfile comments, re-applied last-initial-only rule (Agent 1 rewrite dropped lastInitial fn again), build+push clean
+
 VERCEL DEPLOYMENT — 4 manual steps:
   1. Go to vercel.com > "Add New Project" > Import from GitHub: laur9na/edgematch
   2. Framework: Vite (auto-detected). Build command: npm run build. Output dir: dist
