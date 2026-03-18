@@ -30,3 +30,15 @@
 [AGENT-3] [CLEAN] QA on Agent 2 script fixes: build clean, 0 console.log, 0 em dashes, 0 synchro, 0 forbidden strings. Created vercel.json with SPA rewrite rule (was missing). SkaterProfile empty-field safety confirmed.
 [AGENT-1] [DONE] Small fixes: Profile Instagram shows "Instagram: [handle]" (muted label, blue value), Goals shows "Goals: [text]", removed max travel distance field from Goals step
 [AGENT-1] [DONE] Phase 13+12.4: SkaterProfile rewritten — full name, clubs(*) join, navigate(-1) back link, club contact section (website/email/phone), competition results from separate query, build clean
+[AGENT-2] [DONE] Phase 12.1 — created supabase/migrations/011_clubs_enrich.sql (ADD COLUMN website, phone, name_aliases to clubs). Needs dashboard paste to apply.
+[AGENT-2] [DONE] Phase 12.2 — scripts/seed_clubs.js: 1 club created (psc), 2 athletes linked.
+[AGENT-2] [DONE] Phase 12.3 — scripts/enrich_clubs.js: exits cleanly when OPENAI_API_KEY not set; pre-flights 011 migration.
+[AGENT-2] [DONE] Phase 14 — .env.local.example updated (added ANTHROPIC_API_KEY), vite.config.js explicit outDir:dist, build passes. vercel.json already correct.
+
+VERCEL DEPLOYMENT — 4 manual steps:
+  1. Go to vercel.com > "Add New Project" > Import from GitHub: laur9na/edgematch
+  2. Framework: Vite (auto-detected). Build command: npm run build. Output dir: dist
+  3. Add Environment Variables (copy from .env.local):
+       VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
+       RESEND_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
+  4. Click Deploy. vercel.json handles SPA routing automatically.
