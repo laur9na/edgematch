@@ -386,35 +386,40 @@ export default function SkaterProfile() {
             }}>
               Club
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e', marginBottom: 6 }}>
-              {club.name}
+            <div style={{
+              background: '#f4f7fb', border: '1px solid #d4e0f5',
+              borderRadius: 10, padding: 14,
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e', marginBottom: 6 }}>
+                {club.name}
+              </div>
+              {club.website && (
+                <div style={{ marginBottom: 4 }}>
+                  <a
+                    href={club.website}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
+                  >
+                    Visit website
+                  </a>
+                </div>
+              )}
+              {club.contact_email && (
+                <div style={{ marginBottom: 4 }}>
+                  <a
+                    href={`mailto:${club.contact_email}`}
+                    style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
+                  >
+                    {club.contact_email}
+                  </a>
+                </div>
+              )}
+              {club.phone && (
+                <div style={{ fontSize: 12, color: '#4a5a7a' }}>
+                  {club.phone}
+                </div>
+              )}
             </div>
-            {club.website && (
-              <div style={{ marginBottom: 4 }}>
-                <a
-                  href={club.website}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
-                >
-                  Visit website
-                </a>
-              </div>
-            )}
-            {club.contact_email && (
-              <div style={{ marginBottom: 4 }}>
-                <a
-                  href={`mailto:${club.contact_email}`}
-                  style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
-                >
-                  {club.contact_email}
-                </a>
-              </div>
-            )}
-            {club.phone && (
-              <div style={{ fontSize: 12, color: '#4a5a7a' }}>
-                {club.phone}
-              </div>
-            )}
           </div>
         )}
 
