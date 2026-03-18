@@ -1,7 +1,8 @@
 /**
  * SkaterProfile.jsx (Phase 15.6)
  * Single-column, full-width card. No right sidebar.
- * Header: avatar + name + try-out button / meta row / score bar / dot row.
+ * Competition results: fuzzy match by skater_name.
+ * Club: joined club_id first, then fuzzy club_name match, then raw text fallback.
  */
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -52,7 +53,6 @@ function PlaceBadge({ place }) {
   );
 }
 
-// Inline dot indicator: "Label ●●●●○"
 function DotItem({ label, value }) {
   const filled = Math.round((value ?? 0) * 5);
   return (
@@ -142,10 +142,12 @@ export default function SkaterProfile() {
 
   const [partner, setPartner]     = useState(null);
   const [results, setResults]     = useState([]);
+  const [club, setClub]           = useState(null);
   const [matchRow, setMatchRow]   = useState(null);
   const [loading, setLoading]     = useState(true);
   const [showModal, setShowModal] = useState(false);
 
+  // Load athlete with clubs join
   useEffect(() => {
     if (!id) return;
     supabase
@@ -155,20 +157,52 @@ export default function SkaterProfile() {
       .single()
       .then(({ data }) => {
         setPartner(data ?? null);
+        if (data?.clubs) setClub(data.clubs);
         setLoading(false);
       });
   }, [id]);
 
+  // Load competition results by skater_name fuzzy match, fall back to last name only
   useEffect(() => {
-    if (!id) return;
+    if (!partner?.name) return;
+    const parts = partner.name.trim().split(/\s+/);
+    const firstName = parts[0] ?? '';
+    const lastName = parts[parts.length - 1] ?? '';
+
     supabase
       .from('competition_results')
       .select('*')
-      .eq('athlete_id', id)
+      .ilike('skater_name', `%${firstName}%${lastName}%`)
       .order('event_year', { ascending: false })
-      .then(({ data }) => setResults(data ?? []));
-  }, [id]);
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setResults(data);
+        } else if (lastName) {
+          // Fallback: last name only
+          supabase
+            .from('competition_results')
+            .select('*')
+            .ilike('skater_name', `%${lastName}%`)
+            .order('event_year', { ascending: false })
+            .then(({ data: fb }) => setResults(fb ?? []));
+        }
+      });
+  }, [partner?.name]);
 
+  // If no club from join, try fuzzy match on club_name string
+  useEffect(() => {
+    if (!partner || partner.clubs || !partner.club_name) return;
+    supabase
+      .from('clubs')
+      .select('*')
+      .ilike('name', `%${partner.club_name}%`)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setClub(data);
+      });
+  }, [partner]);
+
+  // Load match score
   useEffect(() => {
     if (!myAthlete?.id || !id) return;
     supabase
@@ -196,7 +230,6 @@ export default function SkaterProfile() {
   const scorePct = Math.round(score * 100);
   const loc = [partner.location_city, partner.location_state].filter(Boolean).join(', ');
   const ht = heightStr(partner.height_cm);
-  const club = partner.clubs;
 
   const metaParts = [
     DISCIPLINE_LABEL[partner.discipline],
@@ -210,7 +243,8 @@ export default function SkaterProfile() {
   const cells = Array.from({ length: 9 }, (_, i) => mediaUrls[i] ?? null);
   const hasMedia = cells.some(c => c !== null);
 
-  const hasAbout = partner.goals || partner.training_hours_wk || partner.coach_name || (partner.club_name && !club);
+  const hasAbout = partner.goals || partner.training_hours_wk || partner.coach_name;
+  const hasClub  = club || partner.club_name;
 
   const modalMatch = matchRow
     ? { ...matchRow, partner }
@@ -302,7 +336,7 @@ export default function SkaterProfile() {
             </div>
           )}
 
-          {/* Row 4: component dots — all inline */}
+          {/* Row 4: component dots */}
           {matchRow && (
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
               <DotItem label="Height"      value={matchRow.height_score} />
@@ -367,13 +401,8 @@ export default function SkaterProfile() {
             </div>
           )}
           {partner.coach_name && (
-            <div style={{ fontSize: 13, color: '#4a5a7a', marginBottom: 4 }}>
-              Coach: {partner.coach_name}
-            </div>
-          )}
-          {partner.club_name && !club && (
             <div style={{ fontSize: 13, color: '#4a5a7a' }}>
-              Club: {partner.club_name}
+              Coach: {partner.coach_name}
             </div>
           )}
           {!hasAbout && (
@@ -381,8 +410,8 @@ export default function SkaterProfile() {
           )}
         </div>
 
-        {/* Club section */}
-        {club && (
+        {/* Club section: joined record > fuzzy lookup > raw club_name text */}
+        {hasClub && (
           <div style={{ padding: '16px 20px', borderTop: '1px solid #f0f4fb' }}>
             <div style={{
               fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
@@ -395,9 +424,9 @@ export default function SkaterProfile() {
               borderRadius: 10, padding: 14,
             }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e', marginBottom: 6 }}>
-                {club.name}
+                {club ? club.name : partner.club_name}
               </div>
-              {club.website && (
+              {club?.website && (
                 <div style={{ marginBottom: 4 }}>
                   <a
                     href={club.website}
@@ -408,7 +437,7 @@ export default function SkaterProfile() {
                   </a>
                 </div>
               )}
-              {club.contact_email && (
+              {club?.contact_email && (
                 <div style={{ marginBottom: 4 }}>
                   <a
                     href={`mailto:${club.contact_email}`}
@@ -418,7 +447,7 @@ export default function SkaterProfile() {
                   </a>
                 </div>
               )}
-              {club.phone && (
+              {club?.phone && (
                 <div style={{ fontSize: 12, color: '#4a5a7a' }}>
                   {club.phone}
                 </div>
