@@ -25,7 +25,7 @@ const KNOB = {
   width: 16, height: 16, borderRadius: '50%', background: '#fff',
   boxShadow: '0 1px 4px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08)',
   position: 'absolute', top: '50%', transform: 'translate(-50%,-50%)',
-  pointerEvents: 'none',
+  pointerEvents: 'none', zIndex: 2,
 };
 
 // Dual-handle range slider using two overlapping native inputs
@@ -48,11 +48,11 @@ function DualRangeSlider({ min, max, value, onChange }) {
       <div style={{ ...KNOB, left: `${hiPct}%` }} />
       <input type="range" min={min} max={max} value={lo}
         onChange={e => onChange([Math.min(+e.target.value, hi), hi])}
-        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0 }}
+        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0, zIndex: 3 }}
       />
       <input type="range" min={min} max={max} value={hi}
         onChange={e => onChange([lo, Math.max(+e.target.value, lo)])}
-        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0 }}
+        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0, zIndex: 3 }}
       />
     </div>
   );
@@ -195,8 +195,8 @@ export default function Matches() {
   const [strength, setStrength]       = useState(saved?.strength       ?? [40, 100]);
   const [distance, setDistance]       = useState(saved?.distance       ?? 500);
   const [levels, setLevels]           = useState(saved?.levels         ?? []);
-  const [disciplines, setDisciplines] = useState(saved?.disciplines    ?? []);
-  const [roles, setRoles]             = useState(saved?.roles          ?? []);
+  const [disciplines, setDisciplines] = useState(saved?.disciplines    ?? ['pairs', 'ice_dance']);
+  const [roles, setRoles]             = useState(saved?.roles          ?? ['man', 'lady', 'either']);
 
   useEffect(() => {
     sessionStorage.setItem('matchFilters', JSON.stringify({ strength, distance, levels, disciplines, roles }));
