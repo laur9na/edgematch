@@ -36,6 +36,7 @@
 [AGENT-2] [DONE] Phase 14 — .env.local.example updated (added ANTHROPIC_API_KEY), vite.config.js explicit outDir:dist, build passes. vercel.json already correct.
 
 [AGENT-3] [FIX] QA on Phase 13+12.4: removed 3 em dashes from SkaterProfile comments, re-applied last-initial-only rule (Agent 1 rewrite dropped lastInitial fn again), build+push clean
+[AGENT-1] [DONE] Phase 15.6: SkaterProfile single-column — sidebar removed, header has try-out button right-aligned, score bar + component dots inline in header, full-width media/about/club/results
 
 VERCEL DEPLOYMENT — 4 manual steps:
   1. Go to vercel.com > "Add New Project" > Import from GitHub: laur9na/edgematch
