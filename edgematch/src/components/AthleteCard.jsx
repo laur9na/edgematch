@@ -65,9 +65,6 @@ function ScoreBar({ score }) {
           {pct}%
         </span>
       </div>
-      <div style={{ fontSize: 11, color: '#5a6a8a', marginBottom: 8 }}>
-        match strength
-      </div>
     </div>
   );
 }

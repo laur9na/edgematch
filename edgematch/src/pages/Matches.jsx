@@ -28,35 +28,8 @@ const KNOB = {
   pointerEvents: 'none', zIndex: 2,
 };
 
-// Dual-handle range slider using two overlapping native inputs
-function DualRangeSlider({ min, max, value, onChange }) {
-  const [lo, hi] = value;
-  const loPct = ((lo - min) / (max - min)) * 100;
-  const hiPct = ((hi - min) / (max - min)) * 100;
-  return (
-    <div style={{ position: 'relative', height: 20, margin: '8px 4px 4px' }}>
-      <div style={{
-        position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-        left: 0, right: 0, height: 3, background: '#e2e8f0', borderRadius: 99,
-      }}>
-        <div style={{
-          position: 'absolute', height: '100%', background: '#1a56db', borderRadius: 99,
-          left: `${loPct}%`, right: `${100 - hiPct}%`,
-        }} />
-      </div>
-      <div style={{ ...KNOB, left: `${loPct}%` }} />
-      <div style={{ ...KNOB, left: `${hiPct}%` }} />
-      <input type="range" min={min} max={max} value={lo}
-        onChange={e => onChange([Math.min(+e.target.value, hi), hi])}
-        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0, zIndex: 3 }}
-      />
-      <input type="range" min={min} max={max} value={hi}
-        onChange={e => onChange([lo, Math.max(+e.target.value, lo)])}
-        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0, zIndex: 3 }}
-      />
-    </div>
-  );
-}
+// No dual-input approach — two overlapping inputs can't be independently clicked.
+// Replaced with two labeled single sliders (min/max) that always work.
 
 // Single-handle range slider
 function SingleRangeSlider({ min, max, step, value, onChange }) {
@@ -108,14 +81,16 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
         Filter matches
       </div>
 
-      {/* Match strength */}
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 4 }}>
+      {/* Match strength: two independent sliders */}
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 6 }}>
         Match strength
       </div>
-      <div style={{ fontSize: 12, color: '#1a56db', marginBottom: 2 }}>
-        {strength[0]}% to {strength[1]}%
-      </div>
-      <DualRangeSlider min={0} max={100} value={strength} onChange={onStrength} />
+      <div style={{ fontSize: 11, color: '#7a8aaa', marginBottom: 2 }}>Min: <span style={{ color: '#1a56db', fontWeight: 600 }}>{strength[0]}%</span></div>
+      <SingleRangeSlider min={0} max={100} step={1} value={strength[0]}
+        onChange={v => onStrength([Math.min(v, strength[1]), strength[1]])} />
+      <div style={{ fontSize: 11, color: '#7a8aaa', marginBottom: 2, marginTop: 6 }}>Max: <span style={{ color: '#1a56db', fontWeight: 600 }}>{strength[1]}%</span></div>
+      <SingleRangeSlider min={0} max={100} step={1} value={strength[1]}
+        onChange={v => onStrength([strength[0], Math.max(v, strength[0])])} />
 
       {divider}
 
@@ -159,28 +134,28 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       {divider}
 
       {/* Discipline */}
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 8 }}>
-        Discipline
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 6 }}>Discipline</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {['ice_dance', 'pairs'].map(val => (
+          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#4a5a7a', cursor: 'pointer' }}>
+            <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#1a56db' }} checked={disciplines.includes(val)} onChange={() => toggleDiscipline(val)} />
+            <span>{DISCIPLINE_LABEL[val]}</span>
+          </label>
+        ))}
       </div>
-      {['ice_dance', 'pairs'].map(val => (
-        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', marginBottom: 6, cursor: 'pointer' }}>
-          <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#1a56db' }} checked={disciplines.includes(val)} onChange={() => toggleDiscipline(val)} />
-          <span>{DISCIPLINE_LABEL[val]}</span>
-        </label>
-      ))}
 
       {divider}
 
       {/* Role */}
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 8 }}>
-        Role
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 6 }}>Role</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {['man', 'lady', 'either'].map(val => (
+          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#4a5a7a', cursor: 'pointer' }}>
+            <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#1a56db' }} checked={roles.includes(val)} onChange={() => toggleRole(val)} />
+            <span>{ROLE_LABEL[val]}</span>
+          </label>
+        ))}
       </div>
-      {['man', 'lady', 'either'].map(val => (
-        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#4a5a7a', marginBottom: 6, cursor: 'pointer' }}>
-          <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#1a56db' }} checked={roles.includes(val)} onChange={() => toggleRole(val)} />
-          <span>{ROLE_LABEL[val]}</span>
-        </label>
-      ))}
     </aside>
   );
 }

@@ -162,23 +162,24 @@ export default function SkaterProfile() {
       });
   }, [id]);
 
-  // Load competition results by skater_name fuzzy match, fall back to last name only
+  // Load competition results: try First Last, Last First, then last name only
+  // IJS stores names as "LASTNAME Firstname", athletes table stores "Firstname Lastname"
   useEffect(() => {
     if (!partner?.name) return;
     const parts = partner.name.trim().split(/\s+/);
     const firstName = parts[0] ?? '';
     const lastName = parts[parts.length - 1] ?? '';
+    if (!lastName) return;
 
     supabase
       .from('competition_results')
       .select('*')
-      .ilike('skater_name', `%${firstName}%${lastName}%`)
+      .or(`skater_name.ilike.%${firstName}%${lastName}%,skater_name.ilike.%${lastName}%${firstName}%`)
       .order('event_year', { ascending: false })
       .then(({ data }) => {
         if (data && data.length > 0) {
           setResults(data);
-        } else if (lastName) {
-          // Fallback: last name only
+        } else {
           supabase
             .from('competition_results')
             .select('*')
