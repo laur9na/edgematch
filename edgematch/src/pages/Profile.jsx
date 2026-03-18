@@ -230,13 +230,16 @@ function ProfileView({ athlete, onEdit }) {
                 </div>
               )}
               {athlete.instagram_handle && (
-                <a
-                  href={`https://instagram.com/${athlete.instagram_handle}`}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
-                >
-                  @{athlete.instagram_handle}
-                </a>
+                <div style={{ fontSize: 12 }}>
+                  <span style={{ color: '#7a8aaa' }}>Instagram: </span>
+                  <a
+                    href={`https://instagram.com/${athlete.instagram_handle}`}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{ color: '#1a56db', textDecoration: 'none' }}
+                  >
+                    {athlete.instagram_handle}
+                  </a>
+                </div>
               )}
             </div>
           </div>
@@ -313,7 +316,9 @@ function ProfileView({ athlete, onEdit }) {
             ABOUT
           </div>
           {athlete.goals && (
-            <div style={{ fontSize: 12, color: '#4a5a7a', marginBottom: 4 }}>{athlete.goals}</div>
+            <div style={{ fontSize: 12, color: '#4a5a7a', marginBottom: 4 }}>
+              Goals: {athlete.goals}
+            </div>
           )}
           {athlete.training_hours_wk && (
             <div style={{ fontSize: 12, color: '#4a5a7a', marginBottom: 4 }}>
@@ -475,10 +480,6 @@ function StepGoals({ data, onChange }) {
             {LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
         </div>
-      </label>
-      <label>Maximum travel distance (km)
-        <input type="number" value={data.max_distance_km} onChange={e => onChange('max_distance_km', parseInt(e.target.value) || 500)} min={50} max={20000} step={50} placeholder="500" />
-        <span className="hint">Use a large number (e.g. 20000) if open to relocating.</span>
       </label>
     </div>
   );
