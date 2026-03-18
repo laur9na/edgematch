@@ -1,12 +1,19 @@
 /**
- * scripts/scrape_results.js — Phase 11
+ * scripts/scrape_results.js — Phase 11 + live detection
  *
  * Scrapes competition results from ijs.usfigureskating.org for events in event_ids.json.
  * Matches results to athletes table by name + club. Inserts into competition_results.
  *
+ * Current-year events (2026) are always re-scraped with ON CONFLICT DO UPDATE so
+ * stale scores are overwritten on every cron run.
+ *
+ * Before scraping, the USFS calendar for the current year is checked for new event IDs
+ * not yet in event_ids.json. Any found are auto-added and persisted to disk.
+ *
  * URL patterns:
- *   /leaderboard/results/{year}/{event_id}/index.asp          — event index
- *   /leaderboard/results/{year}/{event_id}/CAT{N}SEG{N}.html  — segment results
+ *   /leaderboard/results/{year}/                       — year calendar (new event discovery)
+ *   /leaderboard/results/{year}/{event_id}/index.asp   — event index
+ *   /leaderboard/results/{year}/{event_id}/CAT{N}SEG{N}.html — segment results
  *
  * Usage:
  *   node scripts/scrape_results.js
@@ -15,7 +22,7 @@
  * Requires: VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env.local
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -38,13 +45,15 @@ const IJS_BASE = 'https://ijs.usfigureskating.org';
 const DELAY_MS = 1500;
 const MATCH_THRESHOLD = 0.75;
 const DRY_RUN = process.argv.includes('--dry-run');
+const CURRENT_YEAR = new Date().getFullYear();
+const EVENT_IDS_PATH = join(__dirname, 'event_ids.json');
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
   process.exit(1);
 }
 
-const EVENT_IDS = JSON.parse(readFileSync(join(__dirname, 'event_ids.json'), 'utf8'));
+let EVENT_IDS = JSON.parse(readFileSync(EVENT_IDS_PATH, 'utf8'));
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -58,6 +67,65 @@ async function fetchHtml(url) {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
   return res.text();
+}
+
+// ---------------------------------------------------------------------------
+// Step 0: discover new events from the USFS year calendar
+// ---------------------------------------------------------------------------
+
+async function discoverNewEvents(year) {
+  const calendarUrl = `${IJS_BASE}/leaderboard/results/${year}/`;
+  let html;
+  try {
+    html = await fetchHtml(calendarUrl);
+  } catch (err) {
+    console.warn(`  Calendar fetch failed for ${year}: ${err.message}`);
+    return [];
+  }
+
+  // Extract all event IDs from href patterns like:
+  //   /leaderboard/results/2026/36273/   or
+  //   /leaderboard/results/2026/36273/index.asp
+  const idPattern = new RegExp(
+    `/leaderboard/results/${year}/(\\d{4,6})(?:/[^"'\\s>]*)?["'\\s>]`,
+    'gi'
+  );
+
+  const foundIds = new Set();
+  let m;
+  while ((m = idPattern.exec(html)) !== null) {
+    foundIds.add(m[1]);
+  }
+
+  const existingIds = new Set(EVENT_IDS.filter(e => e.year === year).map(e => String(e.event_id)));
+  const newIds = [...foundIds].filter(id => !existingIds.has(id));
+
+  if (newIds.length === 0) return [];
+
+  // For each new ID, try to get event name from the index page title
+  const newEvents = [];
+  for (const id of newIds) {
+    await sleep(500);
+    let name = `${year} Event ${id}`;
+    try {
+      const indexHtml = await fetchHtml(`${IJS_BASE}/leaderboard/results/${year}/${id}/index.asp`);
+      // Look for a <title> tag or heading
+      const titleMatch = indexHtml.match(/<title[^>]*>([^<]+)<\/title>/i);
+      if (titleMatch) {
+        name = titleMatch[1].replace(/\s+/g, ' ').trim().replace(/\s*-\s*IJS.*$/i, '').trim();
+      } else {
+        const h1Match = indexHtml.match(/<h[123][^>]*>([^<]+)<\/h[123]>/i);
+        if (h1Match) name = h1Match[1].replace(/\s+/g, ' ').trim();
+      }
+    } catch {
+      // event not live yet or 404 — skip
+      continue;
+    }
+    newEvents.push({ year, event_id: id, event_name: name });
+    console.log(`  Discovered new event: "${name}" (${year}/${id})`);
+  }
+
+  return newEvents;
 }
 
 // ---------------------------------------------------------------------------
@@ -99,7 +167,7 @@ function clubSimilarity(a, b) {
 }
 
 // ---------------------------------------------------------------------------
-// Detect discipline from segment link text / URL
+// Detect discipline / level / segment from text
 // ---------------------------------------------------------------------------
 
 function detectDiscipline(text) {
@@ -109,7 +177,6 @@ function detectDiscipline(text) {
   return null;
 }
 
-// Detect level from segment heading text
 function detectLevel(text) {
   const t = text.toLowerCase();
   if (t.includes('senior')) return 'senior';
@@ -122,7 +189,6 @@ function detectLevel(text) {
   return 'unknown';
 }
 
-// Detect segment name (Short Program, Free Skate, etc.)
 function detectSegment(text) {
   const t = text.toLowerCase();
   if (t.includes('rhythm')) return 'Rhythm Dance';
@@ -146,14 +212,6 @@ async function getSegmentLinks(year, eventId) {
     return [];
   }
 
-  // IJS pages use unquoted href: <A href=CAT001SEG001.html>
-  // Row structure: <TD class="event ...">Novice Pairs / Short Program</TD>...
-  //               <TD class="stat ..."><A href=CAT001SEG001.html>Final</A></TD>
-  //
-  // Strategy: parse each <TR>, find any CAT*SEG*.html link in it, and look
-  // at all text in that row + the closest preceding row with event text.
-
-  // Extract all table rows
   const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
   const rows = [];
   let rm;
@@ -163,19 +221,15 @@ async function getSegmentLinks(year, eventId) {
 
   const links = [];
   const seen = new Set();
-
-  // Track the last seen event label across rows (rowspan cells often split info)
   let lastEventLabel = '';
 
   for (const row of rows) {
-    // Update event label if this row contains one
     const eventCellMatch = row.match(/class="event[^"]*"[^>]*>([\s\S]*?)<\/td>/i);
     if (eventCellMatch) {
       const cellText = eventCellMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
       if (cellText.length > 2) lastEventLabel = cellText;
     }
 
-    // Look for a CAT*SEG*.html link (quoted or unquoted href)
     const linkMatch = row.match(/href=["']?(CAT\d+SEG\d+\.html)["']?/i);
     if (!linkMatch) continue;
 
@@ -184,7 +238,6 @@ async function getSegmentLinks(year, eventId) {
     if (seen.has(fullUrl)) continue;
     seen.add(fullUrl);
 
-    // Use the event label from this row or the last seen one
     const context = row + ' ' + lastEventLabel;
     const discipline = detectDiscipline(context);
     if (!discipline) continue;
@@ -214,40 +267,23 @@ function stripHtml(s) {
 
 function parseSegmentHtml(html) {
   const results = [];
-
-  // IJS segment pages have parent result rows structured as:
-  // <TR class=parent id="XXXX">
-  //   <TD class=place>1</TD>
-  //   <TD class=start>2</TD>
-  //   <TD class=name sort-key=...>First Last, Club Name<BR>First Last, Club Name</TD>
-  //   <TD class=score>41.33</TD>
-  //   ...
-  // </TR>
-  //
-  // For singles events the name cell has one skater, for pairs/dance there are two
-  // separated by <BR>.
-
   const parentRowRe = /<TR[^>]*class=parent[^>]*>([\s\S]*?)<\/TR>/gi;
   let rowMatch;
 
   while ((rowMatch = parentRowRe.exec(html)) !== null) {
     const row = rowMatch[1];
 
-    // Extract placement
     const placeMatch = row.match(/<TD[^>]*class=place[^>]*>\s*(\d+)\s*<\/TD>/i);
     if (!placeMatch) continue;
     const placement = parseInt(placeMatch[1], 10);
     if (isNaN(placement) || placement < 1) continue;
 
-    // Extract name cell — contains "Name1, Club1<BR>Name2, Club2" for teams
     const nameMatch = row.match(/<TD[^>]*class=name[^>]*>([\s\S]*?)<\/TD>/i);
     if (!nameMatch) continue;
     const nameCell = nameMatch[1];
 
-    // Split on <BR> to get individual skater entries
     const entries = nameCell.split(/<BR\s*\/?>/i).map((e) => stripHtml(e));
 
-    // Each entry: "First Last, Club Name"
     function splitEntry(entry) {
       const commaIdx = entry.indexOf(',');
       if (commaIdx === -1) return { name: entry.trim(), club: null };
@@ -262,7 +298,6 @@ function parseSegmentHtml(html) {
 
     if (!first.name || first.name.length < 2) continue;
 
-    // Extract score
     const scoreMatch = row.match(/<TD[^>]*class=score[^>]*>\s*([\d.]+)\s*<\/TD>/i);
     const totalScore = scoreMatch ? parseFloat(scoreMatch[1]) : null;
 
@@ -311,24 +346,33 @@ function findBestMatch(skaterName, clubName, athletes) {
     }
   }
 
-  if (best && best.confidence >= MATCH_THRESHOLD) {
-    return best;
-  }
+  if (best && best.confidence >= MATCH_THRESHOLD) return best;
   return null;
 }
 
 // ---------------------------------------------------------------------------
-// DB insert
+// DB insert / upsert
 // ---------------------------------------------------------------------------
 
-async function insertResult(record) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/competition_results`, {
+async function insertResult(record, upsert = false) {
+  // upsert=true for current-year events: overwrite stale scores on conflict
+  // upsert=false for past events: ignore duplicates (already final)
+  // on_conflict param tells PostgREST which columns form the unique key
+  const url = upsert
+    ? `${SUPABASE_URL}/rest/v1/competition_results?on_conflict=event_id,segment,skater_name`
+    : `${SUPABASE_URL}/rest/v1/competition_results`;
+
+  const prefer = upsert
+    ? 'resolution=merge-duplicates,return=minimal'
+    : 'resolution=ignore-duplicates,return=minimal';
+
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json',
-      Prefer: 'resolution=ignore-duplicates,return=minimal',
+      Prefer: prefer,
     },
     body: JSON.stringify(record),
   });
@@ -356,17 +400,31 @@ async function checkTableExists() {
 
 async function main() {
   if (!DRY_RUN) await checkTableExists();
-  console.log(`Loading athletes from Supabase...`);
+
+  // Step 0: discover new events for current year
+  console.log(`Checking for new ${CURRENT_YEAR} events on USFS calendar...`);
+  const newEvents = DRY_RUN ? [] : await discoverNewEvents(CURRENT_YEAR);
+  if (newEvents.length > 0) {
+    EVENT_IDS = [...EVENT_IDS, ...newEvents];
+    writeFileSync(EVENT_IDS_PATH, JSON.stringify(EVENT_IDS, null, 2) + '\n');
+    console.log(`Added ${newEvents.length} new event(s) to event_ids.json`);
+  } else {
+    console.log(`No new events found.`);
+  }
+
+  console.log(`\nLoading athletes from Supabase...`);
   const athletes = await loadAthletes();
   console.log(`Loaded ${athletes.length} active athletes for matching`);
 
   let totalInserted = 0;
+  let totalUpdated = 0;
   let totalMatched = 0;
   let totalUnmatched = 0;
   const unmatched = [];
 
   for (const event of EVENT_IDS) {
-    console.log(`\nEvent: ${event.event_name} (${event.year}/${event.event_id})`);
+    const isCurrentYear = event.year === CURRENT_YEAR;
+    console.log(`\nEvent: ${event.event_name} (${event.year}/${event.event_id})${isCurrentYear ? ' [live — upsert]' : ''}`);
 
     const segments = await getSegmentLinks(event.year, event.event_id);
     console.log(`  Found ${segments.length} pairs/dance segment(s)`);
@@ -414,11 +472,10 @@ async function main() {
         };
 
         if (!DRY_RUN) {
+          if (isCurrentYear) totalUpdated++; else totalInserted++;
           try {
-            await insertResult(record);
-            totalInserted++;
+            await insertResult(record, isCurrentYear);
           } catch (err) {
-            // ON CONFLICT DO NOTHING — duplicates are expected on re-runs
             if (!err.message.includes('23505') && !err.message.includes('duplicate')) {
               console.error(`    Insert error for ${row.skaterName}: ${err.message}`);
             }
@@ -431,7 +488,12 @@ async function main() {
   }
 
   console.log(`\n--- Summary ---`);
-  console.log(`Results inserted:  ${totalInserted}${DRY_RUN ? ' (dry run)' : ''}`);
+  if (DRY_RUN) {
+    console.log(`Results parsed:     ${totalInserted} (dry run)`);
+  } else {
+    console.log(`Past results saved: ${totalInserted}`);
+    console.log(`Live results upserted: ${totalUpdated}`);
+  }
   console.log(`Matched to athlete: ${totalMatched}`);
   console.log(`Unmatched:          ${totalUnmatched}`);
 
