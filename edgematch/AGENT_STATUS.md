@@ -37,6 +37,8 @@
 
 [AGENT-3] [FIX] QA on Phase 13+12.4: removed 3 em dashes from SkaterProfile comments, re-applied last-initial-only rule (Agent 1 rewrite dropped lastInitial fn again), build+push clean
 [AGENT-1] [DONE] Phase 15.6: SkaterProfile single-column — sidebar removed, header has try-out button right-aligned, score bar + component dots inline in header, full-width media/about/club/results
+[AGENT-1] [DONE] Landing: removed stats strip (active skaters / pairs scored / disciplines) and Supabase queries entirely
+[AGENT-1] [DONE] SkaterProfile: club contact box styled per spec (bg #f4f7fb, border, border-radius 10px); Club + Competition results sections confirmed present below About
 
 VERCEL DEPLOYMENT — 4 manual steps:
   1. Go to vercel.com > "Add New Project" > Import from GitHub: laur9na/edgematch
