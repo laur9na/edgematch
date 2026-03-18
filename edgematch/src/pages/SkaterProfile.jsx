@@ -1,5 +1,5 @@
 /**
- * SkaterProfile.jsx — Phase 13 + 12.4
+ * SkaterProfile.jsx (Phase 13 + 12.4)
  * Public profile at /matches/[id].
  * Loads: athlete (with clubs join), competition results, compatibility score.
  * Two-column: left profile card + right sticky sidebar.
@@ -25,6 +25,13 @@ function getInitials(name) {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0][0].toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function lastInitial(name) {
+  if (!name) return '';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + ' ' + parts[parts.length - 1][0] + '.';
 }
 
 function heightStr(cm) {
@@ -215,7 +222,7 @@ export default function SkaterProfile() {
 
   return (
     <main style={{ background: '#f4f7fb', minHeight: 'calc(100vh - 56px)', padding: '24px 28px' }}>
-      {/* Back link — navigate(-1) preserves filter state */}
+      {/* Back link: navigate(-1) preserves filter state */}
       <button
         onClick={() => navigate(-1)}
         style={{
@@ -256,7 +263,7 @@ export default function SkaterProfile() {
               )}
               <div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: '#0f2a5e', marginBottom: 2 }}>
-                  {partner.name}
+                  {lastInitial(partner.name)}
                 </div>
                 <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 2 }}>
                   {[
@@ -351,7 +358,7 @@ export default function SkaterProfile() {
             )}
           </div>
 
-          {/* Club section — Phase 12.4: show when club row has contact info */}
+          {/* Club section (Phase 12.4): show when club row has contact info */}
           {club && (
             <div style={{ padding: 16, borderTop: '1px solid #f0f4fb' }}>
               <div style={{
