@@ -72,22 +72,15 @@ function ScoreBar({ score }) {
   );
 }
 
-function DotIndicator({ label, value }) {
-  const filled = Math.round((value ?? 0) * 5);
-  return (
-    <div style={{ fontSize: 11, color: '#7a8aaa', display: 'flex', alignItems: 'center', gap: 4 }}>
-      <span style={{ marginRight: 2 }}>{label}</span>
-      {[0,1,2,3,4].map(i => (
-        <span
-          key={i}
-          style={{
-            width: 7, height: 7, borderRadius: '50%', display: 'inline-block',
-            background: i < filled ? '#1a56db' : '#d4e0f5',
-          }}
-        />
-      ))}
-    </div>
-  );
+function dots(score) {
+  const filled = Math.round((score ?? 0) * 5);
+  return Array.from({ length: 5 }, (_, i) => (
+    <span key={i} style={{
+      width: 6, height: 6, borderRadius: '50%',
+      background: i < filled ? '#1a56db' : '#d4e0f5',
+      display: 'inline-block',
+    }} />
+  ));
 }
 
 export default function AthleteCard({ match, index, onClick }) {
@@ -169,10 +162,16 @@ export default function AthleteCard({ match, index, onClick }) {
       <ScoreBar score={score} />
 
       {/* Sub-score dots */}
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-        <DotIndicator label="Height"   value={match.height_score} />
-        <DotIndicator label="Level"    value={match.level_score} />
-        <DotIndicator label="Distance" value={match.location_score} />
+      <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'nowrap' }}>
+        <span style={{ fontSize: 10, color: '#7a8aaa', display: 'flex', alignItems: 'center', gap: 3 }}>
+          Height {dots(match.height_score)}
+        </span>
+        <span style={{ fontSize: 10, color: '#7a8aaa', display: 'flex', alignItems: 'center', gap: 3 }}>
+          Level {dots(match.level_score)}
+        </span>
+        <span style={{ fontSize: 10, color: '#7a8aaa', display: 'flex', alignItems: 'center', gap: 3 }}>
+          Distance {dots(match.location_score)}
+        </span>
       </div>
     </div>
   );
