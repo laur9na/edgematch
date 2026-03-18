@@ -27,3 +27,6 @@
 [AGENT-3] [FIX] QA on 8.1-8.5: last-initial-only in AthleteCard+SkaterProfile (were showing full names), removed em dash from Profile comment; noUiSlider confirmed imported+installed; build clean
 [AGENT-2] [DONE] Script fixes: scrape_results.js pre-flight checks competition_results table (exits cleanly if missing); enrich_instagram.js exits 0 on missing ANTHROPIC_API_KEY. Dry-run verified: 295 results parsed, 12 athlete matches, 0 errors. competition_results table still needs 009 migration applied via Supabase dashboard SQL editor.
 [AGENT-2] [DONE] scrape_results.js live run: 295 results inserted, 12 athlete matches, 0 fatal errors. Sectional/2023 404s are expected (IJS pages removed). competition_results table confirmed populated.
+[AGENT-3] [CLEAN] QA on Agent 2 script fixes: build clean, 0 console.log, 0 em dashes, 0 synchro, 0 forbidden strings. Created vercel.json with SPA rewrite rule (was missing). SkaterProfile empty-field safety confirmed.
+[AGENT-1] [DONE] Small fixes: Profile Instagram shows "Instagram: [handle]" (muted label, blue value), Goals shows "Goals: [text]", removed max travel distance field from Goals step
+[AGENT-1] [DONE] Phase 13+12.4: SkaterProfile rewritten — full name, clubs(*) join, navigate(-1) back link, club contact section (website/email/phone), competition results from separate query, build clean
