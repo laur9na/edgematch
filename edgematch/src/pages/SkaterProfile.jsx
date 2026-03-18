@@ -263,7 +263,7 @@ export default function SkaterProfile() {
               )}
               <div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: '#0f2a5e', marginBottom: 2 }}>
-                  {lastInitial(partner.name)}
+                  {partner.name}
                 </div>
                 <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 2 }}>
                   {[

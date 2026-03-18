@@ -92,7 +92,7 @@ function TryoutCard({ tryout, role, onUpdate }) {
             fontSize: 14, fontWeight: 700, color: '#0f2a5e',
             textDecoration: isCancelled ? 'line-through' : 'none',
           }}>
-            {lastInitial(partner?.name)}
+            {partner?.name}
           </div>
           <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 2 }}>
             {[level, loc].filter(Boolean).join(' · ')}

@@ -142,7 +142,7 @@ export default function AthleteCard({ match, index, onClick }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e' }}>
-              {lastInitial(p.name)}
+              {p.name}
             </span>
             {p.skating_level && (
               <span style={{

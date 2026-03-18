@@ -241,7 +241,7 @@ function Dashboard({ athlete }) {
               <tbody>
                 {sorted.map(a => (
                   <tr key={a.id} className={a.verified ? '' : 'row-unverified'}>
-                    <td className="td-name">{lastInitial(a.name)}</td>
+                    <td className="td-name">{a.name}</td>
                     <td>{LEVEL_LABELS[a.skating_level] ?? a.skating_level}</td>
                     <td>{ROLE_LABELS[a.partner_role] ?? a.partner_role}</td>
                     <td>{a.age ?? 'N/A'}</td>

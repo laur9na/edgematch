@@ -59,7 +59,7 @@ export default function TryoutModal({ match, onClose, onSuccess }) {
         </div>
 
         <p className="modal-partner-name">
-          with <strong>{lastInitial(partner.name)}</strong>
+          with <strong>{partner.name}</strong>
         </p>
 
         <form onSubmit={handleSubmit}>
