@@ -56,4 +56,5 @@ VERCEL DEPLOYMENT — 4 manual steps:
 [AGENT-1] [DONE] Phase 17.3: card grid gridTemplateColumns repeat(2,minmax(0,1fr)) to prevent overflow
 [AGENT-1] [DONE] Phase 17.4: AthleteCard name wordBreak:break-word, level badge display:block on own line
 [AGENT-1] [DONE] Phase 17.5: replaced noUiSlider with DualRangeSlider+SingleRangeSlider using native range inputs; bundle -29KB, tab-switch glitch eliminated
+[AGENT-1] [DONE] Matches header: removed skater count + sort dropdown, header is just "Your matches" h1; added visible 16px white knob divs to both sliders; checkboxes margin:0 flexShrink:0 exact pattern; build clean
 [AGENT-2] [DONE] Live competition detection: scrape_results.js updated with (1) on_conflict upsert for current-year events (2026) so stale scores overwrite on every cron run, (2) discoverNewEvents() checks USFS calendar for new 2026 event IDs and auto-adds to event_ids.json (calendar returns 403 — handled as warn, does not block). Run confirmed clean: 65 live rows upserted, 230 past rows saved, 0 errors.
