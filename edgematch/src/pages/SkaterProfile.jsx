@@ -1,7 +1,8 @@
 /**
- * SkaterProfile.jsx, Phase 8.3
- * Public profile view for any skater at /matches/[id].
- * Two-column: left profile card + right sticky sidebar with match score.
+ * SkaterProfile.jsx — Phase 13 + 12.4
+ * Public profile at /matches/[id].
+ * Loads: athlete (with clubs join), competition results, compatibility score.
+ * Two-column: left profile card + right sticky sidebar.
  */
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -26,13 +27,6 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function lastInitial(name) {
-  if (!name) return '';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return parts[0] + ' ' + parts[parts.length - 1][0] + '.';
-}
-
 function heightStr(cm) {
   if (!cm) return null;
   const totalIn = cm / 2.54;
@@ -46,7 +40,6 @@ function weightStr(kg) {
   return `${kg} kg`;
 }
 
-// Place badge colors per spec
 function PlaceBadge({ place }) {
   if (!place) return <span style={{ color: '#4a5a7a' }}>-</span>;
   const p = parseInt(place);
@@ -55,39 +48,19 @@ function PlaceBadge({ place }) {
   else if (p === 2) { bg = '#f1f5f9'; color = '#475569'; }
   else if (p === 3) { bg = '#fce8dc'; color = '#9a3412'; }
   return (
-    <span style={{
-      background: bg, color, padding: '2px 7px', borderRadius: 4,
-      fontSize: 11, fontWeight: 600,
-    }}>
+    <span style={{ background: bg, color, padding: '2px 7px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>
       {place}
     </span>
   );
 }
 
-function CompetitionResults({ athleteId }) {
-  const [results, setResults] = useState([]);
+function CompetitionResults({ results }) {
   const [showAll, setShowAll] = useState(false);
-  const [loaded, setLoaded]   = useState(false);
-
-  useEffect(() => {
-    if (!athleteId) return;
-    supabase
-      .from('competition_results')
-      .select('event_name, event_year, level, segment, placement, total_score')
-      .eq('athlete_id', athleteId)
-      .order('event_year', { ascending: false })
-      .then(({ data }) => {
-        setResults(data ?? []);
-        setLoaded(true);
-      });
-  }, [athleteId]);
-
-  if (!loaded || results.length === 0) return null;
-
+  if (!results || results.length === 0) return null;
   const visible = showAll ? results : results.slice(0, 10);
 
   return (
-    <div style={{ padding: '16px', borderTop: '1px solid #f0f4fb' }}>
+    <div style={{ padding: 16, borderTop: '1px solid #f0f4fb' }}>
       <div style={{
         fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
         letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 10,
@@ -109,7 +82,7 @@ function CompetitionResults({ athleteId }) {
           {visible.map((r, i) => (
             <tr key={i}>
               <td style={{ padding: '5px 6px', borderBottom: '1px solid #f0f4fb', color: '#0f2a5e' }}>
-                {r.event_name} {r.event_year ? `(${r.event_year})` : ''}
+                {r.event_name}{r.event_year ? ` (${r.event_year})` : ''}
               </td>
               <td style={{ padding: '5px 6px', borderBottom: '1px solid #f0f4fb', color: '#4a5a7a' }}>
                 {LEVEL_LABEL[r.level] ?? r.level}
@@ -137,10 +110,7 @@ function CompetitionResults({ athleteId }) {
       {results.length > 10 && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          style={{
-            marginTop: 8, background: 'none', border: 'none',
-            color: '#1a56db', fontSize: 12, cursor: 'pointer', padding: 0,
-          }}
+          style={{ marginTop: 8, background: 'none', border: 'none', color: '#1a56db', fontSize: 12, cursor: 'pointer', padding: 0 }}
         >
           View all ({results.length})
         </button>
@@ -171,17 +141,18 @@ export default function SkaterProfile() {
   const navigate = useNavigate();
   const { athlete: myAthlete } = useAuth();
 
-  const [partner, setPartner]       = useState(null);
-  const [matchRow, setMatchRow]     = useState(null);
-  const [loading, setLoading]       = useState(true);
-  const [showModal, setShowModal]   = useState(false);
+  const [partner, setPartner]     = useState(null);
+  const [results, setResults]     = useState([]);
+  const [matchRow, setMatchRow]   = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
+  // Load athlete with clubs join
   useEffect(() => {
     if (!id) return;
-    // Fetch partner athlete
     supabase
       .from('athletes')
-      .select('*')
+      .select('*, clubs(*)')
       .eq('id', id)
       .single()
       .then(({ data }) => {
@@ -190,57 +161,80 @@ export default function SkaterProfile() {
       });
   }, [id]);
 
+  // Load competition results
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from('competition_results')
+      .select('event_name, event_year, level, segment, placement, total_score')
+      .eq('athlete_id', id)
+      .order('event_year', { ascending: false })
+      .then(({ data }) => setResults(data ?? []));
+  }, [id]);
+
+  // Load match score
   useEffect(() => {
     if (!myAthlete?.id || !id) return;
-    // Fetch the compatibility score row for this pair
     supabase
       .from('compatibility_scores')
       .select('*')
-      .or(`and(athlete_a_id.eq.${myAthlete.id},athlete_b_id.eq.${id}),and(athlete_a_id.eq.${id},athlete_b_id.eq.${myAthlete.id})`)
+      .or(
+        `and(athlete_a_id.eq.${myAthlete.id},athlete_b_id.eq.${id}),` +
+        `and(athlete_a_id.eq.${id},athlete_b_id.eq.${myAthlete.id})`
+      )
       .maybeSingle()
       .then(({ data }) => setMatchRow(data ?? null));
   }, [myAthlete?.id, id]);
 
   if (loading) return <div className="loading">Loading...</div>;
-  if (!partner) return (
-    <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
-      <p style={{ color: '#7a8aaa' }}>Skater not found.</p>
-    </main>
-  );
+
+  if (!partner) {
+    return (
+      <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
+        <p style={{ color: '#7a8aaa' }}>Skater not found.</p>
+      </main>
+    );
+  }
 
   const score = matchRow?.total_score ?? 0;
   const scorePct = Math.round(score * 100);
   const loc = [partner.location_city, partner.location_state].filter(Boolean).join(', ');
   const ht = heightStr(partner.height_cm);
   const wt = weightStr(partner.weight_kg);
+  const club = partner.clubs; // joined club row (may be null)
 
   const mediaUrls = partner.media_urls ?? [];
   const cells = Array.from({ length: 9 }, (_, i) => mediaUrls[i] ?? null);
+  const hasMedia = cells.some(c => c !== null);
 
-  // For the modal, construct a match object
   const modalMatch = matchRow
     ? { ...matchRow, partner }
     : { id: null, partner, total_score: score };
 
+  const hasAbout = partner.goals || partner.training_hours_wk || partner.coach_name || partner.club_name;
+
   return (
     <main style={{ background: '#f4f7fb', minHeight: 'calc(100vh - 56px)', padding: '24px 28px' }}>
-      {/* Back link */}
-      <a
-        onClick={() => navigate('/matches')}
+      {/* Back link — navigate(-1) preserves filter state */}
+      <button
+        onClick={() => navigate(-1)}
         style={{
-          display: 'inline-block', marginBottom: 16,
-          fontSize: 13, color: '#1a56db', cursor: 'pointer', textDecoration: 'none',
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          marginBottom: 16, background: 'none', border: 'none',
+          fontSize: 13, color: '#1a56db', cursor: 'pointer', padding: 0,
         }}
       >
         &larr; Back to matches
-      </a>
+      </button>
 
-      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', maxWidth: 1000 }}>
+      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', maxWidth: 1040 }}>
+
         {/* Left: profile card */}
         <div style={{
           flex: 1, background: '#fff', border: '1px solid #d4e0f5',
           borderRadius: 14, overflow: 'hidden',
         }}>
+
           {/* Header */}
           <div style={{ padding: 20, borderBottom: '1px solid #f0f4fb' }}>
             <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
@@ -262,7 +256,7 @@ export default function SkaterProfile() {
               )}
               <div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: '#0f2a5e', marginBottom: 2 }}>
-                  {lastInitial(partner.name)}
+                  {partner.name}
                 </div>
                 <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 2 }}>
                   {[
@@ -290,7 +284,7 @@ export default function SkaterProfile() {
           </div>
 
           {/* Media grid */}
-          {cells.some(c => c !== null) && (
+          {hasMedia && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2 }}>
               {cells.map((url, i) => (
                 <div
@@ -333,7 +327,9 @@ export default function SkaterProfile() {
               About
             </div>
             {partner.goals && (
-              <div style={{ fontSize: 13, color: '#4a5a7a', marginBottom: 4 }}>{partner.goals}</div>
+              <div style={{ fontSize: 13, color: '#4a5a7a', marginBottom: 4 }}>
+                Goals: {partner.goals}
+              </div>
             )}
             {partner.training_hours_wk && (
               <div style={{ fontSize: 13, color: '#4a5a7a', marginBottom: 4 }}>
@@ -345,16 +341,59 @@ export default function SkaterProfile() {
                 Coach: {partner.coach_name}
               </div>
             )}
-            {partner.club_name && (
-              <div style={{ fontSize: 13, color: '#4a5a7a' }}>Club: {partner.club_name}</div>
+            {partner.club_name && !club && (
+              <div style={{ fontSize: 13, color: '#4a5a7a' }}>
+                Club: {partner.club_name}
+              </div>
             )}
-            {!partner.goals && !partner.training_hours_wk && !partner.coach_name && !partner.club_name && (
+            {!hasAbout && (
               <div style={{ fontSize: 13, color: '#7a8aaa' }}>No details added yet.</div>
             )}
           </div>
 
+          {/* Club section — Phase 12.4: show when club row has contact info */}
+          {club && (
+            <div style={{ padding: 16, borderTop: '1px solid #f0f4fb' }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 8,
+              }}>
+                Club
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e', marginBottom: 6 }}>
+                {club.name}
+              </div>
+              {club.website && (
+                <div style={{ marginBottom: 4 }}>
+                  <a
+                    href={club.website}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
+                  >
+                    Visit website
+                  </a>
+                </div>
+              )}
+              {club.contact_email && (
+                <div style={{ marginBottom: 4 }}>
+                  <a
+                    href={`mailto:${club.contact_email}`}
+                    style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
+                  >
+                    {club.contact_email}
+                  </a>
+                </div>
+              )}
+              {club.phone && (
+                <div style={{ fontSize: 12, color: '#4a5a7a' }}>
+                  {club.phone}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Competition results */}
-          <CompetitionResults athleteId={partner.id} />
+          <CompetitionResults results={results} />
         </div>
 
         {/* Right sidebar */}
@@ -372,18 +411,16 @@ export default function SkaterProfile() {
               <div style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 10 }}>
                 match strength
               </div>
-              {/* Score bar */}
               <div style={{ height: 8, background: '#e8eef7', borderRadius: 4, marginBottom: 16 }}>
                 <div style={{
                   height: '100%', borderRadius: 4,
                   width: `${scorePct}%`, background: '#1a7a3a',
                 }} />
               </div>
-              {/* Breakdown dots */}
-              <DotRow label="Height"    value={matchRow.height_score} />
+              <DotRow label="Height"      value={matchRow.height_score} />
               <DotRow label="Skill level" value={matchRow.level_score} />
-              <DotRow label="Role fit"  value={matchRow.role_score} />
-              <DotRow label="Distance"  value={matchRow.location_score} />
+              <DotRow label="Role fit"    value={matchRow.role_score} />
+              <DotRow label="Distance"    value={matchRow.location_score} />
             </>
           ) : (
             <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 16 }}>
@@ -393,7 +430,6 @@ export default function SkaterProfile() {
 
           <hr style={{ border: 'none', borderTop: '1px solid #f0f4fb', margin: '16px 0' }} />
 
-          {/* Key stats */}
           {ht && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
               <span style={{ color: '#7a8aaa' }}>Height</span>
@@ -403,7 +439,9 @@ export default function SkaterProfile() {
           {partner.skating_level && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
               <span style={{ color: '#7a8aaa' }}>Level</span>
-              <span style={{ color: '#0f2a5e', fontWeight: 600 }}>{LEVEL_LABEL[partner.skating_level] ?? partner.skating_level}</span>
+              <span style={{ color: '#0f2a5e', fontWeight: 600 }}>
+                {LEVEL_LABEL[partner.skating_level] ?? partner.skating_level}
+              </span>
             </div>
           )}
           {partner.training_hours_wk && (
@@ -426,7 +464,7 @@ export default function SkaterProfile() {
             Request try-out
           </button>
           <button
-            onClick={() => navigate('/matches')}
+            onClick={() => navigate(-1)}
             style={{
               width: '100%', background: '#f0f4fb', color: '#4a5a7a',
               border: '1px solid #d4e0f5',
