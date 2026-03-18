@@ -44,3 +44,4 @@ VERCEL DEPLOYMENT — 4 manual steps:
        VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
        RESEND_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
   4. Click Deploy. vercel.json handles SPA routing automatically.
+[AGENT-2] [DONE] Phase 15.5 — scripts/create_storage_bucket.js created and ran: bucket "athlete-media" created in Supabase Storage (private, jpg/png/webp, 5MB limit). Git remote verified: https://github.com/laur9na/edgematch.git. All commits pushed.
