@@ -1,10 +1,8 @@
 /**
  * Landing.jsx, Phase 7.2
- * Hero + Stats strip + How it works. Three sections only.
+ * Hero + How it works. Two sections.
  */
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 
 const HOW_IT_WORKS = [
   {
@@ -25,27 +23,6 @@ const HOW_IT_WORKS = [
 ];
 
 export default function Landing() {
-  const [activeCount, setActiveCount]  = useState(null);
-  const [scoredCount, setScoredCount]  = useState(null);
-
-  useEffect(() => {
-    supabase
-      .from('athletes')
-      .select('id', { count: 'exact', head: true })
-      .eq('search_status', 'active')
-      .then(({ count }) => setActiveCount(count));
-
-    supabase
-      .from('compatibility_scores')
-      .select('id', { count: 'exact', head: true })
-      .then(({ count }) => setScoredCount(count));
-  }, []);
-
-  function fmt(n) {
-    if (n == null) return '...';
-    return n.toLocaleString();
-  }
-
   return (
     <main style={{ background: '#f4f7fb' }}>
 
@@ -87,39 +64,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Section 2 Stats strip */}
-      <section style={{
-        background: '#f4f7fb',
-        borderTop: '1px solid #d4e0f5',
-        borderBottom: '1px solid #d4e0f5',
-        padding: '24px 28px',
-      }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12,
-        }}>
-          {[
-            { value: fmt(activeCount), label: 'active skaters' },
-            { value: fmt(scoredCount), label: 'pairs scored' },
-            { value: '2',              label: 'disciplines' },
-          ].map(stat => (
-            <div key={stat.label} style={{
-              background: '#fff', border: '1px solid #d4e0f5',
-              borderRadius: 10, padding: 16, textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: 26, fontWeight: 800, color: '#1a3a6b', letterSpacing: '-0.5px',
-              }}>
-                {stat.value}
-              </div>
-              <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 3 }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 3 How it works */}
+      {/* Section 2 How it works */}
       <section style={{ padding: '32px 28px' }}>
         <div style={{
           fontSize: 11, fontWeight: 700, letterSpacing: '1.2px',
