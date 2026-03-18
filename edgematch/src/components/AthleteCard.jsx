@@ -133,14 +133,13 @@ export default function AthleteCard({ match, index, onClick }) {
         )}
 
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e' }}>
-              {p.name}
-            </span>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f2a5e', lineHeight: 1.3, wordBreak: 'break-word', marginBottom: 2 }}>
+            {p.name}
             {p.skating_level && (
               <span style={{
+                display: 'block', marginTop: 3,
                 background: '#e8f0fe', color: '#1a56db', fontSize: 10, fontWeight: 600,
-                padding: '2px 7px', borderRadius: 4, marginLeft: 6,
+                padding: '2px 7px', borderRadius: 4, width: 'fit-content',
               }}>
                 {LEVEL_LABEL[p.skating_level] ?? p.skating_level}
               </span>
