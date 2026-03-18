@@ -2,10 +2,8 @@
  * Matches.jsx, Phase 8.1
  * Left sidebar (220px) with noUiSlider filters + main content area.
  */
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import noUiSlider from 'nouislider';
-import 'nouislider/dist/nouislider.css';
 import { useAuth } from '../hooks/useAuth';
 import { useMatches } from '../hooks/useMatches';
 import AthleteCard from '../components/AthleteCard';
@@ -30,100 +28,55 @@ const SORT_OPTIONS = [
 
 const LEVEL_ORDER = ['pre_juvenile','juvenile','intermediate','novice','junior','senior','adult'];
 
-// Dual-handle slider: match strength 40-100
-function StrengthSlider({ value, onChange }) {
-  const ref = useRef(null);
-  const sliderRef = useRef(null);
-
-  useEffect(() => {
-    if (!ref.current || sliderRef.current) return;
-
-    sliderRef.current = noUiSlider.create(ref.current, {
-      start: value,
-      connect: true,
-      range: { min: 0, max: 100 },
-      step: 1,
-    });
-
-    // Style the connect (filled) portion
-    const connect = ref.current.querySelector('.noUi-connect');
-    if (connect) connect.style.background = '#1a56db';
-
-    sliderRef.current.on('update', (vals) => {
-      onChange([Math.round(parseFloat(vals[0])), Math.round(parseFloat(vals[1]))]);
-    });
-
-    return () => {
-      if (sliderRef.current) {
-        sliderRef.current.destroy();
-        sliderRef.current = null;
-      }
-    };
-  }, []);
-
-  return <div ref={ref} style={{ margin: '8px 4px 4px' }} />;
+// Dual-handle range slider using two overlapping native inputs
+function DualRangeSlider({ min, max, value, onChange }) {
+  const [lo, hi] = value;
+  return (
+    <div style={{ position: 'relative', height: 20, margin: '8px 4px 4px' }}>
+      <div style={{
+        position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+        left: 0, right: 0, height: 3, background: '#e2e8f0', borderRadius: 99,
+      }}>
+        <div style={{
+          position: 'absolute', height: '100%', background: '#1a56db', borderRadius: 99,
+          left: `${((lo - min) / (max - min)) * 100}%`,
+          right: `${((max - hi) / (max - min)) * 100}%`,
+        }} />
+      </div>
+      <input type="range" min={min} max={max} value={lo}
+        onChange={e => onChange([Math.min(+e.target.value, hi), hi])}
+        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0 }}
+      />
+      <input type="range" min={min} max={max} value={hi}
+        onChange={e => onChange([lo, Math.max(+e.target.value, lo)])}
+        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0 }}
+      />
+    </div>
+  );
 }
 
-// Single slider: distance
-function DistanceSlider({ value, onChange }) {
-  const ref = useRef(null);
-  const sliderRef = useRef(null);
-
-  useEffect(() => {
-    if (!ref.current || sliderRef.current) return;
-
-    sliderRef.current = noUiSlider.create(ref.current, {
-      start: value,
-      connect: [true, false],
-      range: { min: 0, max: 5000 },
-      step: 50,
-    });
-
-    const connect = ref.current.querySelector('.noUi-connect');
-    if (connect) connect.style.background = '#1a56db';
-
-    sliderRef.current.on('update', (vals) => {
-      onChange(Math.round(parseFloat(vals[0])));
-    });
-
-    return () => {
-      if (sliderRef.current) {
-        sliderRef.current.destroy();
-        sliderRef.current = null;
-      }
-    };
-  }, []);
-
-  return <div ref={ref} style={{ margin: '8px 4px 4px' }} />;
-}
-
-// noUiSlider base handle/track styles injected once
-function useSliderStyles() {
-  useEffect(() => {
-    const id = 'nouislider-custom';
-    if (document.getElementById(id)) return;
-    const style = document.createElement('style');
-    style.id = id;
-    style.textContent = `
-      .noUi-target { background: #e8eef7; border: none; box-shadow: none; }
-      .noUi-handle {
-        width: 14px !important; height: 14px !important;
-        border-radius: 50% !important;
-        background: #1a56db !important;
-        border: 2px solid #fff !important;
-        box-shadow: 0 1px 4px rgba(26,86,219,0.25) !important;
-        top: -5px !important; right: -7px !important;
-        cursor: pointer;
-      }
-      .noUi-handle::before, .noUi-handle::after { display: none !important; }
-    `;
-    document.head.appendChild(style);
-  }, []);
+// Single-handle range slider
+function SingleRangeSlider({ min, max, step, value, onChange }) {
+  return (
+    <div style={{ position: 'relative', height: 20, margin: '8px 4px 4px' }}>
+      <div style={{
+        position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+        left: 0, right: 0, height: 3, background: '#e2e8f0', borderRadius: 99,
+      }}>
+        <div style={{
+          position: 'absolute', height: '100%', background: '#1a56db', borderRadius: 99,
+          left: 0, right: `${((max - value) / (max - min)) * 100}%`,
+        }} />
+      </div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={e => onChange(+e.target.value)}
+        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0 }}
+      />
+    </div>
+  );
 }
 
 function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels, disciplines, onDisciplines, roles, onRoles }) {
-  useSliderStyles();
-
   function toggleLevel(key) {
     onLevels(prev => prev.includes(key) ? prev.filter(l => l !== key) : [...prev, key]);
   }
@@ -157,7 +110,7 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       <div style={{ fontSize: 12, color: '#1a56db', marginBottom: 2 }}>
         {strength[0]}% to {strength[1]}%
       </div>
-      <StrengthSlider value={strength} onChange={onStrength} />
+      <DualRangeSlider min={0} max={100} value={strength} onChange={onStrength} />
 
       {divider}
 
@@ -168,7 +121,7 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       <div style={{ fontSize: 12, color: '#1a56db', marginBottom: 2 }}>
         Within {distance === 5000 ? '5000+' : distance} km
       </div>
-      <DistanceSlider value={distance} onChange={onDistance} />
+      <SingleRangeSlider min={0} max={5000} step={50} value={distance} onChange={onDistance} />
 
       {divider}
 
