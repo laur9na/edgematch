@@ -58,7 +58,7 @@ export default function Signup() {
       <div className="auth-page">
         <h1>Find your perfect skating partner</h1>
         <p>Create a free profile and see who you match with.</p>
-        <button className="btn-primary" onClick={goToWizard}>Create my profile →</button>
+        <button className="btn-primary" onClick={goToWizard}>Create my profile</button>
         <p className="auth-switch">
           Already have an account?{' '}
           <button className="link-btn" onClick={() => setMode('signin')}>Sign in</button>

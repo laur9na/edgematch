@@ -1,6 +1,6 @@
 /**
- * Landing.jsx, Phase 7.2
- * Hero + How it works. Two sections.
+ * Landing.jsx
+ * Hero + How it works. Dark luxury design system.
  */
 import { Link } from 'react-router-dom';
 
@@ -24,75 +24,90 @@ const HOW_IT_WORKS = [
 
 export default function Landing() {
   return (
-    <main style={{ background: '#f4f7fb' }}>
+    <main style={{ background: '#0d1b2e' }}>
 
-      {/* Section 1 Hero */}
-      <section style={{ background: '#f4f7fb', padding: '52px 28px 40px' }}>
-        <h1 style={{
-          fontSize: 34, fontWeight: 800, color: '#0f2a5e',
-          maxWidth: 420, lineHeight: 1.15, letterSpacing: '-0.3px',
+      {/* Hero */}
+      <section style={{ padding: '72px 40px 56px', maxWidth: 680 }}>
+        <div style={{
+          fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.18em',
+          color: '#c9a96e', textTransform: 'uppercase', marginBottom: 20,
         }}>
-          The right partner changes everything.
+          Competitive pairs and ice dance
+        </div>
+        <h1 style={{
+          fontSize: '2.8rem', fontWeight: 300, color: '#fdfcf8',
+          lineHeight: 1.18, letterSpacing: '-0.02em', marginBottom: 20,
+        }}>
+          The right partner<br />changes everything.
         </h1>
         <p style={{
-          color: '#4a5a7a', fontSize: 15, marginTop: 12, maxWidth: 380,
+          color: 'rgba(253,252,248,0.65)', fontSize: '0.95rem', lineHeight: 1.75,
+          maxWidth: 420, marginBottom: 36,
         }}>
-          AI-powered matching for competitive pairs and ice dance skaters.
+          Data-driven partner matching for pairs and ice dance skaters.
+          Replace Facebook posts and coaching favors with something better.
         </p>
-        <div style={{ marginTop: 22, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <Link
             to="/signup"
             style={{
-              background: '#1a56db', color: '#fff', border: 'none',
-              padding: '10px 22px', borderRadius: 8, fontWeight: 600,
-              fontSize: 14, textDecoration: 'none', display: 'inline-block',
+              background: '#c9a96e', color: '#0d1b2e', border: 'none',
+              padding: '12px 32px', borderRadius: 2, fontWeight: 700,
+              fontSize: '0.78rem', textDecoration: 'none', display: 'inline-block',
+              letterSpacing: '0.12em', textTransform: 'uppercase',
             }}
           >
             Find my partner
           </Link>
           <Link
-            to="/admin"
+            to="/about"
             style={{
-              background: '#fff', color: '#1a3a6b',
-              border: '1.5px solid #c5d3eb',
-              padding: '10px 18px', borderRadius: 8,
-              fontSize: 14, textDecoration: 'none', display: 'inline-block',
+              background: 'transparent', color: '#c9a96e',
+              border: '1px solid rgba(201,169,110,0.35)',
+              padding: '11px 28px', borderRadius: 2,
+              fontSize: '0.78rem', textDecoration: 'none', display: 'inline-block',
+              fontWeight: 600, letterSpacing: '0.08em',
             }}
           >
-            I&apos;m a coach
+            How it works
           </Link>
         </div>
       </section>
 
-      {/* Section 2 How it works */}
-      <section style={{ padding: '32px 28px' }}>
+      {/* How it works */}
+      <section style={{ padding: '0 40px 64px' }}>
         <div style={{
-          fontSize: 11, fontWeight: 700, letterSpacing: '1.2px',
-          color: '#1a56db', textTransform: 'uppercase', marginBottom: 14,
+          fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.18em',
+          color: '#c9a96e', textTransform: 'uppercase', marginBottom: 24,
         }}>
-          HOW IT WORKS
+          The process
         </div>
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12,
+          display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16,
+          maxWidth: 860,
         }} className="how-steps-grid">
           {HOW_IT_WORKS.map(s => (
             <div key={s.n} style={{
-              background: '#fff', border: '1px solid #d4e0f5',
-              borderRadius: 12, padding: '18px 16px',
-            }}>
+              background: '#142236', border: '1px solid rgba(201,169,110,0.12)',
+              borderRadius: 4, padding: '24px 22px',
+              transition: 'border-color 250ms, transform 250ms',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.35)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.12)'; e.currentTarget.style.transform = 'none'; }}
+            >
               <div style={{
-                width: 28, height: 28, borderRadius: '50%', background: '#1a56db',
-                color: '#fff', fontSize: 12, fontWeight: 700, marginBottom: 10,
+                width: 26, height: 26, borderRadius: '50%', background: '#c9a96e',
+                color: '#0d1b2e', fontSize: '0.75rem', fontWeight: 700, marginBottom: 14,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 {s.n}
               </div>
               <h3 style={{
-                fontSize: 13, fontWeight: 700, color: '#0f2a5e', marginBottom: 6,
+                fontSize: '0.88rem', fontWeight: 600, color: '#fdfcf8', marginBottom: 8,
               }}>
                 {s.title}
               </h3>
-              <p style={{ fontSize: 12, color: '#5a6a8a', lineHeight: 1.55 }}>
+              <p style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)', lineHeight: 1.65 }}>
                 {s.desc}
               </p>
             </div>

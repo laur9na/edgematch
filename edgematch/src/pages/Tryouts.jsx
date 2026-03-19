@@ -83,61 +83,61 @@ function TryoutCard({ tryout, role, onUpdate }) {
 
   return (
     <div style={{
-      background: '#fff', border: '1px solid #d4e0f5',
-      borderRadius: 12, padding: 16, marginBottom: 10,
+      background: '#142236', border: '1px solid rgba(201,169,110,0.12)',
+      borderRadius: 4, padding: 18, marginBottom: 10,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{
-            fontSize: 14, fontWeight: 700, color: '#0f2a5e',
+            fontSize: '0.88rem', fontWeight: 600, color: '#fdfcf8',
             textDecoration: isCancelled ? 'line-through' : 'none',
           }}>
             {partner?.name}
           </div>
-          <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 2 }}>
+          <div style={{ fontSize: '0.72rem', color: 'rgba(253,252,248,0.5)', marginTop: 2 }}>
             {[level, loc].filter(Boolean).join(' · ')}
           </div>
         </div>
         <Badge status={tryout.status} />
       </div>
 
-      <div style={{ fontSize: 11, color: '#5a6a8a', marginTop: 8 }}>
+      <div style={{ fontSize: '0.75rem', color: 'rgba(253,252,248,0.6)', marginTop: 10 }}>
         {formatDateTime(tryout.proposed_date, tryout.proposed_time)}
       </div>
       {tryout.location_note && (
-        <div style={{ fontSize: 11, color: '#5a6a8a', marginTop: 2 }}>
+        <div style={{ fontSize: '0.75rem', color: 'rgba(253,252,248,0.5)', marginTop: 3 }}>
           {tryout.location_note}
         </div>
       )}
       {tryout.outcome && (
-        <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 2, fontStyle: 'italic' }}>
+        <div style={{ fontSize: '0.72rem', color: '#c9a96e', marginTop: 3, fontStyle: 'italic' }}>
           {OUTCOME_LABELS[tryout.outcome] ?? tryout.outcome}
         </div>
       )}
 
       {!showOutcome && !confirmCancel && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           {role === 'received' && tryout.status === 'requested' && (
             <>
               <button disabled={updating} onClick={() => updateStatus('confirmed')}
-                style={{ background: '#1a56db', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                style={{ background: '#c9a96e', color: '#0d1b2e', border: 'none', padding: '6px 14px', borderRadius: 2, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em' }}>
                 Confirm
               </button>
               <button disabled={updating} onClick={() => updateStatus('cancelled')}
-                style={{ background: '#fff', border: '1px solid #d4e0f5', color: '#7a8aaa', padding: '6px 14px', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}>
+                style={{ background: 'transparent', border: '1px solid rgba(201,169,110,0.2)', color: 'rgba(253,252,248,0.5)', padding: '5px 14px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Decline
               </button>
             </>
           )}
           {tryout.status === 'confirmed' && !tryout.outcome && (
             <button disabled={updating} onClick={() => setShowOutcome(true)}
-              style={{ background: '#1a56db', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              style={{ background: '#c9a96e', color: '#0d1b2e', border: 'none', padding: '6px 14px', borderRadius: 2, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               Mark completed
             </button>
           )}
           {!isCancelled && tryout.status !== 'completed' && (
             <button disabled={updating} onClick={() => setConfirmCancel(true)}
-              style={{ background: '#fff', border: '1px solid #d4e0f5', color: '#7a8aaa', padding: '6px 14px', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}>
+              style={{ background: 'transparent', border: '1px solid rgba(201,169,110,0.15)', color: 'rgba(253,252,248,0.45)', padding: '5px 14px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
               Cancel
             </button>
           )}
@@ -145,15 +145,15 @@ function TryoutCard({ tryout, role, onUpdate }) {
       )}
 
       {confirmCancel && (
-        <div style={{ marginTop: 10, padding: '10px 12px', background: '#f4f7fb', borderRadius: 8, fontSize: 12, color: '#4a5a7a' }}>
+        <div style={{ marginTop: 12, padding: '12px 14px', background: '#1c3050', borderRadius: 2, border: '1px solid rgba(201,169,110,0.12)', fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)' }}>
           Cancel this try-out?
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button onClick={() => { updateStatus('cancelled'); setConfirmCancel(false); }}
-              style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}>
+              style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
               Yes, cancel
             </button>
             <button onClick={() => setConfirmCancel(false)}
-              style={{ background: '#fff', border: '1px solid #d4e0f5', color: '#4a5a7a', padding: '5px 12px', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}>
+              style={{ background: 'transparent', border: '1px solid rgba(201,169,110,0.2)', color: 'rgba(253,252,248,0.5)', padding: '5px 12px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
               Keep it
             </button>
           </div>
@@ -161,16 +161,16 @@ function TryoutCard({ tryout, role, onUpdate }) {
       )}
 
       {showOutcome && (
-        <div style={{ marginTop: 10, padding: '10px 12px', background: '#f4f7fb', borderRadius: 8, fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ color: '#4a5a7a' }}>How did it go?</span>
+        <div style={{ marginTop: 12, padding: '12px 14px', background: '#1c3050', borderRadius: 2, border: '1px solid rgba(201,169,110,0.12)', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ color: 'rgba(253,252,248,0.65)' }}>How did it go?</span>
           {Object.entries(OUTCOME_LABELS).map(([val, label]) => (
             <button key={val} disabled={updating} onClick={() => setOutcome(val)}
-              style={{ background: '#fff', border: '1px solid #d4e0f5', color: '#0f2a5e', padding: '4px 12px', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}>
+              style={{ background: 'transparent', border: '1px solid rgba(201,169,110,0.25)', color: '#c9a96e', padding: '4px 12px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
               {label}
             </button>
           ))}
           <button onClick={() => setShowOutcome(false)}
-            style={{ background: 'none', border: 'none', color: '#7a8aaa', fontSize: 12, cursor: 'pointer' }}>
+            style={{ background: 'none', border: 'none', color: 'rgba(253,252,248,0.45)', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
             Cancel
           </button>
         </div>
@@ -188,11 +188,11 @@ export default function Tryouts() {
 
   if (!athlete) {
     return (
-      <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f2a5e' }}>Try-outs</h1>
-        <p style={{ color: '#7a8aaa', marginTop: 12 }}>
+      <main style={{ background: '#0d1b2e', padding: '24px 28px' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 300, color: '#fdfcf8' }}>Try-outs</h1>
+        <p style={{ color: 'rgba(253,252,248,0.65)', marginTop: 12 }}>
           You need a profile to manage try-outs.{' '}
-          <a href="/profile/new" style={{ color: '#1a56db' }}>Create one</a>
+          <a href="/profile/new" style={{ color: '#c9a96e' }}>Create one</a>
         </p>
       </main>
     );
@@ -201,26 +201,26 @@ export default function Tryouts() {
   const list = tab === 'sent' ? sent : received;
 
   return (
-    <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f2a5e', letterSpacing: '-0.3px', marginBottom: 16 }}>
+    <main style={{ background: '#0d1b2e', padding: '24px 28px', minHeight: 'calc(100vh - 52px)' }}>
+      <h1 style={{ fontSize: '1.8rem', fontWeight: 300, color: '#fdfcf8', marginBottom: 20 }}>
         Try-outs
       </h1>
 
-      <div style={{ display: 'flex', marginBottom: 14, borderBottom: '2px solid #d4e0f5' }}>
+      <div style={{ display: 'flex', marginBottom: 20, borderBottom: '1px solid rgba(201,169,110,0.15)' }}>
         {[
           { key: 'sent',     label: 'Sent' },
           { key: 'received', label: 'Received' },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
-            fontSize: 13, fontWeight: 600, padding: '8px 14px', cursor: 'pointer',
-            background: 'none', border: 'none',
-            color: tab === t.key ? '#1a56db' : '#7a8aaa',
-            borderBottom: tab === t.key ? '2px solid #1a56db' : '2px solid transparent',
-            marginBottom: -2, display: 'flex', alignItems: 'center', gap: 4,
+            fontSize: '0.82rem', fontWeight: 600, padding: '8px 16px', cursor: 'pointer',
+            background: 'none', border: 'none', fontFamily: 'inherit',
+            color: tab === t.key ? '#c9a96e' : 'rgba(253,252,248,0.5)',
+            borderBottom: tab === t.key ? '2px solid #c9a96e' : '2px solid transparent',
+            marginBottom: -1, display: 'flex', alignItems: 'center', gap: 5,
           }}>
             {t.label}
             {t.key === 'sent' && sent.length > 0 && (
-              <span style={{ background: '#1a56db', color: '#fff', borderRadius: 10, padding: '1px 6px', fontSize: 10 }}>
+              <span style={{ background: '#c9a96e', color: '#0d1b2e', borderRadius: 10, padding: '1px 6px', fontSize: '0.68rem', fontWeight: 700 }}>
                 {sent.length}
               </span>
             )}
@@ -228,7 +228,7 @@ export default function Tryouts() {
         ))}
       </div>
 
-      {error && <p style={{ color: '#dc2626', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+      {error && <p style={{ color: '#dc2626', fontSize: '0.82rem', marginBottom: 12 }}>{error}</p>}
 
       {loading && (
         <div>
@@ -237,7 +237,7 @@ export default function Tryouts() {
       )}
 
       {!loading && list.length === 0 && (
-        <div style={{ textAlign: 'center', color: '#7a8aaa', fontSize: 14, marginTop: tab === 'received' ? 40 : 60 }}>
+        <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.45)', fontSize: '0.85rem', marginTop: tab === 'received' ? 40 : 60 }}>
           {tab === 'received' ? 'No one has requested a try-out yet.' : 'No try-out requests sent yet.'}
         </div>
       )}

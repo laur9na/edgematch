@@ -90,9 +90,9 @@ function Toast({ msg, onHide }) {
   return (
     <div style={{
       position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
-      background: '#1a3a6b', color: '#fff', padding: '10px 20px',
-      borderRadius: 8, fontSize: 13, fontWeight: 600, zIndex: 200,
-      boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+      background: '#c9a96e', color: '#0d1b2e', padding: '10px 20px',
+      borderRadius: 2, fontSize: '0.78rem', fontWeight: 700, zIndex: 200,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.4)', letterSpacing: '0.06em',
     }}>
       {msg}
     </div>
@@ -125,20 +125,22 @@ function CompetitionResults({ athleteId }) {
   const visible = showAll ? results : results.slice(0, 10);
 
   return (
-    <div style={{ padding: '0 16px 16px' }}>
+    <div style={{ padding: '0 18px 16px' }}>
       <div style={{
-        fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-        letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 8,
+        fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+        letterSpacing: '0.14em', color: '#c9a96e', marginBottom: 8,
       }}>
         Competition results
       </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
         <thead>
           <tr>
             {['Event', 'Level', 'Segment', 'Place', 'Score'].map(h => (
               <th key={h} style={{
                 textAlign: 'left', padding: '4px 6px',
-                borderBottom: '1px solid #d4e0f5', color: '#7a8aaa', fontWeight: 700,
+                borderBottom: '1px solid rgba(201,169,110,0.12)',
+                color: 'rgba(253,252,248,0.4)', fontWeight: 600, fontSize: '0.65rem',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
               }}>{h}</th>
             ))}
           </tr>
@@ -146,19 +148,19 @@ function CompetitionResults({ athleteId }) {
         <tbody>
           {visible.map((r, i) => (
             <tr key={i}>
-              <td style={{ padding: '5px 6px', borderBottom: '1px solid #f0f4fb', color: '#0f2a5e' }}>
+              <td style={{ padding: '6px 6px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: '#fdfcf8' }}>
                 {r.event_name}
               </td>
-              <td style={{ padding: '5px 6px', borderBottom: '1px solid #f0f4fb', color: '#4a5a7a' }}>
+              <td style={{ padding: '6px 6px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: 'rgba(253,252,248,0.65)' }}>
                 {LEVEL_LABEL[r.level] ?? r.level}
               </td>
-              <td style={{ padding: '5px 6px', borderBottom: '1px solid #f0f4fb', color: '#4a5a7a' }}>
+              <td style={{ padding: '6px 6px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: 'rgba(253,252,248,0.65)' }}>
                 {r.segment}
               </td>
-              <td style={{ padding: '5px 6px', borderBottom: '1px solid #f0f4fb', color: '#4a5a7a', textAlign: 'center' }}>
+              <td style={{ padding: '6px 6px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: 'rgba(253,252,248,0.65)', textAlign: 'center' }}>
                 {r.placement ?? '-'}
               </td>
-              <td style={{ padding: '5px 6px', borderBottom: '1px solid #f0f4fb', color: '#4a5a7a', textAlign: 'right' }}>
+              <td style={{ padding: '6px 6px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: '#c9a96e', textAlign: 'right', fontWeight: 600 }}>
                 {r.total_score ?? '-'}
               </td>
             </tr>
@@ -170,7 +172,7 @@ function CompetitionResults({ athleteId }) {
           onClick={() => setShowAll(true)}
           style={{
             marginTop: 8, background: 'none', border: 'none',
-            color: '#1a56db', fontSize: 12, cursor: 'pointer', padding: 0,
+            color: '#c9a96e', fontSize: '0.75rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
           }}
         >
           View all ({results.length})
@@ -205,12 +207,12 @@ function ProfileView({ athlete, onEdit }) {
   return (
     <div style={{ maxWidth: 480, margin: '24px auto', padding: '0 16px' }}>
       <div style={{
-        background: '#fff', border: '1px solid #d4e0f5',
-        borderRadius: 14, overflow: 'hidden',
+        background: '#142236', border: '1px solid rgba(201,169,110,0.15)',
+        borderRadius: 4, overflow: 'hidden',
       }}>
         {/* Header */}
-        <div style={{ padding: 20, borderBottom: '1px solid #f0f4fb' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 8 }}>
+        <div style={{ padding: 22, borderBottom: '1px solid rgba(201,169,110,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 12 }}>
             {athlete.profile_photo_url ? (
               <img
                 src={athlete.profile_photo_url}
@@ -220,18 +222,19 @@ function ProfileView({ athlete, onEdit }) {
             ) : (
               <div style={{
                 width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
-                background: '#dce8fc', color: '#1a56db',
+                background: 'rgba(201,169,110,0.15)', color: '#c9a96e',
                 fontSize: 16, fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(201,169,110,0.3)',
               }}>
                 {getInitials(athlete.name)}
               </div>
             )}
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f2a5e' }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 300, color: '#fdfcf8' }}>
                 {athlete.name}
               </div>
-              <div style={{ fontSize: 12, color: '#7a8aaa', marginTop: 2 }}>
+              <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', marginTop: 3 }}>
                 {[
                   LEVEL_LABEL[athlete.skating_level],
                   DISCIPLINE_LABEL[athlete.discipline],
@@ -239,45 +242,35 @@ function ProfileView({ athlete, onEdit }) {
                 ].filter(Boolean).join(' · ')}
               </div>
               {(athlete.location_city || athlete.location_state) && (
-                <div style={{ fontSize: 12, color: '#7a8aaa' }}>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(253,252,248,0.5)' }}>
                   {[athlete.location_city, athlete.location_state].filter(Boolean).join(', ')}
                 </div>
               )}
               {athlete.instagram_handle && (
-                <div style={{ fontSize: 12 }}>
-                  <span style={{ color: '#7a8aaa' }}>Instagram: </span>
+                <div style={{ fontSize: '0.75rem', marginTop: 2 }}>
                   <a
                     href={`https://instagram.com/${athlete.instagram_handle}`}
                     target="_blank" rel="noopener noreferrer"
-                    style={{ color: '#1a56db', textDecoration: 'none' }}
+                    style={{ color: '#c9a96e', textDecoration: 'none' }}
                   >
-                    {athlete.instagram_handle}
+                    @{athlete.instagram_handle}
                   </a>
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
             <button
               onClick={onEdit}
               style={{
-                background: '#fff', color: '#1a3a6b',
-                border: '1.5px solid #c5d3eb',
-                padding: '6px 14px', borderRadius: 7,
-                fontSize: 12, cursor: 'pointer',
+                background: 'transparent', color: '#c9a96e',
+                border: '1px solid rgba(201,169,110,0.35)',
+                padding: '6px 16px', borderRadius: 2,
+                fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
               }}
             >
               Edit profile
-            </button>
-            <button
-              style={{
-                background: '#f0f4fb', color: '#4a5a7a', border: 'none',
-                padding: '6px 14px', borderRadius: 7,
-                fontSize: 12, cursor: 'pointer',
-              }}
-            >
-              Share
             </button>
           </div>
         </div>
@@ -291,7 +284,7 @@ function ProfileView({ athlete, onEdit }) {
               key={i}
               style={{
                 aspectRatio: '1/1', overflow: 'hidden',
-                background: url ? '#b5d4f4' : '#dce8fc',
+                background: url ? '#1c3050' : '#1c3050',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 position: 'relative',
               }}
@@ -314,7 +307,7 @@ function ProfileView({ athlete, onEdit }) {
                 )
               ) : (
                 i === firstEmpty
-                  ? <span style={{ fontSize: 10, color: '#7a9ace' }}>+ Add</span>
+                  ? <span style={{ fontSize: 10, color: 'rgba(201,169,110,0.5)' }}>+ Add</span>
                   : null
               )}
             </div>
@@ -322,70 +315,70 @@ function ProfileView({ athlete, onEdit }) {
         </div>
 
         {/* About section */}
-        <div style={{ padding: 16 }}>
+        <div style={{ padding: '16px 18px', borderTop: '1px solid rgba(201,169,110,0.1)' }}>
           <div style={{
-            fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 8,
+            fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.14em', color: '#c9a96e', marginBottom: 8,
           }}>
-            ABOUT
+            About
           </div>
           {athlete.goals && (
-            <div style={{ fontSize: 12, color: '#4a5a7a', marginBottom: 4 }}>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)', marginBottom: 4, lineHeight: 1.65 }}>
               Goals: {athlete.goals}
             </div>
           )}
           {athlete.training_hours_wk && (
-            <div style={{ fontSize: 12, color: '#4a5a7a', marginBottom: 4 }}>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)', marginBottom: 4 }}>
               Training: {athlete.training_hours_wk} hrs/week
             </div>
           )}
           {athlete.coach_name && (
-            <div style={{ fontSize: 12, color: '#4a5a7a', marginBottom: 4 }}>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)', marginBottom: 4 }}>
               Coach: {athlete.coach_name}
             </div>
           )}
           {athlete.club_name && (
-            <div style={{ fontSize: 12, color: '#4a5a7a' }}>Club: {athlete.club_name}</div>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)' }}>Club: {athlete.club_name}</div>
           )}
           {!athlete.goals && !athlete.training_hours_wk && !athlete.coach_name && !athlete.club_name && (
-            <div style={{ fontSize: 12, color: '#7a8aaa' }}>No details added yet.</div>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.35)' }}>No details added yet.</div>
           )}
         </div>
 
         {/* Club section */}
         {club && (club.website || club.contact_email || club.phone) && (
-          <div style={{ padding: '0 16px 16px' }}>
+          <div style={{ padding: '0 18px 16px' }}>
             <div style={{
-              fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-              letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 8,
+              fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: '0.14em', color: '#c9a96e', marginBottom: 8,
             }}>
               Club
             </div>
             <div style={{
-              background: '#f4f7fb', border: '1px solid #d4e0f5',
-              borderRadius: 10, padding: '12px 14px',
+              background: '#1c3050', border: '1px solid rgba(201,169,110,0.15)',
+              borderRadius: 2, padding: '12px 14px',
             }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e', marginBottom: 6 }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fdfcf8', marginBottom: 6 }}>
                 {club.name}
               </div>
               {club.website && (
-                <div style={{ fontSize: 12, marginBottom: 4 }}>
+                <div style={{ fontSize: '0.78rem', marginBottom: 4 }}>
                   <a href={club.website} target="_blank" rel="noopener noreferrer"
-                    style={{ color: '#1a56db', textDecoration: 'none' }}>
+                    style={{ color: '#c9a96e', textDecoration: 'none' }}>
                     Visit website
                   </a>
                 </div>
               )}
               {club.contact_email && (
-                <div style={{ fontSize: 12, marginBottom: 4 }}>
+                <div style={{ fontSize: '0.78rem', marginBottom: 4 }}>
                   <a href={`mailto:${club.contact_email}`}
-                    style={{ color: '#1a56db', textDecoration: 'none' }}>
+                    style={{ color: '#c9a96e', textDecoration: 'none' }}>
                     {club.contact_email}
                   </a>
                 </div>
               )}
               {club.phone && (
-                <div style={{ fontSize: 12, color: '#4a5a7a' }}>
+                <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)' }}>
                   {club.phone}
                 </div>
               )}
@@ -421,7 +414,7 @@ function StepBasics({ data, onChange, isExistingUser }) {
         </>
       )}
       {isExistingUser && (
-        <p className="hint" style={{ marginBottom: 12 }}>Signed in as <strong>{data.email}</strong></p>
+        <p className="hint" style={{ marginBottom: 12, color: 'rgba(253,252,248,0.65)' }}>Signed in as <strong style={{ color: '#fdfcf8' }}>{data.email}</strong></p>
       )}
       <label>Age
         <input type="number" value={data.age} onChange={e => onChange('age', e.target.value)} min={8} max={99} placeholder="e.g. 17" />
@@ -754,17 +747,17 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
       {/* Completeness bar (edit mode only) */}
       {isEdit && (
         <div style={{
-          background: '#fff', border: '1px solid #d4e0f5', borderRadius: 10,
+          background: '#142236', border: '1px solid rgba(201,169,110,0.15)', borderRadius: 2,
           padding: '12px 16px', marginBottom: 24,
         }}>
-          <div style={{ fontSize: 12, color: '#4a5a7a', marginBottom: 6 }}>
-            <span style={{ fontWeight: 600 }}>{pct}% complete</span>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(253,252,248,0.65)', marginBottom: 6 }}>
+            <span style={{ fontWeight: 600, color: '#c9a96e' }}>{pct}%</span> complete
           </div>
-          <div style={{ height: 6, background: '#e8eef7', borderRadius: 3 }}>
+          <div style={{ height: 3, background: 'rgba(201,169,110,0.15)', borderRadius: 2 }}>
             <div style={{
-              height: '100%', borderRadius: 3,
+              height: '100%', borderRadius: 2,
               width: `${pct}%`,
-              background: pct >= 80 ? '#27a845' : '#1a56db',
+              background: pct >= 80 ? '#4ade80' : '#c9a96e',
               transition: 'width 0.3s',
             }} />
           </div>
@@ -835,10 +828,10 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
-        <p style={{ color: '#7a8aaa', fontSize: 14 }}>
+      <main style={{ background: '#0d1b2e', padding: '24px 28px' }}>
+        <p style={{ color: 'rgba(253,252,248,0.65)', fontSize: '0.85rem' }}>
           Sign in to view your profile.{' '}
-          <a href="/signup" style={{ color: '#1a56db' }}>Sign in</a>
+          <a href="/signup" style={{ color: '#c9a96e' }}>Sign in</a>
         </p>
       </main>
     );
@@ -846,7 +839,7 @@ export default function Profile() {
 
   return (
     <>
-      <main style={{ background: '#f4f7fb', minHeight: 'calc(100vh - 52px)' }}>
+      <main style={{ background: '#0d1b2e', minHeight: 'calc(100vh - 52px)' }}>
         <ProfileView athlete={athlete} onEdit={() => setEditMode(true)} />
       </main>
       {toast && <Toast msg={toast} onHide={() => setToast(null)} />}

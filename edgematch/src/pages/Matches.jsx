@@ -28,7 +28,7 @@ const KNOB = {
   pointerEvents: 'none', zIndex: 2,
 };
 
-// No dual-input approach — two overlapping inputs can't be independently clicked.
+// No dual-input approach. Two overlapping inputs can't be independently clicked.
 // Replaced with two labeled single sliders (min/max) that always work.
 
 // Single-handle range slider
@@ -38,10 +38,10 @@ function SingleRangeSlider({ min, max, step, value, onChange }) {
     <div style={{ position: 'relative', height: 20, margin: '8px 4px 4px' }}>
       <div style={{
         position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-        left: 0, right: 0, height: 3, background: '#e2e8f0', borderRadius: 99,
+        left: 0, right: 0, height: 3, background: 'rgba(201,169,110,0.2)', borderRadius: 99,
       }}>
         <div style={{
-          position: 'absolute', height: '100%', background: '#1a56db', borderRadius: 99,
+          position: 'absolute', height: '100%', background: '#c9a96e', borderRadius: 99,
           left: 0, right: `${100 - pct}%`,
         }} />
       </div>
@@ -72,33 +72,33 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
   return (
     <aside style={{
       width: 220, flexShrink: 0,
-      background: '#fff', borderRight: '1px solid #d4e0f5',
+      background: '#142236', borderRight: '1px solid rgba(201,169,110,0.12)',
       padding: '20px 16px', alignSelf: 'flex-start',
-      position: 'sticky', top: 56,
-      minHeight: 'calc(100vh - 56px)',
+      position: 'sticky', top: 52,
+      minHeight: 'calc(100vh - 52px)',
     }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: '#0f2a5e', marginBottom: 16 }}>
+      <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#c9a96e', marginBottom: 16, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
         Filter matches
       </div>
 
       {/* Match strength: two independent sliders */}
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 6 }}>
+      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
         Match strength
       </div>
-      <div style={{ fontSize: 11, color: '#7a8aaa', marginBottom: 2 }}>Min: <span style={{ color: '#1a56db', fontWeight: 600 }}>{strength[0]}%</span></div>
+      <div style={{ fontSize: 11, color: 'rgba(253,252,248,0.65)', marginBottom: 2 }}>Min: <span style={{ color: '#c9a96e', fontWeight: 600 }}>{strength[0]}%</span></div>
       <SingleRangeSlider min={0} max={100} step={1} value={strength[0]}
         onChange={v => onStrength([Math.min(v, strength[1]), strength[1]])} />
-      <div style={{ fontSize: 11, color: '#7a8aaa', marginBottom: 2, marginTop: 6 }}>Max: <span style={{ color: '#1a56db', fontWeight: 600 }}>{strength[1]}%</span></div>
+      <div style={{ fontSize: 11, color: 'rgba(253,252,248,0.65)', marginBottom: 2, marginTop: 6 }}>Max: <span style={{ color: '#c9a96e', fontWeight: 600 }}>{strength[1]}%</span></div>
       <SingleRangeSlider min={0} max={100} step={1} value={strength[1]}
         onChange={v => onStrength([strength[0], Math.max(v, strength[0])])} />
 
       {divider}
 
       {/* Distance */}
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 4 }}>
+      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
         Distance
       </div>
-      <div style={{ fontSize: 12, color: '#1a56db', marginBottom: 2 }}>
+      <div style={{ fontSize: 11, color: '#c9a96e', marginBottom: 2 }}>
         Within {distance === 5000 ? '5000+' : distance} km
       </div>
       <SingleRangeSlider min={0} max={5000} step={50} value={distance} onChange={onDistance} />
@@ -106,7 +106,7 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       {divider}
 
       {/* Level pills */}
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 8 }}>
+      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
         Level
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -117,12 +117,12 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
               key={key}
               onClick={() => toggleLevel(key)}
               style={{
-                padding: '4px 9px', borderRadius: 20, fontSize: 11, cursor: 'pointer',
-                background: active ? '#eef3fe' : '#fff',
-                border: `1px solid ${active ? '#1a56db' : '#d4e0f5'}`,
-                color: active ? '#1a56db' : '#4a5a7a',
+                padding: '4px 9px', borderRadius: 2, fontSize: 10, cursor: 'pointer',
+                background: active ? 'rgba(201,169,110,0.15)' : 'transparent',
+                border: `1px solid ${active ? 'rgba(201,169,110,0.5)' : 'rgba(201,169,110,0.15)'}`,
+                color: active ? '#c9a96e' : 'rgba(253,252,248,0.5)',
                 fontWeight: active ? 600 : 400,
-                transition: 'all 0.12s',
+                transition: 'all 0.12s', fontFamily: 'inherit',
               }}
             >
               {LEVEL_LABEL[key]}
@@ -134,11 +134,11 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       {divider}
 
       {/* Discipline */}
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 6 }}>Discipline</div>
+      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Discipline</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
         {['ice_dance', 'pairs'].map(val => (
-          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#4a5a7a', cursor: 'pointer' }}>
-            <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#1a56db' }} checked={disciplines.includes(val)} onChange={() => toggleDiscipline(val)} />
+          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
+            <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#c9a96e' }} checked={disciplines.includes(val)} onChange={() => toggleDiscipline(val)} />
             <span>{DISCIPLINE_LABEL[val]}</span>
           </label>
         ))}
@@ -147,11 +147,11 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       {divider}
 
       {/* Role */}
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4a5a7a', marginBottom: 6 }}>Role</div>
+      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Role</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
         {['man', 'lady', 'either'].map(val => (
-          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#4a5a7a', cursor: 'pointer' }}>
-            <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#1a56db' }} checked={roles.includes(val)} onChange={() => toggleRole(val)} />
+          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
+            <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#c9a96e' }} checked={roles.includes(val)} onChange={() => toggleRole(val)} />
             <span>{ROLE_LABEL[val]}</span>
           </label>
         ))}
@@ -205,18 +205,18 @@ export default function Matches() {
 
   if (!athlete) {
     return (
-      <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f2a5e' }}>Your matches</h1>
-        <p style={{ color: '#7a8aaa', marginTop: 12 }}>
+      <main style={{ background: '#0d1b2e', padding: '24px 28px' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 300, color: '#fdfcf8' }}>Your matches</h1>
+        <p style={{ color: 'rgba(253,252,248,0.65)', marginTop: 12 }}>
           You need a profile to see matches.{' '}
-          <a href="/profile/new" style={{ color: '#1a56db' }}>Create one</a>
+          <a href="/profile/new" style={{ color: '#c9a96e' }}>Create one</a>
         </p>
       </main>
     );
   }
 
   return (
-    <div style={{ display: 'flex', background: '#f4f7fb', minHeight: 'calc(100vh - 56px)', alignItems: 'flex-start' }}>
+    <div style={{ display: 'flex', background: '#0d1b2e', minHeight: 'calc(100vh - 52px)', alignItems: 'flex-start' }}>
       <Sidebar
         strength={strength} onStrength={setStrength}
         distance={distance} onDistance={setDistance}
@@ -226,7 +226,7 @@ export default function Matches() {
       />
 
       <main style={{ flex: 1, padding: '24px 24px' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f2a5e', letterSpacing: '-0.3px', marginBottom: 18 }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 300, color: '#fdfcf8', marginBottom: 18 }}>
           Your matches
         </h1>
 
@@ -241,7 +241,7 @@ export default function Matches() {
         )}
 
         {!loading && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#7a8aaa', fontSize: 14, marginTop: 60 }}>
+          <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.65)', fontSize: 14, marginTop: 60 }}>
             No matches found. Try adjusting the filters.
           </div>
         )}

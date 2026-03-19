@@ -49,10 +49,10 @@ function AvatarDropdown() {
         onClick={() => setOpen(o => !o)}
         style={{
           width: 30, height: 30, borderRadius: '50%',
-          background: '#3b6fd4', color: '#fff',
-          fontSize: 11, fontWeight: 600,
+          background: 'rgba(201,169,110,0.2)', color: '#c9a96e',
+          fontSize: 11, fontWeight: 700,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', userSelect: 'none',
+          cursor: 'pointer', userSelect: 'none', border: '1px solid rgba(201,169,110,0.35)',
         }}
       >
         {initials}
@@ -60,27 +60,27 @@ function AvatarDropdown() {
       {open && (
         <div style={{
           position: 'absolute', right: 0, top: 38,
-          background: '#fff', border: '1px solid #d4e0f5',
-          borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+          background: '#142236', border: '1px solid rgba(201,169,110,0.2)',
+          borderRadius: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
           minWidth: 180, zIndex: 100, overflow: 'hidden',
         }}>
           <div style={{ padding: '12px 16px' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f2a5e' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#fdfcf8' }}>
               {athlete?.name ?? user.email}
             </div>
             {subline && (
-              <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: 'rgba(253,252,248,0.65)', marginTop: 2 }}>
                 {subline}
               </div>
             )}
           </div>
-          <div style={{ borderTop: '1px solid #f0f4fb' }} />
+          <div style={{ borderTop: '1px solid rgba(201,169,110,0.12)' }} />
           <button
             onClick={handleSignOut}
             style={{
               display: 'block', width: '100%', textAlign: 'left',
               padding: '10px 16px', background: 'none', border: 'none',
-              fontSize: 13, color: '#4a5a7a', cursor: 'pointer',
+              fontSize: 13, color: 'rgba(253,252,248,0.65)', cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
             Sign out
@@ -132,7 +132,7 @@ export default function Nav() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
-        <span style={{ color: '#fff', fontWeight: 700, fontSize: 17, letterSpacing: '-0.3px' }}>
+        <span style={{ color: '#c9a96e', fontFamily: "'Great Vibes', cursive", fontSize: 26, lineHeight: 1 }}>
           EdgeMatch
         </span>
 
@@ -142,10 +142,11 @@ export default function Nav() {
               key={link}
               to={toPath(link)}
               style={({ isActive }) => ({
-                color: isActive ? '#fff' : 'rgba(255,255,255,0.75)',
-                background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
-                fontSize: 13, padding: '6px 10px', borderRadius: 6,
-                textDecoration: 'none', transition: 'background 0.15s',
+                color: isActive ? '#fdfcf8' : 'rgba(253,252,248,0.65)',
+                background: 'transparent',
+                fontSize: 13, padding: '6px 10px',
+                textDecoration: 'none', fontWeight: isActive ? 600 : 400,
+                fontFamily: "'Nunito', sans-serif",
               })}
             >
               {link}
@@ -157,10 +158,12 @@ export default function Nav() {
             <NavLink
               to="/signup"
               style={({ isActive }) => ({
-                color: isActive ? '#fff' : 'rgba(255,255,255,0.75)',
-                background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
-                fontSize: 13, padding: '6px 10px', borderRadius: 6,
-                textDecoration: 'none', transition: 'background 0.15s',
+                color: isActive ? '#c9a96e' : '#c9a96e',
+                background: 'transparent',
+                border: '1px solid rgba(201,169,110,0.35)',
+                fontSize: 13, padding: '5px 14px', borderRadius: 2,
+                textDecoration: 'none', fontWeight: 600,
+                fontFamily: "'Nunito', sans-serif",
               })}
             >
               Sign in

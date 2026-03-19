@@ -57,12 +57,12 @@ function DotItem({ label, value }) {
   const filled = Math.round((value ?? 0) * 5);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-      <span style={{ fontSize: 12, color: '#4a5a7a', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: '0.72rem', color: 'rgba(253,252,248,0.5)', whiteSpace: 'nowrap' }}>{label}</span>
       <div style={{ display: 'flex', gap: 3 }}>
         {[0,1,2,3,4].map(i => (
           <span key={i} style={{
-            width: 7, height: 7, borderRadius: '50%', display: 'inline-block',
-            background: i < filled ? '#1a7a3a' : '#d4e0f5',
+            width: 6, height: 6, borderRadius: '50%', display: 'inline-block',
+            background: i < filled ? '#c9a96e' : 'rgba(201,169,110,0.2)',
           }} />
         ))}
       </div>
@@ -76,20 +76,22 @@ function CompetitionResults({ results }) {
   const visible = showAll ? results : results.slice(0, 10);
 
   return (
-    <div style={{ padding: '16px 20px', borderTop: '1px solid #f0f4fb' }}>
+    <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(201,169,110,0.1)' }}>
       <div style={{
-        fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-        letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 10,
+        fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+        letterSpacing: '0.14em', color: '#c9a96e', marginBottom: 12,
       }}>
         Competition results
       </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
         <thead>
           <tr>
             {['Event', 'Level', 'Segment', 'Place', 'Score'].map(h => (
               <th key={h} style={{
                 textAlign: 'left', padding: '4px 8px',
-                borderBottom: '1px solid #d4e0f5', color: '#7a8aaa', fontWeight: 700,
+                borderBottom: '1px solid rgba(201,169,110,0.12)',
+                color: 'rgba(253,252,248,0.45)', fontWeight: 600, fontSize: '0.65rem',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
               }}>{h}</th>
             ))}
           </tr>
@@ -97,23 +99,23 @@ function CompetitionResults({ results }) {
         <tbody>
           {visible.map((r, i) => (
             <tr key={i}>
-              <td style={{ padding: '6px 8px', borderBottom: '1px solid #f0f4fb', color: '#0f2a5e' }}>
+              <td style={{ padding: '7px 8px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: '#fdfcf8' }}>
                 {r.event_name}{r.event_year ? ` (${r.event_year})` : ''}
               </td>
-              <td style={{ padding: '6px 8px', borderBottom: '1px solid #f0f4fb', color: '#4a5a7a' }}>
+              <td style={{ padding: '7px 8px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: 'rgba(253,252,248,0.65)' }}>
                 {LEVEL_LABEL[r.level] ?? r.level}
               </td>
-              <td style={{ padding: '6px 8px', borderBottom: '1px solid #f0f4fb', color: '#4a5a7a' }}>
+              <td style={{ padding: '7px 8px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: 'rgba(253,252,248,0.65)' }}>
                 {r.segment}
               </td>
-              <td style={{ padding: '6px 8px', borderBottom: '1px solid #f0f4fb', textAlign: 'center' }}>
+              <td style={{ padding: '7px 8px', borderBottom: '1px solid rgba(201,169,110,0.06)', textAlign: 'center' }}>
                 <PlaceBadge place={r.placement} />
               </td>
-              <td style={{ padding: '6px 8px', borderBottom: '1px solid #f0f4fb', textAlign: 'right' }}>
+              <td style={{ padding: '7px 8px', borderBottom: '1px solid rgba(201,169,110,0.06)', textAlign: 'right' }}>
                 {r.total_score != null ? (
                   <span style={{
-                    background: '#eef3fe', color: '#1a56db',
-                    padding: '2px 7px', borderRadius: 4, fontSize: 11, fontWeight: 600,
+                    background: 'rgba(201,169,110,0.15)', color: '#c9a96e',
+                    padding: '2px 7px', borderRadius: 2, fontSize: '0.72rem', fontWeight: 600,
                   }}>
                     {r.total_score}
                   </span>
@@ -126,7 +128,7 @@ function CompetitionResults({ results }) {
       {results.length > 10 && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          style={{ marginTop: 8, background: 'none', border: 'none', color: '#1a56db', fontSize: 12, cursor: 'pointer', padding: 0 }}
+          style={{ marginTop: 8, background: 'none', border: 'none', color: '#c9a96e', fontSize: '0.78rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
         >
           View all ({results.length})
         </button>
@@ -221,8 +223,8 @@ export default function SkaterProfile() {
 
   if (!partner) {
     return (
-      <main style={{ background: '#f4f7fb', padding: '24px 28px' }}>
-        <p style={{ color: '#7a8aaa' }}>Skater not found.</p>
+      <main style={{ background: '#0d1b2e', padding: '24px 28px' }}>
+        <p style={{ color: 'rgba(253,252,248,0.65)' }}>Skater not found.</p>
       </main>
     );
   }
@@ -252,7 +254,7 @@ export default function SkaterProfile() {
     : { id: null, partner, total_score: score };
 
   return (
-    <main style={{ background: '#f4f7fb', minHeight: 'calc(100vh - 56px)', padding: '24px 28px' }}>
+    <main style={{ background: '#0d1b2e', minHeight: 'calc(100vh - 52px)', padding: '24px 28px' }}>
 
       {/* Back link */}
       <button
@@ -260,7 +262,7 @@ export default function SkaterProfile() {
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 4,
           marginBottom: 16, background: 'none', border: 'none',
-          fontSize: 13, color: '#1a56db', cursor: 'pointer', padding: 0,
+          fontSize: '0.78rem', color: '#c9a96e', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
         }}
       >
         &larr; Back to matches
@@ -268,32 +270,33 @@ export default function SkaterProfile() {
 
       {/* Single full-width card */}
       <div style={{
-        background: '#fff', border: '1px solid #d4e0f5',
-        borderRadius: 14, overflow: 'hidden',
+        background: '#142236', border: '1px solid rgba(201,169,110,0.15)',
+        borderRadius: 4, overflow: 'hidden',
       }}>
 
         {/* Header */}
-        <div style={{ padding: 20, borderBottom: '1px solid #f0f4fb' }}>
+        <div style={{ padding: 24, borderBottom: '1px solid rgba(201,169,110,0.1)' }}>
 
           {/* Row 1: avatar + name + try-out button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
             <div style={{
               width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
-              background: '#dce8fc', color: '#1a56db',
+              background: 'rgba(201,169,110,0.15)', color: '#c9a96e',
               fontSize: 18, fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid rgba(201,169,110,0.3)',
             }}>
               {getInitials(partner.name)}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#0f2a5e' }}>
+              <div style={{ fontSize: '1.3rem', fontWeight: 300, color: '#fdfcf8' }}>
                 {partner.name}
               </div>
               {partner.instagram_handle && (
                 <a
                   href={`https://instagram.com/${partner.instagram_handle}`}
                   target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
+                  style={{ fontSize: '0.78rem', color: '#c9a96e', textDecoration: 'none' }}
                 >
                   @{partner.instagram_handle}
                 </a>
@@ -303,9 +306,9 @@ export default function SkaterProfile() {
               onClick={() => setShowModal(true)}
               style={{
                 flexShrink: 0,
-                background: '#1a56db', color: '#fff', border: 'none',
-                padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700,
-                cursor: 'pointer',
+                background: '#c9a96e', color: '#0d1b2e', border: 'none',
+                padding: '10px 24px', borderRadius: 2, fontSize: '0.75rem', fontWeight: 700,
+                cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit',
               }}
             >
               Request try-out
@@ -314,7 +317,7 @@ export default function SkaterProfile() {
 
           {/* Row 2: discipline / level / role / city / height */}
           {metaParts.length > 0 && (
-            <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 10 }}>
+            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.65)', marginBottom: 12 }}>
               {metaParts.join(' · ')}
             </div>
           )}
@@ -323,16 +326,16 @@ export default function SkaterProfile() {
           {matchRow && (
             <div style={{ marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                <div style={{ flex: 1, height: 6, background: '#e8eef7', borderRadius: 3 }}>
+                <div style={{ flex: 1, height: 3, background: 'rgba(201,169,110,0.2)', borderRadius: 2 }}>
                   <div style={{
-                    height: '100%', borderRadius: 3,
-                    width: `${scorePct}%`, background: '#1a7a3a',
+                    height: '100%', borderRadius: 2,
+                    width: `${scorePct}%`, background: '#c9a96e',
                   }} />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#1a7a3a', minWidth: 40 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#c9a96e', minWidth: 36 }}>
                   {scorePct}%
                 </span>
-                <span style={{ fontSize: 12, color: '#7a8aaa' }}>match strength</span>
+                <span style={{ fontSize: '0.72rem', color: 'rgba(253,252,248,0.45)' }}>match</span>
               </div>
             </div>
           )}
@@ -384,47 +387,47 @@ export default function SkaterProfile() {
         )}
 
         {/* About section */}
-        <div style={{ padding: '16px 20px', borderTop: '1px solid #f0f4fb' }}>
+        <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(201,169,110,0.1)' }}>
           <div style={{
-            fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 8,
+            fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.14em', color: '#c9a96e', marginBottom: 10,
           }}>
             About
           </div>
           {partner.goals && (
-            <div style={{ fontSize: 13, color: '#4a5a7a', marginBottom: 4 }}>
+            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.65)', marginBottom: 6, lineHeight: 1.65 }}>
               Goals: {partner.goals}
             </div>
           )}
           {partner.training_hours_wk && (
-            <div style={{ fontSize: 13, color: '#4a5a7a', marginBottom: 4 }}>
+            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.65)', marginBottom: 6 }}>
               Training: {partner.training_hours_wk} hrs/week
             </div>
           )}
           {partner.coach_name && (
-            <div style={{ fontSize: 13, color: '#4a5a7a' }}>
+            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.65)' }}>
               Coach: {partner.coach_name}
             </div>
           )}
           {!hasAbout && (
-            <div style={{ fontSize: 13, color: '#7a8aaa' }}>No details added yet.</div>
+            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.4)' }}>No details added yet.</div>
           )}
         </div>
 
         {/* Club section: joined record > fuzzy lookup > raw club_name text */}
         {hasClub && (
-          <div style={{ padding: '16px 20px', borderTop: '1px solid #f0f4fb' }}>
+          <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(201,169,110,0.1)' }}>
             <div style={{
-              fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-              letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 8,
+              fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: '0.14em', color: '#c9a96e', marginBottom: 10,
             }}>
               Club
             </div>
             <div style={{
-              background: '#f4f7fb', border: '1px solid #d4e0f5',
-              borderRadius: 10, padding: 14,
+              background: '#1c3050', border: '1px solid rgba(201,169,110,0.15)',
+              borderRadius: 2, padding: 14,
             }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e', marginBottom: 6 }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#fdfcf8', marginBottom: 8 }}>
                 {club ? club.name : partner.club_name}
               </div>
               {club?.website && (
@@ -432,7 +435,7 @@ export default function SkaterProfile() {
                   <a
                     href={club.website}
                     target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
+                    style={{ fontSize: '0.78rem', color: '#c9a96e', textDecoration: 'none' }}
                   >
                     Visit website
                   </a>
@@ -442,14 +445,14 @@ export default function SkaterProfile() {
                 <div style={{ marginBottom: 4 }}>
                   <a
                     href={`mailto:${club.contact_email}`}
-                    style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none' }}
+                    style={{ fontSize: '0.78rem', color: '#c9a96e', textDecoration: 'none' }}
                   >
                     {club.contact_email}
                   </a>
                 </div>
               )}
               {club?.phone && (
-                <div style={{ fontSize: 12, color: '#4a5a7a' }}>
+                <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)' }}>
                   {club.phone}
                 </div>
               )}

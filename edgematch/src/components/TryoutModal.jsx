@@ -55,11 +55,11 @@ export default function TryoutModal({ match, onClose, onSuccess }) {
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Request try-out</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close" style={{ fontFamily: 'inherit' }}>×</button>
         </div>
 
         <p className="modal-partner-name">
-          with <strong>{partner.name}</strong>
+          with <strong style={{ color: '#fdfcf8' }}>{partner.name}</strong>
         </p>
 
         <form onSubmit={handleSubmit}>
