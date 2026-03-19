@@ -9,6 +9,8 @@ import Tryouts from './pages/Tryouts';
 import Admin from './pages/Admin';
 import About from './pages/About';
 import SkaterProfile from './pages/SkaterProfile';
+import Browse from './pages/Browse';
+import ClubPage from './pages/ClubPage';
 import './index.css';
 
 // Guard: redirect to /signup if not authenticated
@@ -33,6 +35,8 @@ function AppRoutes() {
         <Route path="/matches/:id" element={<Protected><SkaterProfile /></Protected>} />
         <Route path="/tryouts"    element={<Protected><Tryouts /></Protected>} />
         <Route path="/about"      element={<About />} />
+        <Route path="/browse"     element={<Browse />} />
+        <Route path="/clubs/:id"  element={<ClubPage />} />
         <Route path="/admin"      element={<Admin />} />
         <Route path="*"           element={<Navigate to="/" replace />} />
       </Routes>

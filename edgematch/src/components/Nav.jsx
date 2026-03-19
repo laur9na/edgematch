@@ -91,7 +91,7 @@ function AvatarDropdown() {
   );
 }
 
-const NAV_LINKS = ['Matches', 'Try-outs', 'About', 'Profile'];
+const NAV_LINKS = ['Browse', 'Matches', 'Try-outs', 'About', 'Profile'];
 
 function toPath(link) {
   return '/' + link.toLowerCase().replace('-', '').replace("'", '');
