@@ -42,6 +42,7 @@ try {
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const IJS_BASE = 'https://ijs.usfigureskating.org';
+const ISU_BASE = 'https://results.isu.org';
 const DELAY_MS = 1500;
 const MATCH_THRESHOLD = 0.75;
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -121,7 +122,7 @@ async function discoverNewEvents(year) {
       // event not live yet or 404 — skip
       continue;
     }
-    newEvents.push({ year, event_id: id, event_name: name });
+    newEvents.push({ year, event_id: id, event_name: name, source: 'usfs' });
     console.log(`  Discovered new event: "${name}" (${year}/${id})`);
   }
 
@@ -196,6 +197,72 @@ function detectSegment(text) {
   if (t.includes('short') || t.includes('sp ') || t.includes('_sp')) return 'Short Program';
   if (t.includes('free') || t.includes('fs ') || t.includes('_fs')) return 'Free Skate';
   return text.trim();
+}
+
+// ---------------------------------------------------------------------------
+// ISU: normalize "First LAST" or "FIRST LAST" to "First Last"
+// ---------------------------------------------------------------------------
+
+function titleCase(name) {
+  return name.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
+// ISU results pages use fixed segment numbers:
+//   SEG005 = Pairs Short Program
+//   SEG006 = Pairs Free Skating
+//   SEG007 = Ice Dance Rhythm Dance
+//   SEG008 = Ice Dance Free Dance
+// Returns the same shape as getSegmentLinks.
+function getIsuSegments(event) {
+  const base = `${ISU_BASE}/results/season${event.season}/${event.event_id}`;
+  return [
+    { url: `${base}/SEG005.htm`, discipline: 'pairs',     level: event.level, segment: 'Short Program' },
+    { url: `${base}/SEG006.htm`, discipline: 'pairs',     level: event.level, segment: 'Free Skate' },
+    { url: `${base}/SEG007.htm`, discipline: 'ice_dance', level: event.level, segment: 'Rhythm Dance' },
+    { url: `${base}/SEG008.htm`, discipline: 'ice_dance', level: event.level, segment: 'Free Dance' },
+  ];
+}
+
+// Parse ISU segment HTML.
+// Row format (alternating Line1Green / Line2Green):
+//   <td align="center">1</td>          <- placement
+//   <td align="center">Q</td>          <- qual (skip)
+//   <td class="CellLeft"><a>Name1 / Name2</a></td>  <- names
+//   <td>JPN</td>                        <- nation
+//   <td align="right">76.57</td>        <- TSS
+function parseIsuSegmentHtml(html) {
+  const results = [];
+  // Pairs use Line1Green/Line2Green; ice dance uses Line1Yellow/Line2Yellow
+  const rowRe = /<tr\s+class="Line[12](?:Green|Yellow)?"\s*>([\s\S]*?)<\/tr>/gi;
+  let rowMatch;
+
+  while ((rowMatch = rowRe.exec(html)) !== null) {
+    const row = rowMatch[1];
+
+    // Placement: first <td align="center"> with a digit
+    const placeMatch = row.match(/<td[^>]*align="center"[^>]*>\s*(\d+)\s*<\/td>/i);
+    if (!placeMatch) continue;
+    const placement = parseInt(placeMatch[1], 10);
+    if (isNaN(placement) || placement < 1) continue;
+
+    // Names: <td class="CellLeft">
+    const nameCell = row.match(/<td[^>]*class="CellLeft"[^>]*>([\s\S]*?)<\/td>/i);
+    if (!nameCell) continue;
+    const rawName = nameCell[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    // Split on " / " for pairs/dance partner
+    const parts = rawName.split(/\s*\/\s*/);
+    const skaterName = titleCase(parts[0] || '');
+    const partnerName = parts[1] ? titleCase(parts[1]) : null;
+    if (!skaterName || skaterName.length < 2) continue;
+
+    // TSS: first <td align="right">
+    const scoreMatch = row.match(/<td[^>]*align="right"[^>]*>\s*([\d.]+)\s*<\/td>/i);
+    const totalScore = scoreMatch ? parseFloat(scoreMatch[1]) : null;
+
+    results.push({ placement, skaterName, partnerName, clubName: null, totalScore });
+  }
+  return results;
 }
 
 // ---------------------------------------------------------------------------
@@ -424,10 +491,17 @@ async function main() {
 
   for (const event of EVENT_IDS) {
     const isCurrentYear = event.year === CURRENT_YEAR;
-    console.log(`\nEvent: ${event.event_name} (${event.year}/${event.event_id})${isCurrentYear ? ' [live — upsert]' : ''}`);
+    const isIsu = event.source === 'isu';
+    console.log(`\nEvent: ${event.event_name} (${event.year}/${event.event_id}) [${isIsu ? 'ISU' : 'USFS'}]${isCurrentYear ? ' [live — upsert]' : ''}`);
 
-    const segments = await getSegmentLinks(event.year, event.event_id);
-    console.log(`  Found ${segments.length} pairs/dance segment(s)`);
+    let segments;
+    if (isIsu) {
+      segments = getIsuSegments(event);
+      console.log(`  Using ${segments.length} fixed ISU segments`);
+    } else {
+      segments = await getSegmentLinks(event.year, event.event_id);
+      console.log(`  Found ${segments.length} pairs/dance segment(s)`);
+    }
 
     for (const seg of segments) {
       console.log(`  Segment: ${seg.discipline} ${seg.level} ${seg.segment} — ${seg.url}`);
@@ -441,7 +515,7 @@ async function main() {
         continue;
       }
 
-      const rows = parseSegmentHtml(html);
+      const rows = isIsu ? parseIsuSegmentHtml(html) : parseSegmentHtml(html);
       console.log(`    Parsed ${rows.length} result rows`);
 
       for (const row of rows) {
