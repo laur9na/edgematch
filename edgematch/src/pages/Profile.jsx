@@ -186,10 +186,6 @@ function CompetitionResults({ athleteId }) {
 // Profile view (default)
 // ---------------------------------------------------------------------------
 function ProfileView({ athlete, onEdit }) {
-  const mediaUrls = athlete.media_urls ?? [];
-  const cells     = Array.from({ length: 9 }, (_, i) => mediaUrls[i] ?? null);
-  const firstEmpty = cells.findIndex(c => c === null);
-
   const [club, setClub] = useState(null);
 
   useEffect(() => {
@@ -273,45 +269,6 @@ function ProfileView({ athlete, onEdit }) {
               Edit profile
             </button>
           </div>
-        </div>
-
-        {/* Media grid */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2,
-        }}>
-          {cells.map((url, i) => (
-            <div
-              key={i}
-              style={{
-                aspectRatio: '1/1', overflow: 'hidden',
-                background: url ? '#1c3050' : '#1c3050',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                position: 'relative',
-              }}
-            >
-              {url ? (
-                url.match(/\.(mp4|mov|webm)$/i) ? (
-                  <>
-                    <video src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)">
-                        <polygon points="5,3 19,12 5,21" />
-                      </svg>
-                    </div>
-                  </>
-                ) : (
-                  <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                )
-              ) : (
-                i === firstEmpty
-                  ? <span style={{ fontSize: 10, color: 'rgba(201,169,110,0.5)' }}>+ Add</span>
-                  : null
-              )}
-            </div>
-          ))}
         </div>
 
         {/* About section */}
