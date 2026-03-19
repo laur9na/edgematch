@@ -188,6 +188,20 @@ function ProfileView({ athlete, onEdit }) {
   const cells     = Array.from({ length: 9 }, (_, i) => mediaUrls[i] ?? null);
   const firstEmpty = cells.findIndex(c => c === null);
 
+  const [club, setClub] = useState(null);
+
+  useEffect(() => {
+    if (!athlete) return;
+    // Try club_id join first, then fall back to name match
+    if (athlete.club_id) {
+      supabase.from('clubs').select('*').eq('id', athlete.club_id).single()
+        .then(({ data }) => { if (data) setClub(data); });
+    } else if (athlete.club_name) {
+      supabase.from('clubs').select('*').ilike('name', athlete.club_name).limit(1)
+        .then(({ data }) => { if (data?.[0]) setClub(data[0]); });
+    }
+  }, [athlete?.id]);
+
   return (
     <div style={{ maxWidth: 480, margin: '24px auto', padding: '0 16px' }}>
       <div style={{
@@ -337,6 +351,47 @@ function ProfileView({ athlete, onEdit }) {
             <div style={{ fontSize: 12, color: '#7a8aaa' }}>No details added yet.</div>
           )}
         </div>
+
+        {/* Club section */}
+        {club && (club.website || club.contact_email || club.phone) && (
+          <div style={{ padding: '0 16px 16px' }}>
+            <div style={{
+              fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: '0.8px', color: '#7a8aaa', marginBottom: 8,
+            }}>
+              Club
+            </div>
+            <div style={{
+              background: '#f4f7fb', border: '1px solid #d4e0f5',
+              borderRadius: 10, padding: '12px 14px',
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#0f2a5e', marginBottom: 6 }}>
+                {club.name}
+              </div>
+              {club.website && (
+                <div style={{ fontSize: 12, marginBottom: 4 }}>
+                  <a href={club.website} target="_blank" rel="noopener noreferrer"
+                    style={{ color: '#1a56db', textDecoration: 'none' }}>
+                    Visit website
+                  </a>
+                </div>
+              )}
+              {club.contact_email && (
+                <div style={{ fontSize: 12, marginBottom: 4 }}>
+                  <a href={`mailto:${club.contact_email}`}
+                    style={{ color: '#1a56db', textDecoration: 'none' }}>
+                    {club.contact_email}
+                  </a>
+                </div>
+              )}
+              {club.phone && (
+                <div style={{ fontSize: 12, color: '#4a5a7a' }}>
+                  {club.phone}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Competition results only renders if athlete has matched results */}
         <CompetitionResults athleteId={athlete.id} />
