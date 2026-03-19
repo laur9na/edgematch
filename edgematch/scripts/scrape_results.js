@@ -46,6 +46,7 @@ const ISU_BASE = 'https://results.isu.org';
 const DELAY_MS = 1500;
 const MATCH_THRESHOLD = 0.75;
 const DRY_RUN = process.argv.includes('--dry-run');
+const SOURCE_FILTER = process.argv.find(a => a.startsWith('--source='))?.split('=')[1] ?? null;
 const CURRENT_YEAR = new Date().getFullYear();
 const EVENT_IDS_PATH = join(__dirname, 'event_ids.json');
 
@@ -489,7 +490,12 @@ async function main() {
   let totalUnmatched = 0;
   const unmatched = [];
 
-  for (const event of EVENT_IDS) {
+  const eventsToRun = SOURCE_FILTER
+    ? EVENT_IDS.filter(e => e.source === SOURCE_FILTER)
+    : EVENT_IDS;
+  if (SOURCE_FILTER) console.log(`Source filter: ${SOURCE_FILTER} — ${eventsToRun.length} event(s) selected`);
+
+  for (const event of eventsToRun) {
     const isCurrentYear = event.year === CURRENT_YEAR;
     const isIsu = event.source === 'isu';
     console.log(`\nEvent: ${event.event_name} (${event.year}/${event.event_id}) [${isIsu ? 'ISU' : 'USFS'}]${isCurrentYear ? ' [live — upsert]' : ''}`);
