@@ -14,11 +14,11 @@ const LEVEL_LABEL = {
 };
 
 const STATUS_BADGE = {
-  requested:  { label: 'Pending',   bg: '#e6f0ff', color: '#1a56db'  },
-  confirmed:  { label: 'Confirmed', bg: '#e1f5ee', color: '#0f6e56'  },
-  completed:  { label: 'Completed', bg: '#e1f5ee', color: '#085041'  },
-  cancelled:  { label: 'Cancelled', bg: '#f0f0f0', color: '#7a8aaa'  },
-  no_show:    { label: 'No-show',   bg: '#f0f0f0', color: '#7a8aaa'  },
+  requested:  { label: 'Pending',   bg: 'rgba(201,169,110,0.12)', color: '#c9a96e'               },
+  confirmed:  { label: 'Confirmed', bg: 'rgba(74,222,128,0.12)',  color: '#4ade80'               },
+  completed:  { label: 'Completed', bg: 'rgba(74,222,128,0.08)',  color: 'rgba(74,222,128,0.7)'  },
+  cancelled:  { label: 'Cancelled', bg: 'rgba(253,252,248,0.06)', color: 'rgba(253,252,248,0.4)' },
+  no_show:    { label: 'No-show',   bg: 'rgba(253,252,248,0.06)', color: 'rgba(253,252,248,0.4)' },
 };
 
 const OUTCOME_LABELS = {

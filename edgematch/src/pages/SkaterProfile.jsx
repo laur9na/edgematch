@@ -359,7 +359,7 @@ export default function SkaterProfile() {
                 key={i}
                 style={{
                   aspectRatio: '1/1', overflow: 'hidden',
-                  background: url ? '#b5d4f4' : '#f4f7fb',
+                  background: '#1c3050',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   position: 'relative',
                 }}
