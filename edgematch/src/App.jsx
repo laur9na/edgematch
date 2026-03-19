@@ -32,7 +32,8 @@ function AppRoutes() {
         <Route path="/profile/new" element={<Profile />} />
         <Route path="/profile"    element={<Protected><Profile /></Protected>} />
         <Route path="/matches"    element={<Protected><Matches /></Protected>} />
-        <Route path="/matches/:id" element={<Protected><SkaterProfile /></Protected>} />
+        <Route path="/matches/:id"   element={<Protected><SkaterProfile /></Protected>} />
+        <Route path="/athletes/:id"  element={<Protected><SkaterProfile /></Protected>} />
         <Route path="/tryouts"    element={<Protected><Tryouts /></Protected>} />
         <Route path="/about"      element={<About />} />
         <Route path="/browse"     element={<Browse />} />

@@ -150,6 +150,10 @@ select option { background: var(--navy-mid); color: var(--white); }
 .dot-label { font-size: 0.65rem; color: var(--white-dim); white-space: nowrap; text-transform: none; letter-spacing: 0; font-weight: 400; }
 .wizard-step-dot.active .dot-label { color: var(--gold); font-weight: 600; }
 
+.step {
+  background: var(--navy-mid); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px;
+}
 .step h2 { margin-bottom: 24px; font-size: 1.1rem; color: var(--white); font-weight: 600; }
 
 .unit-toggle { display: flex; gap: 0; margin-bottom: 8px; }

@@ -814,7 +814,7 @@ export default function Profile() {
 
   if (isNewAthlete || editMode) {
     return (
-      <>
+      <main style={{ background: '#0d1b2e', minHeight: 'calc(100vh - 52px)' }}>
         <EditForm
           athlete={athlete}
           user={user}
@@ -822,7 +822,7 @@ export default function Profile() {
           onCancel={() => setEditMode(false)}
         />
         {toast && <Toast msg={toast} onHide={() => setToast(null)} />}
-      </>
+      </main>
     );
   }
 
