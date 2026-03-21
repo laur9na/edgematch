@@ -1,339 +1,257 @@
-# EdgeMatch — Build Plan
-> Claude Code reads CLAUDE.md automatically. Read this file at the start of every session.
+# PLAN.md — EdgeMatch
+> Read this every session. Source of truth for what we're building and what's next.
 
 ---
 
-## What we're building
-AI-powered partner matching for competitive pairs and ice dance skaters.
-Stack: React + Vite · Supabase · OpenAI · Resend · noUiSlider
+## Product
+B2B skating partner platform. Clubs are the top-level entity.
+Skater browses clubs, clicks into one, sees athletes with compatibility scores, requests a tryout.
+Clubs pay. Athletes use it free through their club.
 
-## Scope rules
-- Pairs and ice dance ONLY. No synchro.
-- No em dashes. No raw DB values in UI. No snake_case visible to users.
-- After every change: npm run build. Fix before moving on.
-- Commit after every step. git push origin main. Append to AGENT_STATUS.md.
-
----
-
-## [DONE] Everything completed so far
-- Full data pipeline: 207 athletes, 12,331 scores, 295 competition results
-- Daily cron scrape, Instagram enrichment, competition results scraper
-- All pages built: Landing, Matches, Tryouts, About, Profile, SkaterProfile, Admin
-- Clubs table + seed + enrichment scripts
-- Vercel deployment prep (vercel.json, .env.local.example)
-- Sidebar filters with noUiSlider
-- QA: zero console.logs, zero em dashes, zero synchro refs
+## Core loop
+1. Sign up and complete 5-step onboarding profile
+2. System matches to an existing scraped athlete card, or creates one
+3. Browse clubs filtered by role, level, distance, country
+4. Click a club, see its athletes with compatibility scores
+5. Request a tryout — recipient gets an email
 
 ---
 
-## Design system
-
-### Colors
+## Routes
 ```
---navy:   #1a3a6b   nav
---blue:   #1a56db   primary
---bg:     #f4f7fb   page background
---border: #d4e0f5   cards/inputs
---text:   #0f2a5e   primary text
---muted:  #7a8aaa   secondary text
+/               Landing page (built — src/pages/Landing.jsx)
+/login          Email + password, persistent session
+/signup         Create account
+/onboarding     5-step profile wizard
+/browse         Filters left panel, club cards right panel
+/clubs/[id]     Club info card + athlete roster
+/athletes/[id]  Full athlete profile + tryout button
+/tryouts        Sent and received tryout requests
+/profile        Own profile view and edit
+/admin          Laurena only
 ```
 
-### Display value maps
+---
+
+## Database schema
+
+### clubs
+```sql
+id, name, city, state, country, federation,
+website, phone, contact_email,
+rink_name, rink_address,
+plan (free | pro), plan_started_at,
+invite_code, created_at
+```
+
+### athletes
+```sql
+id, user_id,
+first_name, last_name, normalized_name,
+email, age, height_cm, weight_kg,
+discipline, skating_level, partner_role,
+location_city, location_state, location_country, location_lat, location_lng,
+coach_name, club_id, club_name,
+goals, training_hours_wk,
+preferred_level_min, preferred_level_max, max_distance_km,
+instagram_handle, profile_photo_url, media_urls,
+search_status, is_claimed,
+source, created_at, updated_at
+```
+
+### competition_results
+```sql
+id, athlete_id, skater_name, normalized_name,
+event_name, event_year, discipline, skating_level,
+segment, place, score, source_url
+```
+
+### compatibility_scores
+```sql
+id, athlete_a_id, athlete_b_id,
+height_score, level_score, role_score, location_score, total_score,
+computed_at
+```
+
+### tryouts
+```sql
+id, requester_id, recipient_id, score_id,
+proposed_date, proposed_time, location_note,
+status (requested | confirmed | completed | cancelled),
+outcome (great_fit | possible | not_a_fit),
+requested_at, confirmed_at, completed_at
+```
+
+---
+
+## Scraping pipeline
+Daily cron via Supabase Edge Function. Scripts in `scripts/pipeline/`.
+
+```
+01_scrape_usfs.js     USFS IJS public results — names, levels, placements, event years
+02_scrape_isu.js      ISU international results
+03_scrape_clubs.js    Puppeteer loads each club website, extracts roster + contact info
+04_deduplicate.js     Levenshtein 0.82 threshold — merge duplicate athlete rows
+05_score.js           Compatibility scores for all new athlete pairs
+run_pipeline.js       Runs 01-05 in order, logs each step to pipeline_runs table
+```
+
+### Name deduplication logic
+- `normalized_name` = lowercase, strip punctuation, trim whitespace
+- Two rows within Levenshtein 0.18 = same person; keep the row with more competition_results, merge, delete the other
+- User claiming a card: name + coach match required. On mismatch, create new card.
+
+---
+
+## Phase 1 — UI tasks (Agent 1)
+
+### 1.1 Audit
+List every file in `src/`. For each page: open it, run `npm run dev`, take a Puppeteer screenshot.
+Delete: unused components, console.logs, any sentence with an em dash.
+Log findings to AGENT_STATUS.md before making any changes.
+
+### 1.2 Global design system
+- `src/index.css`: body background `#0d1b2e`, color `#fdfcf8`, font-family Nunito
+- `index.html`: Great Vibes and Nunito loaded from Google Fonts
+- Nav: `#1a3a6b` background, Great Vibes logo in `--gold`, Nunito links, ghost CTA
+- Puppeteer: screenshot `/` before and after
+
+### 1.3 Browse page
+Two-panel layout. Left 240px fixed, right flex.
+
+Left panel:
+- Background `--navy`, sections separated by gold labels (`--gold`, 0.65rem, uppercase)
+- Sliders: 3px track `#e2e8f0`, gold fill, 14px white knob with shadow (existing component)
+- Level pills: border `--border`, active state `--gold` bg `--navy` text
+- Discipline and Role: checkbox left, label right, `accent-color: --gold`
+
+Right panel:
+- Club cards, 2-column grid
+- Each card: `--navy-mid` bg, `--border` border, `border-radius 4px`, lifts on hover
+- Card content: name (weight 600), location (weight 300 `--white-dim`), federation badge, discipline tags, pastel avatar circles, active skater count, "View club" in `--gold`
+- Puppeteer: screenshot at 1280px and 375px
+
+### 1.4 Club page
+Top card: club name, rink, city, country. Contact links right-aligned (website, maps, email, phone) in `--gold`.
+Roster below: filter pills (discipline, level), then athlete cards in 2-column grid.
+Athlete cards: match the partner cards on `Landing.jsx` — avatar, name, level badge, score bar in gold, competition results, coach, tryout button.
+Puppeteer: screenshot before and after.
+
+### 1.5 Athlete profile
+Single column, full width.
+Header: avatar, name, level badge, discipline / role / city / height, coach. Tryout button right-aligned.
+Score bar gold fill, component dot indicators below.
+Sections below: media grid (3x3), about, club contact, competition results table.
+Puppeteer: screenshot before and after.
+
+### 1.6 Onboarding wizard
+5-step progress bar: gold active node, `--border` inactive.
+Each step is a card (`--navy-mid`) on `--navy` background.
+Step 2: discipline pills, level pills, role pills, height + weight inputs with in/cm and lb/kg toggle.
+Back / step count / Continue footer on every step.
+Puppeteer: screenshot each step.
+
+### 1.7 QA
+Puppeteer: screenshot every route in order.
+Fix all overflow, blank states, color mismatches, font fallbacks.
+`npm run build` passes.
+Commit: `UI: design system applied and verified across all pages`.
+
+---
+
+## Phase 2 — Backend tasks (Agent 2)
+
+### 2.1 Audit
+List every file in `scripts/`. For each: describe what it does and whether it runs cleanly.
+List every migration and confirm which are applied in the live DB.
+Delete broken, duplicated, or unreferenced scripts.
+Log findings to AGENT_STATUS.md before making any changes.
+
+### 2.2 Schema migrations
+Write `supabase/migrations/012_athletes_extend.sql`:
+```sql
+ALTER TABLE athletes
+  ADD COLUMN IF NOT EXISTS normalized_name text,
+  ADD COLUMN IF NOT EXISTS is_claimed boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS first_name text,
+  ADD COLUMN IF NOT EXISTS last_name text;
+
+ALTER TABLE clubs
+  ADD COLUMN IF NOT EXISTS federation text;
+
+ALTER TABLE competition_results
+  ADD COLUMN IF NOT EXISTS normalized_name text;
+```
+Log `[READY] paste 012 in Supabase SQL editor` in AGENT_STATUS.md.
+
+### 2.3 Auth
+After login: check if `athletes` row exists for `user_id`.
+- Row exists and `onboarding_complete = true`: redirect to `/browse`
+- Otherwise: redirect to `/onboarding`
+Protected route wrapper redirects to `/login` when session is absent.
+Session persists on refresh via Supabase's built-in session handling.
+
+### 2.4 Queries
+Every Supabase query in the codebase must be correct. Fix these patterns:
+
 ```js
-const DISCIPLINE_LABEL = { pairs:'Pairs', ice_dance:'Ice dance' }
-const LEVEL_LABEL = { pre_juvenile:'Pre-Juvenile', juvenile:'Juvenile',
-  intermediate:'Intermediate', novice:'Novice', junior:'Junior',
-  senior:'Senior', adult:'Adult' }
-const ROLE_LABEL = { lady:'Skates as lady', man:'Skates as man', either:'Either role' }
-```
-
----
-
-## Phase 15 — Active fixes (priority order)
-
-### 15.1 — Matches page cleanup (Agent 1)
-
-Remove from the matches page header:
-- The skater count ("50 skaters") — delete entirely
-- The sort dropdown next to the title — delete entirely
-- The title should just be "Your matches" with nothing next to it
-
-### 15.2 — Sidebar: Apple-style sliders (Agent 1)
-
-Replace current noUiSlider implementation with a custom React slider component
-that matches Apple's exact style. Do NOT use any noUiSlider CSS classes.
-
-Apple-style slider spec:
-```
-Track: height 3px, border-radius 99px, background #e2e8f0
-Fill:  background #1a56db, same height + border-radius
-Knob:  width/height 15px, border-radius 50%, background #fff
-       box-shadow: 0 0.5px 3px rgba(0,0,0,0.15), 0 1px 6px rgba(0,0,0,0.08),
-                   0 0 0 0.5px rgba(0,0,0,0.06)
-       NO colored ring, NO border. White only with shadow.
-       cursor: pointer
-```
-
-For the dual-handle (match strength):
-- Two knobs on one track
-- Fill between the two knobs only
-- State: [minVal, maxVal], default [40, 100]
-- Label shows "[min]% to [max]%" in color #1a56db, font-size 11px
-
-For the single-handle (distance):
-- One knob, fill from 0 to knob
-- State: maxKm, default 500
-- Label shows "Within [N] km" in #1a56db, font-size 11px
-
-Slider must NOT glitch when user navigates away and back. Fix by:
-- Storing slider state in React useState (not noUiSlider internal state)
-- Using onMouseMove + onMouseUp on document (not slider element) for drag
-- Cleaning up event listeners in useEffect return
-
-### 15.3 — Sidebar: left-align checkboxes (Agent 1)
-
-Discipline and Role sections: checkbox on LEFT, label on right, gap 8px.
-Currently they are misaligned. Fix:
-```jsx
-<label style={{ display:'flex', alignItems:'center', gap:8 }}>
-  <input type="checkbox" checked={...} onChange={...} />
-  <span>Ice dance</span>
-</label>
-```
-
-### 15.4 — Remove photo upload (Agent 1)
-
-Remove the Upload photo button and all associated storage code from Profile.jsx
-and the signup form. Delete any Supabase Storage calls for photos.
-Show initials avatar only. "Bucket not found" error goes away with this.
-
-### 15.5 — Supabase Storage bucket for media (Agent 2)
-
-Create a Supabase Storage bucket for the 3x3 media grid (separate from photos).
-
-Using the service role key from .env.local, create via Supabase JS client:
-```js
-const { data, error } = await supabase.storage.createBucket('athlete-media', {
-  public: false,
-  fileSizeLimit: 52428800,  // 50MB per file
-  allowedMimeTypes: ['image/jpeg','image/png','image/webp','video/mp4','video/quicktime']
-})
-```
-
-Per-user folder structure: athlete-media/[athlete_id]/[filename]
-Max 9 files per athlete. Enforce in upload handler.
-
-File: scripts/create_storage_bucket.js — run once: node scripts/create_storage_bucket.js
-
-### 15.6 — SkaterProfile: full data + club contact (Agent 1)
-
-SkaterProfile.jsx at /matches/[id] must show:
-
-Left column (full width card, no max-width):
-  1. Header: avatar (initials), full name, discipline/level/role, city/height/weight, Instagram
-  2. Media grid: 3x3, shows uploaded media if any
-  3. About section: Goals / Training / Coach
-  4. Club section (NEW):
-     ```
-     Heading: "Club" (muted uppercase label)
-     Club name — 14px font-weight 700
-     Website link — "Visit website" or show URL, color #1a56db
-     Email link — mailto: link, color #1a56db
-     Phone — plain text, color #4a5a7a
-     Only show fields that have data. Never show empty labels.
-     ```
-  5. Competition results table — full width, no overflow hidden
-     Columns: Event | Level | Segment | Place | Score
-     Place badges: gold/silver/bronze/gray circles
-
-NO right sidebar. Remove entirely.
-
-The page is now single-column, full width.
-"Request try-out" button sits inline next to the skater name in the header.
-Match score, component dots, and key stats move INTO the header section below the name.
-
-Header layout:
-  Row 1: [Avatar] [Full name] ["Request try-out" button — right aligned]
-  Row 2: discipline / level / role / city / height
-  Row 3: match strength bar + percentage inline
-  Row 4: Height ●●●●● Level ●●●●● Role fit ●●●●● Distance ●●●○○  (component dots)
-
-Everything below header fills full width:
-  Media grid, About, Club, Competition results — all full page width.
-
-Data loading:
-```js
-// Athlete + club
+// Athletes always load with club
 supabase.from('athletes').select('*, clubs(*)').eq('id', id).single()
 
-// Competition results
-supabase.from('competition_results').select('*').eq('athlete_id', id).order('event_year', { ascending: false })
-
-// Match score (handle both column orderings)
+// Compatibility score — handles both orderings
 supabase.from('compatibility_scores').select('*')
   .or(`and(athlete_a_id.eq.${myId},athlete_b_id.eq.${id}),and(athlete_a_id.eq.${id},athlete_b_id.eq.${myId})`)
   .single()
+
+// Competition results — match by normalized_name
+supabase.from('competition_results').select('*')
+  .eq('normalized_name', normalizedName)
+  .order('event_year', { ascending: false })
+
+// Browse — clubs with active athlete count
+supabase.from('clubs').select('*, athletes(count)')
+  .eq('athletes.search_status', 'active')
 ```
 
-### 15.7 — Club contact on own Profile page (Agent 1)
+### 2.5 Scraping pipeline
+Reorganize into `scripts/pipeline/` if not already there.
+Confirm `01_scrape_usfs.js` and `02_scrape_isu.js` run cleanly end to end.
 
-On the logged-in user's own Profile view (not edit form), add a Club section
-below About, same style as SkaterProfile club section. Show website, email, phone
-if the athlete has a club_id with contact info.
+Write `03_scrape_clubs.js`:
+- For each club in DB with a website URL
+- Puppeteer navigates to the site, finds pages with "roster", "team", "athletes", or "skaters" in href or nav text
+- Extracts: athlete names, coach names, email addresses, phone numbers
+- Upserts to `athletes` table: `source = 'club_website'`, `is_claimed = false`
+- Logs `rows_affected` to `pipeline_runs` table
 
-The point: even if a match target isn't on the platform, the user can still
-reach out to that skater's club directly to find them.
+Write `04_deduplicate.js`:
+- For all athletes where `normalized_name` is null: compute and save it
+- Find athlete pairs with Levenshtein distance below 0.18
+- For each pair: keep the row with more `competition_results`, copy missing fields from the other, delete the duplicate
 
----
+Confirm `05_score.js` scores only athletes with no existing scores.
 
-## Phase 16 — Vercel deployment (Agent 2)
+Write `run_pipeline.js`: runs 01 through 05 in sequence, logs start/end/error per step.
 
-Already done: vercel.json, .env.local.example, vite.config.js correct.
+### 2.6 Tryout emails
+Trigger on `tryouts.status` change using a Supabase database webhook or Edge Function.
+- `requested`: email the recipient — skater name, link to requester's profile, proposed date
+- `confirmed`: email the requester — confirmation and proposed date
+Resend is already configured. Keep templates to plain text with one CTA.
 
-Remaining:
-1. Verify git remote is set to https://github.com/laur9na/edgematch
-2. Ensure all latest commits are pushed: git push origin main
-3. Append to AGENT_STATUS.md the 4 manual Vercel steps the user needs to do:
-   a. vercel.com → Add New Project → import laur9na/edgematch
-   b. Root directory: inner edgematch/ folder (with Vite logo)
-   c. Add env vars from .env.local
-   d. Deploy
+### 2.7 Athlete claiming
+Supabase Edge Function at `supabase/functions/claim-athlete/index.ts`.
 
----
+Logic:
+1. Receive `{ userId, name, coachName }` from onboarding step 5
+2. Compute `normalized_name` from `name`
+3. Query `athletes` where `normalized_name` fuzzy matches and `is_claimed = false`
+4. Return match (if found) to frontend for user confirmation
+5. On confirm: `UPDATE athletes SET is_claimed = true, user_id = $userId`
+6. On deny: `INSERT` new athlete row from onboarding data
 
-## Decisions made
-- Pairs and ice dance only. No synchro.
-- Vite + React. Supabase. No Firebase.
-- Pre-computed score matrix.
-- No video analysis until after pilot.
-- No payments until product-market fit.
-- USFS IJS results are public HTML. No login needed.
-- Fuzzy match threshold 0.75.
-- Custom React slider (no noUiSlider CSS) to avoid tab-switch glitch.
-- No profile photo upload — initials avatar only for now.
-- Club contact info shown on SkaterProfile so users can reach non-platform skaters.
-
----
-
-## Phase 17 — UI fixes from screenshot (do now)
-
-### 17.1 — AthleteCard dot indicators: horizontal single row
-
-Currently Height/Level/Distance dots are stacking vertically.
-Fix: all three in one flex row, no wrapping.
-
-```jsx
-// Replace current sub-scores section with:
-<div style={{ display:'flex', gap:12, marginTop:8, flexWrap:'nowrap' }}>
-  <span style={{ fontSize:10, color:'#7a8aaa', display:'flex', alignItems:'center', gap:3 }}>
-    Height {dots(heightScore)}
-  </span>
-  <span style={{ fontSize:10, color:'#7a8aaa', display:'flex', alignItems:'center', gap:3 }}>
-    Level {dots(levelScore)}
-  </span>
-  <span style={{ fontSize:10, color:'#7a8aaa', display:'flex', alignItems:'center', gap:3 }}>
-    Distance {dots(distanceScore)}
-  </span>
-</div>
-
-// dots helper:
-const dots = (score) => {
-  const filled = Math.round((score ?? 0) * 5)
-  return Array.from({length:5}, (_,i) => (
-    <span key={i} style={{
-      width:6, height:6, borderRadius:'50%',
-      background: i < filled ? '#1a56db' : '#d4e0f5',
-      display:'inline-block'
-    }}/>
-  ))
-}
-```
-
-### 17.2 — Sidebar checkboxes: left-align with exact JSX
-
-Replace ALL checkbox rows in sidebar with this pattern:
-
-```jsx
-<label style={{
-  display:'flex', alignItems:'center', gap:8,
-  fontSize:12, color:'#4a5a7a', cursor:'pointer',
-  marginBottom:6
-}}>
-  <input
-    type="checkbox"
-    checked={disciplines.includes('ice_dance')}
-    onChange={() => toggleDiscipline('ice_dance')}
-    style={{ accentColor:'#1a56db', width:13, height:13, flexShrink:0, margin:0 }}
-  />
-  <span>Ice dance</span>
-</label>
-```
-
-The key fix: `margin:0` on the input, `flexShrink:0`, no extra divs between checkbox and label.
-
-### 17.3 — Card grid: ensure 2 columns always
-
-The card grid must always be 2 columns regardless of content width:
-
-```jsx
-<div style={{
-  display:'grid',
-  gridTemplateColumns:'repeat(2, minmax(0, 1fr))',
-  gap:12
-}}>
-```
-
-`minmax(0, 1fr)` prevents cards from overflowing their column.
-
-### 17.4 — AthleteCard name overflow
-
-Long names like "Kirill Aksenov" must not wrap awkwardly. Fix:
-
-```jsx
-<div style={{
-  fontSize:13, fontWeight:700, color:'#0f2a5e',
-  lineHeight:1.3, wordBreak:'break-word'
-}}>
-  {athlete.name} <span style={{...badgeStyle}}>{LEVEL_LABEL[athlete.skating_level]}</span>
-</div>
-```
-
-Put the level badge on its own line if name is long — use `display:'block'` on the badge span
-and `marginTop:3`.
-
-### 17.5 — Sidebar slider glitch fix
-
-The noUiSlider loses state on tab navigate. Replace with native HTML range inputs
-styled to look Apple-like. No library needed.
-
-```jsx
-// DualRangeSlider component
-function DualRangeSlider({ min, max, value, onChange }) {
-  const [lo, hi] = value
-  return (
-    <div style={{ position:'relative', height:20 }}>
-      <div style={{
-        position:'absolute', top:'50%', transform:'translateY(-50%)',
-        left:0, right:0, height:3, background:'#e2e8f0', borderRadius:99
-      }}>
-        <div style={{
-          position:'absolute', height:'100%', background:'#1a56db', borderRadius:99,
-          left:`${((lo-min)/(max-min))*100}%`,
-          right:`${((max-hi)/(max-min))*100}%`
-        }}/>
-      </div>
-      <input type="range" min={min} max={max} value={lo}
-        onChange={e => onChange([+e.target.value, hi])}
-        style={{ position:'absolute', width:'100%', opacity:0, cursor:'pointer', height:20 }}
-      />
-      <input type="range" min={min} max={max} value={hi}
-        onChange={e => onChange([lo, +e.target.value])}
-        style={{ position:'absolute', width:'100%', opacity:0, cursor:'pointer', height:20 }}
-      />
-    </div>
-  )
-}
-```
-
-This uses two overlapping transparent native range inputs. No drag handlers needed,
-no glitch on tab switch, works on mobile too. Style the visible track/fill with a div behind them.
+### 2.8 Final check
+`npm run build` passes.
+`node scripts/pipeline/run_pipeline.js` runs without crashing.
+All migrations written and noted in AGENT_STATUS.md.
+Push to main.

@@ -1,6 +1,6 @@
 /**
- * ClubPage.jsx — Phase 1.4
- * /clubs/:id — Club info card + athlete roster.
+ * ClubPage.jsx (Phase 1.4)
+ * /clubs/:id: Club info card and athlete roster.
  * Top card: name, rink, city, country. Contact links right-aligned in gold.
  * Roster: filter pills, athlete cards in 2-column grid.
  */

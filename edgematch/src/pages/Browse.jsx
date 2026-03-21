@@ -1,5 +1,5 @@
 /**
- * Browse.jsx — Phase 1.3
+ * Browse.jsx (Phase 1.3)
  * Two-panel layout: left 240px filter panel, right club cards grid.
  * Left panel: gold labels, level pills, discipline/role checkboxes.
  * Right panel: club cards in 2-column grid.

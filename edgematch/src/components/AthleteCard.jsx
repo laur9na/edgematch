@@ -1,5 +1,5 @@
 /**
- * AthleteCard.jsx — dark luxury design system
+ * AthleteCard.jsx: dark luxury design system
  * Full name shown. Clicking card navigates to /matches/[id].
  */
 
