@@ -22,23 +22,21 @@ const ROLE_LABEL = {
 const LEVEL_ORDER = ['pre_juvenile','juvenile','intermediate','novice','junior','senior','adult'];
 
 const KNOB = {
-  width: 16, height: 16, borderRadius: '50%', background: '#fff',
-  boxShadow: '0 1px 4px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08)',
+  width: 14, height: 14, borderRadius: '50%', background: '#fff',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
   position: 'absolute', top: '50%', transform: 'translate(-50%,-50%)',
   pointerEvents: 'none', zIndex: 2,
 };
 
-// No dual-input approach. Two overlapping inputs can't be independently clicked.
-// Replaced with two labeled single sliders (min/max) that always work.
-
-// Single-handle range slider
+// Single-handle range slider (used for distance)
 function SingleRangeSlider({ min, max, step, value, onChange }) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div style={{ position: 'relative', height: 20, margin: '8px 4px 4px' }}>
+    <div style={{ position: 'relative', height: 20, margin: '4px 0' }}>
       <div style={{
         position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-        left: 0, right: 0, height: 3, background: 'rgba(201,169,110,0.2)', borderRadius: 99,
+        left: 0, right: 0, height: 3, background: '#e2e8f0', borderRadius: 99,
+        pointerEvents: 'none',
       }}>
         <div style={{
           position: 'absolute', height: '100%', background: '#c9a96e', borderRadius: 99,
@@ -49,6 +47,40 @@ function SingleRangeSlider({ min, max, step, value, onChange }) {
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(+e.target.value)}
         style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0 }}
+      />
+    </div>
+  );
+}
+
+// Dual-handle range slider: two overlapping inputs sharing one visual track
+function DualRangeSlider({ min, max, step, values, onChange }) {
+  const [lo, hi] = values;
+  const pctLo = ((lo - min) / (max - min)) * 100;
+  const pctHi = ((hi - min) / (max - min)) * 100;
+  // When lo is in the upper half, bring lo input on top so it can be dragged left
+  const loZ = pctLo > 50 ? 5 : 3;
+  const hiZ = pctLo > 50 ? 3 : 5;
+  return (
+    <div style={{ position: 'relative', height: 20, margin: '4px 0' }}>
+      <div style={{
+        position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+        left: 0, right: 0, height: 3, background: '#e2e8f0', borderRadius: 99,
+        pointerEvents: 'none',
+      }}>
+        <div style={{
+          position: 'absolute', height: '100%', background: '#c9a96e', borderRadius: 99,
+          left: `${pctLo}%`, right: `${100 - pctHi}%`,
+        }} />
+      </div>
+      <div style={{ ...KNOB, left: `${pctLo}%` }} />
+      <div style={{ ...KNOB, left: `${pctHi}%` }} />
+      <input type="range" min={min} max={max} step={step} value={lo}
+        onChange={e => onChange([Math.min(+e.target.value, hi), hi])}
+        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0, zIndex: loZ }}
+      />
+      <input type="range" min={min} max={max} step={step} value={hi}
+        onChange={e => onChange([lo, Math.max(+e.target.value, lo)])}
+        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0, zIndex: hiZ }}
       />
     </div>
   );
@@ -65,8 +97,13 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
     onRoles(prev => prev.includes(val) ? prev.filter(r => r !== val) : [...prev, val]);
   }
 
+  const SECTION_LABEL = {
+    fontSize: 10, fontWeight: 600, color: '#c9a96e',
+    letterSpacing: '0.14em', textTransform: 'uppercase',
+    marginBottom: 6,
+  };
   const divider = (
-    <hr style={{ border: 'none', borderTop: '1px solid #f0f4fb', margin: '16px 0' }} />
+    <hr style={{ border: 'none', borderTop: '1px solid rgba(201,169,110,0.12)', margin: '8px 0' }} />
   );
 
   return (
@@ -77,38 +114,34 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       position: 'sticky', top: 52,
       minHeight: 'calc(100vh - 52px)',
     }}>
-      <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#c9a96e', marginBottom: 16, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+      <div style={{ fontSize: 10, fontWeight: 600, color: '#c9a96e', marginBottom: 14, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
         Filter matches
       </div>
 
-      {/* Match strength: two independent sliders */}
-      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-        Match strength
+      {/* Match strength: single dual-handle slider */}
+      <div style={{ ...SECTION_LABEL }}>
+        Match strength &nbsp;
+        <span style={{ color: 'rgba(253,252,248,0.65)', fontWeight: 400, letterSpacing: 0, textTransform: 'none' }}>
+          {strength[0]}% – {strength[1]}%
+        </span>
       </div>
-      <div style={{ fontSize: 11, color: 'rgba(253,252,248,0.65)', marginBottom: 2 }}>Min: <span style={{ color: '#c9a96e', fontWeight: 600 }}>{strength[0]}%</span></div>
-      <SingleRangeSlider min={0} max={100} step={1} value={strength[0]}
-        onChange={v => onStrength([Math.min(v, strength[1]), strength[1]])} />
-      <div style={{ fontSize: 11, color: 'rgba(253,252,248,0.65)', marginBottom: 2, marginTop: 6 }}>Max: <span style={{ color: '#c9a96e', fontWeight: 600 }}>{strength[1]}%</span></div>
-      <SingleRangeSlider min={0} max={100} step={1} value={strength[1]}
-        onChange={v => onStrength([strength[0], Math.max(v, strength[0])])} />
+      <DualRangeSlider min={0} max={100} step={1} values={strength} onChange={onStrength} />
 
       {divider}
 
       {/* Distance */}
-      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+      <div style={{ ...SECTION_LABEL }}>
         Distance
       </div>
       <div style={{ fontSize: 11, color: '#c9a96e', marginBottom: 2 }}>
-        Within {distance === 5000 ? '5000+' : distance} km
+        Within {distance >= 5000 ? '5000+' : distance} km
       </div>
       <SingleRangeSlider min={0} max={5000} step={50} value={distance} onChange={onDistance} />
 
       {divider}
 
       {/* Level pills */}
-      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-        Level
-      </div>
+      <div style={{ ...SECTION_LABEL }}>Level</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         {LEVEL_KEYS.map(key => {
           const active = levels.includes(key);
@@ -134,12 +167,12 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       {divider}
 
       {/* Discipline */}
-      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Discipline</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <div style={{ ...SECTION_LABEL }}>Discipline</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {['ice_dance', 'pairs'].map(val => (
-          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
-            <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#c9a96e' }} checked={disciplines.includes(val)} onChange={() => toggleDiscipline(val)} />
-            <span>{DISCIPLINE_LABEL[val]}</span>
+          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" style={{ accentColor: '#c9a96e', width: 13, height: 13, flexShrink: 0, margin: 0 }} checked={disciplines.includes(val)} onChange={() => toggleDiscipline(val)} />
+            <span style={{ fontSize: 12, color: 'rgba(253,252,248,0.65)' }}>{DISCIPLINE_LABEL[val]}</span>
           </label>
         ))}
       </div>
@@ -147,12 +180,12 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       {divider}
 
       {/* Role */}
-      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(253,252,248,0.65)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Role</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <div style={{ ...SECTION_LABEL }}>Role</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {['man', 'lady', 'either'].map(val => (
-          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
-            <input type="checkbox" style={{ margin: 0, flexShrink: 0, accentColor: '#c9a96e' }} checked={roles.includes(val)} onChange={() => toggleRole(val)} />
-            <span>{ROLE_LABEL[val]}</span>
+          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" style={{ accentColor: '#c9a96e', width: 13, height: 13, flexShrink: 0, margin: 0 }} checked={roles.includes(val)} onChange={() => toggleRole(val)} />
+            <span style={{ fontSize: 12, color: 'rgba(253,252,248,0.65)' }}>{ROLE_LABEL[val]}</span>
           </label>
         ))}
       </div>
@@ -168,7 +201,7 @@ export default function Matches() {
   // Restore filter state from sessionStorage so it survives navigate(-1)
   const saved = (() => { try { return JSON.parse(sessionStorage.getItem('matchFilters') || 'null'); } catch { return null; } })();
   const [strength, setStrength]       = useState(saved?.strength       ?? [40, 100]);
-  const [distance, setDistance]       = useState(saved?.distance       ?? 500);
+  const [distance, setDistance]       = useState(saved?.distance       ?? 1000);
   const [levels, setLevels]           = useState(saved?.levels         ?? []);
   const [disciplines, setDisciplines] = useState(saved?.disciplines    ?? ['pairs', 'ice_dance']);
   const [roles, setRoles]             = useState(saved?.roles          ?? ['man', 'lady', 'either']);
