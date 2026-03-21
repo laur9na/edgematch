@@ -80,3 +80,4 @@ VERCEL DEPLOYMENT — 4 manual steps:
 [AGENT-1] [DONE] Phase 1.5 -- /athletes/:id route alias added (maps to SkaterProfile)
 [AGENT-1] [DONE] Phase 1.6 -- .step card: navy-mid bg + gold border; EditForm wrapped in dark page background
 [AGENT-1] [DONE] Phase 1.7 QA -- SkaterProfile media grid dark, Tryouts status badges dark; 0 em dashes, 0 console.log, 0 synchro, build clean
+[AGENT-2] [DONE] enrich_clubs_contact.js -- 278 clubs processed, 174 websites found, 61 emails added, 82 phones added. Part 1: Puppeteer scrapes known club sites for missing contact info. Part 2: probes candidate domain slugs (club name + common TLDs) then scrapes confirmed sites. Note: a small number of false-positive generic domains (nevada.org, manhattan.org etc) may need manual review in Supabase dashboard.
