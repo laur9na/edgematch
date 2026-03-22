@@ -28,8 +28,7 @@ export default function Landing() {
   const navigate = useNavigate();
 
   function handleCTA() {
-    if (session && profileComplete) return navigate('/browse');
-    if (session && !profileComplete) return navigate('/profile/new');
+    if (session) return navigate('/browse');
     navigate('/signup');
   }
 

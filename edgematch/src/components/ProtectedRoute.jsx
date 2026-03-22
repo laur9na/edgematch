@@ -1,19 +1,18 @@
 /**
  * ProtectedRoute.jsx
- * Requires: session + profileComplete.
+ * Requires session only — profileComplete is not enforced since the app is
+ * waitlist-only and admin access must always work regardless of athlete data.
  * - Loading  → spinner
  * - No session → /login
- * - Session but profile incomplete → /profile/new (finish onboarding)
- * - Session + complete → render children
+ * - Session → render children
  */
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthSpinner from './AuthSpinner';
 
 export default function ProtectedRoute({ children }) {
-  const { session, profileComplete, loading } = useAuth();
+  const { session, loading } = useAuth();
   if (loading) return <AuthSpinner />;
   if (!session) return <Navigate to="/login" replace />;
-  if (!profileComplete) return <Navigate to="/profile/new" replace />;
   return children;
 }
