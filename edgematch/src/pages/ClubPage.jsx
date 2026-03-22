@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import TryoutModal from '../components/TryoutModal';
+import ContactModal from '../components/ContactModal';
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 const LEVEL_LABEL = {
@@ -169,9 +169,6 @@ export default function ClubPage() {
     );
   }
 
-  const modalMatch = modalAthlete
-    ? { id: null, partner: modalAthlete, total_score: 0 }
-    : null;
 
   return (
     <main style={{ background: '#0d1b2e', minHeight: 'calc(100vh - 52px)', padding: '24px 28px' }}>
@@ -301,11 +298,11 @@ export default function ClubPage() {
         )}
       </div>
 
-      {modalMatch && (
-        <TryoutModal
-          match={modalMatch}
+      {modalAthlete && (
+        <ContactModal
+          athlete={modalAthlete}
+          club={club}
           onClose={() => setModalAthlete(null)}
-          onSuccess={() => setModalAthlete(null)}
         />
       )}
     </main>

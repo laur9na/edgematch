@@ -12,6 +12,9 @@ const LEVEL_LABEL = {
 const ROLE_LABEL = {
   lady: 'Skates as lady', man: 'Skates as man', either: 'Either role',
 };
+const JUMP_LABEL = {
+  clockwise: 'CW', counter_clockwise: 'CCW',
+};
 
 const AVATAR_COLORS = [
   { bg: 'rgba(201,169,110,0.15)', color: '#c9a96e' },
@@ -141,6 +144,18 @@ export default function AthleteCard({ match, index, onClick }) {
           <div style={{ fontSize: '0.75rem', color: 'rgba(253,252,248,0.45)' }}>
             {[loc, ht].filter(Boolean).join(' · ')}
           </div>
+          {p.jump_direction && p.jump_direction !== 'not_applicable' && (
+            <span style={{
+              display: 'inline-block', marginTop: 4,
+              fontSize: '0.62rem', fontWeight: 700,
+              padding: '2px 7px', borderRadius: 2,
+              background: 'rgba(201,169,110,0.1)',
+              border: '1px solid rgba(201,169,110,0.2)',
+              color: '#c9a96e', letterSpacing: '0.06em',
+            }}>
+              {JUMP_LABEL[p.jump_direction] ?? p.jump_direction}
+            </span>
+          )}
         </div>
       </div>
 

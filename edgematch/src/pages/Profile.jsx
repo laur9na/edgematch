@@ -5,7 +5,7 @@
  * New athletes (no athlete row): creation wizard only.
  */
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -21,6 +21,23 @@ const LEVEL_LABEL = {
 const ROLE_LABEL = {
   lady: 'Skates as lady', man: 'Skates as man', either: 'Either role',
 };
+const JUMP_LABEL = {
+  clockwise: 'Clockwise', counter_clockwise: 'Counter-clockwise', not_applicable: 'Not applicable',
+};
+const RELOCATE_LABEL = {
+  yes: 'Yes', open: 'Open to it', no: 'No',
+};
+
+const JUMP_OPTIONS = [
+  { value: 'clockwise',       label: 'Clockwise' },
+  { value: 'counter_clockwise', label: 'Counter-clockwise' },
+  { value: 'not_applicable',  label: 'Not applicable' },
+];
+const RELOCATE_OPTIONS = [
+  { value: 'yes',  label: 'Yes' },
+  { value: 'open', label: 'Open to it' },
+  { value: 'no',   label: 'No' },
+];
 const DISCIPLINES = [
   { value: 'pairs',     label: 'Pairs' },
   { value: 'ice_dance', label: 'Ice dance' },
@@ -279,9 +296,38 @@ function ProfileView({ athlete, onEdit }) {
           }}>
             About
           </div>
+          {(athlete.jump_direction || athlete.willing_to_relocate) && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+              {athlete.jump_direction && (
+                <span style={{
+                  fontSize: '0.68rem', padding: '3px 9px', borderRadius: 2,
+                  background: 'rgba(201,169,110,0.1)', color: '#c9a96e',
+                  border: '1px solid rgba(201,169,110,0.2)', fontWeight: 600, letterSpacing: '0.04em',
+                }}>
+                  {JUMP_LABEL[athlete.jump_direction] ?? athlete.jump_direction}
+                </span>
+              )}
+              {athlete.willing_to_relocate && (
+                <span style={{
+                  fontSize: '0.68rem', padding: '3px 9px', borderRadius: 2,
+                  background: 'rgba(201,169,110,0.1)', color: '#c9a96e',
+                  border: '1px solid rgba(201,169,110,0.2)', fontWeight: 600, letterSpacing: '0.04em',
+                }}>
+                  {RELOCATE_LABEL[athlete.willing_to_relocate] === 'Yes' ? 'Will relocate'
+                    : RELOCATE_LABEL[athlete.willing_to_relocate] === 'Open to it' ? 'Open to relocating'
+                    : 'Prefers local'}
+                </span>
+              )}
+            </div>
+          )}
           {athlete.goals && (
             <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)', marginBottom: 4, lineHeight: 1.65 }}>
               Goals: {athlete.goals}
+            </div>
+          )}
+          {athlete.partner_qualities && (
+            <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)', marginBottom: 4, lineHeight: 1.65 }}>
+              {athlete.partner_qualities}
             </div>
           )}
           {athlete.training_hours_wk && (
@@ -297,7 +343,7 @@ function ProfileView({ athlete, onEdit }) {
           {athlete.club_name && (
             <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)' }}>Club: {athlete.club_name}</div>
           )}
-          {!athlete.goals && !athlete.training_hours_wk && !athlete.coach_name && !athlete.club_name && (
+          {!athlete.goals && !athlete.training_hours_wk && !athlete.coach_name && !athlete.club_name && !athlete.partner_qualities && !athlete.jump_direction && (
             <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.35)' }}>No details added yet.</div>
           )}
         </div>
@@ -351,6 +397,41 @@ function ProfileView({ athlete, onEdit }) {
 }
 
 // ---------------------------------------------------------------------------
+// Shared pill picker
+// ---------------------------------------------------------------------------
+function PillPicker({ label, options, value, onChange }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', marginBottom: 8 }}>
+        {label}
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {options.map(opt => {
+          const active = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(active ? '' : opt.value)}
+              style={{
+                padding: '6px 14px', borderRadius: 2, fontSize: '0.78rem',
+                cursor: 'pointer', fontFamily: 'inherit', fontWeight: active ? 700 : 400,
+                background: active ? 'rgba(201,169,110,0.15)' : 'transparent',
+                border: `1px solid ${active ? 'rgba(201,169,110,0.5)' : 'rgba(201,169,110,0.2)'}`,
+                color: active ? '#c9a96e' : 'rgba(253,252,248,0.55)',
+                transition: 'all 150ms',
+              }}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Step components (edit form)
 // ---------------------------------------------------------------------------
 function StepBasics({ data, onChange, isExistingUser }) {
@@ -388,6 +469,12 @@ function StepBasics({ data, onChange, isExistingUser }) {
           {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select>
       </label>
+      <PillPicker
+        label="Jump direction"
+        options={JUMP_OPTIONS}
+        value={data.jump_direction}
+        onChange={v => onChange('jump_direction', v)}
+      />
       <label>Instagram
         <input value={data.instagram_handle || ''} onChange={e => onChange('instagram_handle', e.target.value)} placeholder="@username" />
       </label>
@@ -467,12 +554,35 @@ function StepSkating({ data, onChange }) {
 }
 
 function StepGoals({ data, onChange }) {
+  const pqLen = (data.partner_qualities || '').length;
   return (
     <div className="step">
       <h2>Step 4: Goals and Preferences</h2>
       <label>What are your skating goals?
         <textarea value={data.goals} onChange={e => onChange('goals', e.target.value)} rows={4} placeholder="e.g. Compete at Junior Nationals by 2027..." />
       </label>
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', marginBottom: 6 }}>
+          What would make you a good partner?
+        </div>
+        <textarea
+          value={data.partner_qualities || ''}
+          onChange={e => onChange('partner_qualities', e.target.value.slice(0, 400))}
+          rows={4}
+          maxLength={400}
+          placeholder="Tell potential partners what you bring to a partnership."
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            background: '#1c3050', border: '1px solid rgba(201,169,110,0.2)',
+            borderRadius: 2, padding: '10px 14px',
+            color: '#fdfcf8', fontSize: '0.85rem', fontFamily: 'inherit',
+            resize: 'vertical', lineHeight: 1.6,
+          }}
+        />
+        <div style={{ fontSize: '0.68rem', color: 'rgba(253,252,248,0.35)', textAlign: 'right', marginTop: 3 }}>
+          {pqLen} / 400
+        </div>
+      </div>
       <label>Preferred partner level range
         <div className="inline-inputs">
           <select value={data.preferred_level_min} onChange={e => onChange('preferred_level_min', e.target.value)}>
@@ -486,6 +596,12 @@ function StepGoals({ data, onChange }) {
           </select>
         </div>
       </label>
+      <PillPicker
+        label="Willing to relocate?"
+        options={RELOCATE_OPTIONS}
+        value={data.willing_to_relocate}
+        onChange={v => onChange('willing_to_relocate', v)}
+      />
     </div>
   );
 }
@@ -508,9 +624,11 @@ function StepLocation({ data, onChange }) {
 }
 
 function StepReview({ data }) {
-  const levelLabel = LEVELS.find(l => l.value === data.skating_level)?.label ?? 'Not set';
-  const discLabel  = DISCIPLINES.find(d => d.value === data.discipline)?.label ?? 'Not set';
-  const roleLabel  = ROLES.find(r => r.value === data.partner_role)?.label ?? 'Not set';
+  const levelLabel    = LEVELS.find(l => l.value === data.skating_level)?.label ?? 'Not set';
+  const discLabel     = DISCIPLINES.find(d => d.value === data.discipline)?.label ?? 'Not set';
+  const roleLabel     = ROLES.find(r => r.value === data.partner_role)?.label ?? 'Not set';
+  const jumpLabel     = JUMP_OPTIONS.find(o => o.value === data.jump_direction)?.label ?? 'Not set';
+  const relocLabel    = RELOCATE_OPTIONS.find(o => o.value === data.willing_to_relocate)?.label ?? 'Not set';
   return (
     <div className="step">
       <h2>Step 6: Review</h2>
@@ -521,12 +639,14 @@ function StepReview({ data }) {
           <tr><td>Age</td><td>{data.age || 'Not set'}</td></tr>
           <tr><td>Discipline</td><td>{discLabel}</td></tr>
           <tr><td>Role</td><td>{roleLabel}</td></tr>
+          <tr><td>Jump direction</td><td>{jumpLabel}</td></tr>
           <tr><td>Height</td><td>{data.height_cm ? `${data.height_cm} cm` : 'Not set'}</td></tr>
           <tr><td>Level</td><td>{levelLabel}</td></tr>
           <tr><td>Club</td><td>{data.club_name || 'Not set'}</td></tr>
           <tr><td>Coach</td><td>{data.coach_name || 'Not set'}</td></tr>
           <tr><td>Training hrs/wk</td><td>{data.training_hours_wk || 'Not set'}</td></tr>
           <tr><td>Goals</td><td>{data.goals || 'Not set'}</td></tr>
+          <tr><td>Will relocate</td><td>{relocLabel}</td></tr>
           <tr><td>Max distance</td><td>{data.max_distance_km} km</td></tr>
           <tr><td>Location</td><td>{[data.location_city, data.location_state, data.location_country].filter(Boolean).join(', ') || 'Not set'}</td></tr>
           <tr><td>Instagram</td><td>{data.instagram_handle || 'Not set'}</td></tr>
@@ -548,9 +668,12 @@ const REQUIRED    = [
 
 const EMPTY = {
   name: '', email: '', password: '', age: '', discipline: '', partner_role: '',
+  jump_direction: '',
   height_cm: 0, weight_kg: null, _ft: '', _inches: '',
   skating_level: '', club_name: '', coach_name: '', training_hours_wk: null,
-  goals: '', preferred_level_min: '', preferred_level_max: '', max_distance_km: 500,
+  goals: '', partner_qualities: '',
+  preferred_level_min: '', preferred_level_max: '', max_distance_km: 500,
+  willing_to_relocate: '',
   location_city: '', location_state: '', location_country: 'United States',
   instagram_handle: '',
 };
@@ -571,6 +694,7 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
       age:                 athlete.age ?? '',
       discipline:          athlete.discipline ?? '',
       partner_role:        athlete.partner_role ?? '',
+      jump_direction:      athlete.jump_direction ?? '',
       height_cm:           athlete.height_cm ?? 0,
       weight_kg:           athlete.weight_kg ?? null,
       _ft:                 ft,
@@ -580,9 +704,11 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
       coach_name:          athlete.coach_name ?? '',
       training_hours_wk:   athlete.training_hours_wk ?? null,
       goals:               athlete.goals ?? '',
+      partner_qualities:   athlete.partner_qualities ?? '',
       preferred_level_min: athlete.preferred_level_min ?? '',
       preferred_level_max: athlete.preferred_level_max ?? '',
       max_distance_km:     athlete.max_distance_km ?? 500,
+      willing_to_relocate: athlete.willing_to_relocate ?? '',
       location_city:       athlete.location_city ?? '',
       location_state:      athlete.location_state ?? '',
       location_country:    athlete.location_country ?? 'United States',
@@ -631,15 +757,18 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
       discipline:          data.discipline,
       skating_level:       data.skating_level,
       partner_role:        data.partner_role,
+      jump_direction:      data.jump_direction || null,
       height_cm:           data.height_cm,
       weight_kg:           data.weight_kg,
       club_name:           data.club_name || null,
       coach_name:          data.coach_name || null,
       training_hours_wk:   data.training_hours_wk,
       goals:               data.goals || null,
+      partner_qualities:   data.partner_qualities || null,
       preferred_level_min: data.preferred_level_min || null,
       preferred_level_max: data.preferred_level_max || null,
       max_distance_km:     data.max_distance_km,
+      willing_to_relocate: data.willing_to_relocate || null,
       location_city:       data.location_city || null,
       location_state:      data.location_state || null,
       location_country:    data.location_country || 'United States',
@@ -764,10 +893,12 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
 // ---------------------------------------------------------------------------
 export default function Profile() {
   const { user, athlete } = useAuth();
+  const location = useLocation();
   const [editMode, setEditMode] = useState(false);
   const [toast, setToast]       = useState(null);
 
-  const isNewAthlete = !!user && !athlete;
+  // Show wizard for new users (not yet signed up) visiting /profile/new
+  const isNewAthlete = (!user && location.pathname === '/profile/new') || (!!user && !athlete);
 
   if (isNewAthlete || editMode) {
     return (
