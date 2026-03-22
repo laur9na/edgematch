@@ -2,7 +2,8 @@
  * Landing.jsx
  * Hero + How it works. Dark luxury design system.
  */
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const HOW_IT_WORKS = [
   {
@@ -23,6 +24,15 @@ const HOW_IT_WORKS = [
 ];
 
 export default function Landing() {
+  const { session, profileComplete } = useAuth();
+  const navigate = useNavigate();
+
+  function handleCTA() {
+    if (session && profileComplete) return navigate('/browse');
+    if (session && !profileComplete) return navigate('/profile/new');
+    navigate('/signup');
+  }
+
   return (
     <main style={{ background: '#0d1b2e' }}>
 
@@ -48,17 +58,17 @@ export default function Landing() {
           Replace Facebook posts and coaching favors with something better.
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <Link
-            to="/signup"
+          <button
+            onClick={handleCTA}
             style={{
               background: '#c9a96e', color: '#0d1b2e', border: 'none',
               padding: '12px 32px', borderRadius: 2, fontWeight: 700,
-              fontSize: '0.78rem', textDecoration: 'none', display: 'inline-block',
+              fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'inherit',
               letterSpacing: '0.12em', textTransform: 'uppercase',
             }}
           >
             Find my partner
-          </Link>
+          </button>
           <Link
             to="/about"
             style={{

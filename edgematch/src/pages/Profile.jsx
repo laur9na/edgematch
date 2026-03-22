@@ -5,7 +5,6 @@
  * New athletes (no athlete row): creation wizard only.
  */
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -679,8 +678,7 @@ const EMPTY = {
 };
 
 function EditForm({ athlete, user, onSaved, onCancel }) {
-  const { refetchAthlete } = useAuth();
-  const navigate = useNavigate();
+  const { refreshAthlete, signUp, signIn } = useAuth();
   const isEdit = !!athlete;
 
   const [step, setStep]   = useState(0);
@@ -786,7 +784,7 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
           .update(athletePayload())
           .eq('id', athlete.id);
         if (updateError) throw updateError;
-        await refetchAthlete();
+        await refreshAthlete();
         onSaved();
         return;
       }
@@ -795,17 +793,11 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
       if (user) {
         userId = user.id;
       } else {
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
-          email: data.email, password: data.password,
-        });
-        if (signUpError) throw signUpError;
+        const authData = await signUp(data.email, data.password);
         userId = authData.user?.id;
         if (!userId) throw new Error('Sign-up succeeded but no user ID returned');
         if (!authData.session) {
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: data.email, password: data.password,
-          });
-          if (signInError) throw signInError;
+          await signIn(data.email, data.password);
         }
       }
 
@@ -817,8 +809,9 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
       if (insertError) throw insertError;
 
       await supabase.rpc('score_new_athlete', { new_athlete_id: inserted.id });
-      await refetchAthlete();
-      navigate('/matches');
+      // Refresh athlete in context — once profileComplete becomes true,
+      // OnboardingRoute will redirect to /browse automatically.
+      await refreshAthlete();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -893,12 +886,11 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
 // ---------------------------------------------------------------------------
 export default function Profile() {
   const { user, athlete } = useAuth();
-  const location = useLocation();
   const [editMode, setEditMode] = useState(false);
   const [toast, setToast]       = useState(null);
 
-  // Show wizard for new users (not yet signed up) visiting /profile/new
-  const isNewAthlete = (!user && location.pathname === '/profile/new') || (!!user && !athlete);
+  // Show wizard when user has a session but has not yet created an athlete profile
+  const isNewAthlete = !!user && !athlete;
 
   if (isNewAthlete || editMode) {
     return (

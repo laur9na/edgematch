@@ -1,30 +1,20 @@
 /**
- * Signup.jsx Entry point that redirects to Profile wizard.
- * Also handles the "Sign in" flow for existing users.
- *
- * Session persistence: Supabase stores the session in localStorage by default,
- * so users stay signed in across page reloads/restarts without re-entering
- * credentials. The browser's password manager / OS keychain can save
- * email+password via the standard autocomplete="current-password" attribute.
+ * Signup.jsx
+ * Handles sign-up (redirects to wizard) and sign-in (redirects via onAuthStateChange).
+ * Route guards in App.jsx handle all auth-based redirects — no Navigate needed here.
  */
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabase';
 
 export default function Signup() {
-  const [mode, setMode]     = useState('signup'); // 'signup' | 'signin'
-  const [email, setEmail]   = useState('');
-  const [password, setPass] = useState('');
-  const [error, setError]   = useState(null);
-  const [loading, setLoading] = useState(false);
-  const { user, athlete, loading: authLoading, signIn } = useAuth();
+  const [mode, setMode]       = useState('signup');
+  const [email, setEmail]     = useState('');
+  const [password, setPass]   = useState('');
+  const [error, setError]     = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const { signIn } = useAuth();
   const navigate = useNavigate();
-
-  // Already signed in with a profile → skip this page entirely
-  if (!authLoading && user && athlete) return <Navigate to="/matches" replace />;
-  // Signed in but no profile yet → go finish the wizard
-  if (!authLoading && user && !athlete) return <Navigate to="/profile/new" replace />;
 
   function goToWizard(e) {
     e.preventDefault();
@@ -33,23 +23,18 @@ export default function Signup() {
 
   async function handleSignIn(e) {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     setError(null);
     try {
-      // signIn() returns { user, session } directly (not wrapped in { data })
-      const signInData = await signIn(email, password);
-      // If the auth user has no athlete row yet (prior signup failed mid-way),
-      // send them to the profile wizard rather than the empty matches page.
-      const { data: athleteRow } = await supabase
-        .from('athletes')
-        .select('id')
-        .eq('user_id', signInData.user.id)
-        .maybeSingle();
-      navigate(athleteRow ? '/matches' : '/profile/new');
+      await signIn(email, password);
+      // onAuthStateChange in AuthContext will update session + athlete.
+      // PublicRoute will then redirect to /browse once profileComplete.
+      // If profile is incomplete, OnboardingRoute will redirect to /profile/new.
+      // No manual navigate() needed here.
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
@@ -70,7 +55,6 @@ export default function Signup() {
   return (
     <div className="auth-page">
       <h1>Sign in</h1>
-      {/* autocomplete attributes let browser/OS keychain offer to save credentials */}
       <form onSubmit={handleSignIn} autoComplete="on">
         <label>Email
           <input
@@ -92,8 +76,8 @@ export default function Signup() {
           />
         </label>
         {error && <p className="form-error">{error}</p>}
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign in'}
+        <button type="submit" className="btn-primary" disabled={submitting}>
+          {submitting ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
       <p className="auth-switch">
