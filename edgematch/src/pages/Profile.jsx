@@ -125,15 +125,18 @@ function CompetitionResults({ athleteId }) {
 
   useEffect(() => {
     if (!athleteId) return;
+    let cancelled = false;
     supabase
       .from('competition_results')
       .select('event_name, event_year, level, segment, placement, total_score')
       .eq('athlete_id', athleteId)
       .order('event_year', { ascending: false })
       .then(({ data }) => {
+        if (cancelled) return;
         setResults(data ?? []);
         setLoaded(true);
       });
+    return () => { cancelled = true; };
   }, [athleteId]);
 
   if (!loaded || results.length === 0) return null;
@@ -206,14 +209,16 @@ function ProfileView({ athlete, onEdit }) {
 
   useEffect(() => {
     if (!athlete) return;
+    let cancelled = false;
     // Try club_id join first, then fall back to name match
     if (athlete.club_id) {
       supabase.from('clubs').select('*').eq('id', athlete.club_id).single()
-        .then(({ data }) => { if (data) setClub(data); });
+        .then(({ data }) => { if (!cancelled && data) setClub(data); });
     } else if (athlete.club_name) {
       supabase.from('clubs').select('*').ilike('name', athlete.club_name).limit(1)
-        .then(({ data }) => { if (data?.[0]) setClub(data[0]); });
+        .then(({ data }) => { if (!cancelled && data?.[0]) setClub(data[0]); });
     }
+    return () => { cancelled = true; };
   }, [athlete?.id]);
 
   return (
@@ -441,14 +446,9 @@ function StepBasics({ data, onChange, isExistingUser }) {
         <input value={data.name} onChange={e => onChange('name', e.target.value)} placeholder="First Last" required />
       </label>
       {!isExistingUser && (
-        <>
-          <label>Email *
-            <input type="email" value={data.email} onChange={e => onChange('email', e.target.value)} placeholder="you@example.com" required />
-          </label>
-          <label>Password *
-            <input type="password" value={data.password} onChange={e => onChange('password', e.target.value)} placeholder="At least 8 characters" minLength={8} required />
-          </label>
-        </>
+        <label>Email *
+          <input type="email" value={data.email} onChange={e => onChange('email', e.target.value)} placeholder="you@example.com" required />
+        </label>
       )}
       {isExistingUser && (
         <p className="hint" style={{ marginBottom: 12, color: 'rgba(253,252,248,0.65)' }}>Signed in as <strong style={{ color: '#fdfcf8' }}>{data.email}</strong></p>
@@ -661,7 +661,8 @@ function StepReview({ data }) {
 const STEPS      = [StepBasics, StepPhysical, StepSkating, StepGoals, StepLocation, StepReview];
 const STEP_LABELS = ['Basics', 'Physical', 'Skating', 'Goals', 'Location', 'Review'];
 const REQUIRED    = [
-  ['name', 'email', 'password', 'discipline', 'partner_role'],
+  // Waitlist mode: no password required (no account created)
+  ['name', 'email', 'discipline', 'partner_role'],
   ['height_cm'], ['skating_level'], [], [], [],
 ];
 
@@ -677,12 +678,46 @@ const EMPTY = {
   instagram_handle: '',
 };
 
+function WaitlistConfirmation({ firstName }) {
+  return (
+    <div style={{
+      minHeight: 'calc(100vh - 52px)', background: '#0d1b2e',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: '40px 24px', textAlign: 'center',
+    }}>
+      <div style={{
+        fontFamily: 'Great Vibes, cursive',
+        fontSize: '2.2rem', color: '#c9a96e', marginBottom: 32,
+      }}>
+        EdgeMatch
+      </div>
+      <h1 style={{
+        fontSize: '2rem', fontWeight: 300, color: '#fdfcf8',
+        letterSpacing: '-0.02em', marginBottom: 20,
+      }}>
+        You're on the list.
+      </h1>
+      <p style={{
+        fontSize: '0.95rem', color: 'rgba(253,252,248,0.65)',
+        lineHeight: 1.75, maxWidth: 380, marginBottom: 28,
+      }}>
+        We'll review your profile and be in touch within 48 hours with your top matches.
+      </p>
+      <p style={{ fontSize: '0.95rem', color: 'rgba(253,252,248,0.5)', fontStyle: 'italic' }}>
+        — Laurena
+      </p>
+    </div>
+  );
+}
+
 function EditForm({ athlete, user, onSaved, onCancel }) {
   const { refreshAthlete, signUp, signIn } = useAuth();
   const isEdit = !!athlete;
 
-  const [step, setStep]   = useState(0);
-  const [data, setData]   = useState(() => {
+  const [step,      setStep]      = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+  const [data, setData]           = useState(() => {
     if (!athlete) return { ...EMPTY, email: user?.email ?? '' };
     const { ft, inches } = cmToFtIn(athlete.height_cm ?? 0);
     return {
@@ -730,7 +765,6 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
     for (const field of required) {
       if (!data[field] && data[field] !== 0) return `${field.replace(/_/g, ' ')} is required`;
     }
-    if (step === 0 && !user && data.password.length < 8) return 'Password must be at least 8 characters';
     if (step === 1 && data.height_cm < 100) return 'Please enter a valid height';
     return null;
   }
@@ -789,29 +823,42 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
         return;
       }
 
-      let userId;
-      if (user) {
-        userId = user.id;
-      } else {
-        const authData = await signUp(data.email, data.password);
-        userId = authData.user?.id;
-        if (!userId) throw new Error('Sign-up succeeded but no user ID returned');
-        if (!authData.session) {
-          await signIn(data.email, data.password);
-        }
+      // Waitlist mode: collect info, send emails, show confirmation.
+      // No Supabase auth account is created.
+      const nameParts = data.name.trim().split(/\s+/);
+      const firstName = nameParts[0] ?? '';
+      const lastName  = nameParts.slice(1).join(' ');
+      const { ft, inches } = cmToFtIn(data.height_cm);
+      const heightStr = data.height_cm ? `${ft}'${inches}"` : '';
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const res = await fetch(`${supabaseUrl}/functions/v1/send-waitlist-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${anonKey}`,
+        },
+        body: JSON.stringify({
+          first_name:          firstName,
+          last_name:           lastName,
+          email:               data.email,
+          discipline:          data.discipline || null,
+          skating_level:       data.skating_level || null,
+          partner_role:        data.partner_role || null,
+          height:              heightStr || null,
+          location_city:       data.location_city || null,
+          location_country:    data.location_country || null,
+          jump_direction:      data.jump_direction || null,
+          willing_to_relocate: data.willing_to_relocate || null,
+          goals:               data.goals || null,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Email send failed (${res.status})`);
       }
-
-      const { data: inserted, error: insertError } = await supabase
-        .from('athletes')
-        .insert({ user_id: userId, source: 'self', search_status: 'active', ...athletePayload() })
-        .select('id')
-        .single();
-      if (insertError) throw insertError;
-
-      await supabase.rpc('score_new_athlete', { new_athlete_id: inserted.id });
-      // Refresh athlete in context — once profileComplete becomes true,
-      // OnboardingRoute will redirect to /browse automatically.
-      await refreshAthlete();
+      setSubmitted(true);
     } catch (err) {
       setError(err.message);
     } finally {

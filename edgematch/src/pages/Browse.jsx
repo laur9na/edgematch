@@ -4,9 +4,9 @@
  * Left panel: gold labels, level pills, discipline/role checkboxes.
  * Right panel: club cards in 2-column grid.
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { useClubs } from '../hooks/useClubs';
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 
@@ -240,29 +240,13 @@ function ClubCard({ club, index, onClick }) {
 
 export default function Browse() {
   const navigate = useNavigate();
-  const [clubs, setClubs]         = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
+  const { data: clubs = [], isLoading: loading, error: queryError } = useClubs();
+  const error = queryError?.message ?? null;
 
   const [levels, setLevels]           = useState([]);
   const [disciplines, setDisciplines] = useState(['pairs', 'ice_dance']);
   const [roles, setRoles]             = useState(['man', 'lady', 'either']);
   const [country, setCountry]         = useState('');
-
-  useEffect(() => {
-    supabase
-      .from('clubs')
-      .select('*, athletes(count)')
-      .then(({ data, error: err }) => {
-        if (err) { setError(err.message); setLoading(false); return; }
-        const enriched = (data ?? []).map(c => ({
-          ...c,
-          athlete_count: c.athletes?.[0]?.count ?? 0,
-        }));
-        setClubs(enriched);
-        setLoading(false);
-      });
-  }, []);
 
   const filtered = useMemo(() => {
     return clubs.filter(c => {

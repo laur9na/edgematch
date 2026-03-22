@@ -4,10 +4,11 @@
  * Top card: name, rink, city, country. Contact links right-aligned in gold.
  * Roster: filter pills, athlete cards in 2-column grid.
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useClub } from '../hooks/useClub';
+import { useAthletes } from '../hooks/useAthletes';
 import ContactModal from '../components/ContactModal';
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
@@ -131,24 +132,13 @@ export default function ClubPage() {
   const navigate = useNavigate();
   const { athlete: myAthlete } = useAuth();
 
-  const [club, setClub]           = useState(null);
-  const [athletes, setAthletes]   = useState([]);
-  const [loading, setLoading]     = useState(true);
+  const { data: club = null, isLoading: clubLoading } = useClub(id);
+  const { data: athletes = [], isLoading: athletesLoading } = useAthletes(id);
+  const loading = clubLoading || athletesLoading;
+
   const [filterDisc, setFilterDisc] = useState('');
   const [filterLevel, setFilterLevel] = useState('');
   const [modalAthlete, setModalAthlete] = useState(null);
-
-  useEffect(() => {
-    if (!id) return;
-    Promise.all([
-      supabase.from('clubs').select('*').eq('id', id).single(),
-      supabase.from('athletes').select('*').eq('club_id', id).eq('search_status', 'active'),
-    ]).then(([{ data: clubData }, { data: athleteData }]) => {
-      setClub(clubData ?? null);
-      setAthletes(athleteData ?? []);
-      setLoading(false);
-    });
-  }, [id]);
 
   const disciplines = [...new Set(athletes.map(a => a.discipline).filter(Boolean))];
   const levels = [...new Set(athletes.map(a => a.skating_level).filter(Boolean))];

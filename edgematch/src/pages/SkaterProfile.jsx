@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useAthlete } from '../hooks/useAthlete';
 import TryoutModal from '../components/TryoutModal';
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
@@ -142,27 +143,26 @@ export default function SkaterProfile() {
   const navigate = useNavigate();
   const { athlete: myAthlete } = useAuth();
 
-  const [partner, setPartner]     = useState(null);
+  const { data: partner = null, isLoading: loading } = useAthlete(id);
   const [results, setResults]     = useState([]);
   const [club, setClub]           = useState(null);
   const [matchRow, setMatchRow]   = useState(null);
-  const [loading, setLoading]     = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  // Load athlete with clubs join
+  // Derive club from join; fall back to fuzzy name match
   useEffect(() => {
-    if (!id) return;
+    if (!partner) return;
+    if (partner.clubs) { setClub(partner.clubs); return; }
+    if (!partner.club_name) return;
+    let cancelled = false;
     supabase
-      .from('athletes')
-      .select('*, clubs(*)')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => {
-        setPartner(data ?? null);
-        if (data?.clubs) setClub(data.clubs);
-        setLoading(false);
-      });
-  }, [id]);
+      .from('clubs')
+      .select('*')
+      .ilike('name', `%${partner.club_name}%`)
+      .maybeSingle()
+      .then(({ data }) => { if (!cancelled && data) setClub(data); });
+    return () => { cancelled = true; };
+  }, [partner]);
 
   // Load competition results: try First Last, Last First, then last name only
   // IJS stores names as "LASTNAME Firstname", athletes table stores "Firstname Lastname"
@@ -172,6 +172,7 @@ export default function SkaterProfile() {
     const firstName = parts[0] ?? '';
     const lastName = parts[parts.length - 1] ?? '';
     if (!lastName) return;
+    let cancelled = false;
 
     supabase
       .from('competition_results')
@@ -179,6 +180,7 @@ export default function SkaterProfile() {
       .or(`skater_name.ilike.%${firstName}%${lastName}%,skater_name.ilike.%${lastName}%${firstName}%`)
       .order('event_year', { ascending: false })
       .then(({ data }) => {
+        if (cancelled) return;
         if (data && data.length > 0) {
           setResults(data);
         } else {
@@ -187,27 +189,16 @@ export default function SkaterProfile() {
             .select('*')
             .ilike('skater_name', `%${lastName}%`)
             .order('event_year', { ascending: false })
-            .then(({ data: fb }) => setResults(fb ?? []));
+            .then(({ data: fb }) => { if (!cancelled) setResults(fb ?? []); });
         }
       });
+    return () => { cancelled = true; };
   }, [partner?.name]);
-
-  // If no club from join, try fuzzy match on club_name string
-  useEffect(() => {
-    if (!partner || partner.clubs || !partner.club_name) return;
-    supabase
-      .from('clubs')
-      .select('*')
-      .ilike('name', `%${partner.club_name}%`)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setClub(data);
-      });
-  }, [partner]);
 
   // Load match score
   useEffect(() => {
     if (!myAthlete?.id || !id) return;
+    let cancelled = false;
     supabase
       .from('compatibility_scores')
       .select('*')
@@ -216,7 +207,8 @@ export default function SkaterProfile() {
         `and(athlete_a_id.eq.${id},athlete_b_id.eq.${myAthlete.id})`
       )
       .maybeSingle()
-      .then(({ data }) => setMatchRow(data ?? null));
+      .then(({ data }) => { if (!cancelled) setMatchRow(data ?? null); });
+    return () => { cancelled = true; };
   }, [myAthlete?.id, id]);
 
   if (loading) return <div className="loading">Loading...</div>;
