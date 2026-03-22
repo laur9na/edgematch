@@ -12,12 +12,6 @@ const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 
 const ROLE_LABEL = { man: 'Man', lady: 'Lady', either: 'Either' };
 
-const LEVEL_KEYS = ['pre_juvenile', 'juvenile', 'novice', 'junior', 'senior', 'adult'];
-const LEVEL_LABEL = {
-  pre_juvenile: 'Pre-Juv', juvenile: 'Juvenile',
-  novice: 'Novice', junior: 'Junior', senior: 'Senior', adult: 'Adult',
-};
-
 const FEDERATION_LABEL = {
   usfs: 'USFS', isu: 'ISU', skate_canada: 'Skate Canada',
   ffsg: 'FFSG', fisg: 'FISG',
@@ -38,10 +32,7 @@ function Divider() {
   return <hr style={{ border: 'none', borderTop: '1px solid rgba(201,169,110,0.1)', margin: '16px 0' }} />;
 }
 
-function FilterPanel({ levels, onLevels, disciplines, onDisciplines, roles, onRoles, country, onCountry }) {
-  function toggleLevel(key) {
-    onLevels(prev => prev.includes(key) ? prev.filter(l => l !== key) : [...prev, key]);
-  }
+function FilterPanel({ disciplines, onDisciplines, roles, onRoles, country, onCountry }) {
   function toggleDiscipline(val) {
     onDisciplines(prev => prev.includes(val) ? prev.filter(d => d !== val) : [...prev, val]);
   }
@@ -74,31 +65,6 @@ function FilterPanel({ levels, onLevels, disciplines, onDisciplines, roles, onRo
           marginBottom: 0,
         }}
       />
-
-      <Divider />
-
-      <FilterLabel>Level</FilterLabel>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-        {LEVEL_KEYS.map(key => {
-          const active = levels.includes(key);
-          return (
-            <button
-              key={key}
-              onClick={() => toggleLevel(key)}
-              style={{
-                padding: '3px 8px', borderRadius: 2, fontSize: '0.65rem', cursor: 'pointer',
-                background: active ? 'rgba(201,169,110,0.15)' : 'transparent',
-                border: `1px solid ${active ? 'rgba(201,169,110,0.5)' : 'rgba(201,169,110,0.15)'}`,
-                color: active ? '#c9a96e' : 'rgba(253,252,248,0.45)',
-                fontWeight: active ? 600 : 400, fontFamily: 'inherit',
-                transition: 'all 0.1s',
-              }}
-            >
-              {LEVEL_LABEL[key]}
-            </button>
-          );
-        })}
-      </div>
 
       <Divider />
 
@@ -243,7 +209,6 @@ export default function Browse() {
   const { data: clubs = [], isLoading: loading, error: queryError } = useClubs();
   const error = queryError?.message ?? null;
 
-  const [levels, setLevels]           = useState([]);
   const [disciplines, setDisciplines] = useState(['pairs', 'ice_dance']);
   const [roles, setRoles]             = useState(['man', 'lady', 'either']);
   const [country, setCountry]         = useState('');
@@ -263,7 +228,6 @@ export default function Browse() {
   return (
     <div style={{ display: 'flex', background: '#0d1b2e', minHeight: 'calc(100vh - 52px)', alignItems: 'flex-start' }}>
       <FilterPanel
-        levels={levels} onLevels={setLevels}
         disciplines={disciplines} onDisciplines={setDisciplines}
         roles={roles} onRoles={setRoles}
         country={country} onCountry={setCountry}

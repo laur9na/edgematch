@@ -31,7 +31,7 @@ function AppRoutes() {
       <Suspense fallback={<Spinner />}>
         <Routes>
           {/* Public — redirects logged-in users with complete profiles to /browse */}
-          <Route path="/"       element={<PublicRoute><Landing /></PublicRoute>} />
+          <Route path="/"       element={<Landing />} />
           <Route path="/login"  element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/signin" element={<PublicRoute><Signup /></PublicRoute>} />
