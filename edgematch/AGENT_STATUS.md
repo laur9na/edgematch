@@ -4,6 +4,38 @@
 ---
 
 <!-- agents append below this line -->
+[AGENT-1] [AUDIT] Auth fragmentation in src/:
+
+SCATTERED SESSION READS:
+- src/hooks/useAuth.jsx:27 — supabase.auth.getSession() (the provider — KEEPER)
+- src/hooks/useAuth.jsx:35 — supabase.auth.onAuthStateChange() (the provider — KEEPER)
+- src/pages/Signup.jsx:43-47 — supabase.from('athletes').select('id').eq('user_id',...) — duplicate of AuthContext fetchAthlete
+- src/pages/Profile.jsx:798 — supabase.auth.signUp() called directly (bypasses AuthContext.signUp)
+- src/pages/Profile.jsx:805 — supabase.auth.signInWithPassword() called directly (bypasses AuthContext.signIn)
+
+SCATTERED ATHLETE PROFILE QUERIES:
+- src/hooks/useAuth.jsx:17-23 — fetchAthlete() (the provider — KEEPER)
+- src/pages/Signup.jsx:43-47 — re-queries athlete after signIn (duplicates provider)
+
+AUTH STATE IN useState/CONTEXT:
+- src/hooks/useAuth.jsx:11-13 — user, athlete, loading state (the provider)
+- src/pages/Signup.jsx:20 — loading local state alongside authLoading
+- App.jsx Protected component reads user+loading but NOT athlete (profile completeness ignored)
+
+ROUTING DECISIONS:
+- src/App.jsx:18-21 — Protected checks user only (not profileComplete), redirects to /signup not /login
+- src/pages/Signup.jsx:25 — Navigate to /matches if user+athlete
+- src/pages/Signup.jsx:27 — Navigate to /profile/new if user+!athlete
+- src/pages/Signup.jsx:48 — navigate(athleteRow ? '/matches' : '/profile/new') after signIn
+- src/pages/Profile.jsx:821 — navigate('/matches') after wizard submit
+
+BUGS IDENTIFIED:
+1. RACE CONDITION: hooks/useAuth.jsx:30-31 — setLoading(false) fires BEFORE fetchAthlete resolves. Components render with loading=false but athlete=null, briefly showing wrong UI.
+2. Protected redirects to /signup (wrong) instead of /login
+3. Browse (/browse), ClubPage (/clubs/:id), About (/about) are completely unprotected
+4. profileComplete is never computed — routing is ad-hoc and inconsistent
+5. session object not exposed (only user) — some consumers need raw session
+6. refetchAthlete vs refreshAthlete naming mismatch (Admin.jsx uses refetchAthlete)
 [AGENT-2] [DONE] Step 9.1 — Audit scripts/: removed synchro return values in scrape.js and normalize.js (synchro athletes now get null discipline and are excluded via review_flag)
 [AGENT-2] [DONE] Step 9.2 — Daily cron edge function: supabase/functions/refresh_athlete_db/index.ts (scrape IPS, normalize, upsert raw_athletes, promote, score new athletes)
 [AGENT-2] [DONE] Step 9.3 — Instagram handle extractor: scripts/enrich_instagram.js (Claude Haiku extracts handles from contact_note, validates format, writes to athletes table)
@@ -32,6 +64,9 @@
 [AGENT-1] [DONE] onboarding: jump_direction (Step 1 pill picker CW/CCW/N/A), partner_qualities (Step 4 textarea 400 char), willing_to_relocate (Step 4 pills); profile view badges + card badge; migration 014_athlete_fields.sql; build clean; Puppeteer verified Steps 1+4
 [AGENT-1] [DONE] ClubPage: 'Request try-out' now opens ContactModal (priority: coach+email > website > email > fallback)
 [READY] paste supabase/migrations/014_athlete_fields.sql in Supabase SQL editor to add jump_direction, willing_to_relocate, partner_qualities columns
+[AGENT-1] [DONE] auth: AuthContext.jsx as single source of truth — fixed loading race condition, added profileComplete, ProtectedRoute/PublicRoute/OnboardingRoute guards, Browse/ClubPage/Admin now protected, Signup.jsx cleaned of duplicate athlete query, Landing CTA smart-routes by auth state. Puppeteer verified: / shows landing (logged out), /browse redirects to /login (logged out).
+[AGENT-1] [DONE] launch: waitlist email flow — /profile/new public (no auth), password field removed, send-waitlist-email Edge Function sends 2 Resend emails on submit, WaitlistConfirmation replaces form inline, send-tryout-email disabled (soft launch). Puppeteer verified: form loads unauthenticated, confirmation screen renders correctly.
+[READY] Deploy send-waitlist-email Edge Function: supabase functions deploy send-waitlist-email (requires RESEND_API_KEY env var in Supabase dashboard) — fixed loading race condition, added profileComplete, ProtectedRoute/PublicRoute/OnboardingRoute guards, Browse/ClubPage/Admin now protected, Signup.jsx cleaned of duplicate athlete query, Landing CTA smart-routes by auth state. Puppeteer verified: / shows landing (logged out), /browse redirects to /login (logged out).
 [AGENT-1] [DONE] link_international_athletes.js — 61 athletes linked to national federation clubs (ISU) by location_country; 482 remaining are US/CA athletes or null/malformed country data
 [AGENT-1] [DONE] Data pipeline: seed_world_clubs.js (ES module) inserted 234 clubs (278 total: 208 US, 25 CA, 16 international); link_athletes_and_results.js (ES module) linked 164 athletes to clubs, 1232/1300 results to athletes; 543 intl athletes have no club (ISU data lacks club names)
 [AGENT-3] [CLEAN] QA on Agent 2 script fixes: build clean, 0 console.log, 0 em dashes, 0 synchro, 0 forbidden strings. Created vercel.json with SPA rewrite rule (was missing). SkaterProfile empty-field safety confirmed.
