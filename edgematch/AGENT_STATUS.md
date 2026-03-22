@@ -28,6 +28,10 @@
 [AGENT-2] [DONE] Script fixes: scrape_results.js pre-flight checks competition_results table (exits cleanly if missing); enrich_instagram.js exits 0 on missing ANTHROPIC_API_KEY. Dry-run verified: 295 results parsed, 12 athlete matches, 0 errors. competition_results table still needs 009 migration applied via Supabase dashboard SQL editor.
 [AGENT-2] [DONE] scrape_results.js live run: 295 results inserted, 12 athlete matches, 0 fatal errors. Sectional/2023 404s are expected (IJS pages removed). competition_results table confirmed populated.
 [AGENT-1] [DONE] filter_active_searchers.js -- IPS login-gated (0 names extracted); classified by competition_results: 432 set inactive (no linked results), 277 already correct, 0 matched skipped
+[AGENT-1] [DONE] link_international_athletes.js -- 61 international athletes linked to ISU federation clubs by country code
+[AGENT-1] [DONE] onboarding: jump_direction (Step 1 pill picker CW/CCW/N/A), partner_qualities (Step 4 textarea 400 char), willing_to_relocate (Step 4 pills); profile view badges + card badge; migration 014_athlete_fields.sql; build clean; Puppeteer verified Steps 1+4
+[AGENT-1] [DONE] ClubPage: 'Request try-out' now opens ContactModal (priority: coach+email > website > email > fallback)
+[READY] paste supabase/migrations/014_athlete_fields.sql in Supabase SQL editor to add jump_direction, willing_to_relocate, partner_qualities columns
 [AGENT-1] [DONE] link_international_athletes.js — 61 athletes linked to national federation clubs (ISU) by location_country; 482 remaining are US/CA athletes or null/malformed country data
 [AGENT-1] [DONE] Data pipeline: seed_world_clubs.js (ES module) inserted 234 clubs (278 total: 208 US, 25 CA, 16 international); link_athletes_and_results.js (ES module) linked 164 athletes to clubs, 1232/1300 results to athletes; 543 intl athletes have no club (ISU data lacks club names)
 [AGENT-3] [CLEAN] QA on Agent 2 script fixes: build clean, 0 console.log, 0 em dashes, 0 synchro, 0 forbidden strings. Created vercel.json with SPA rewrite rule (was missing). SkaterProfile empty-field safety confirmed.
