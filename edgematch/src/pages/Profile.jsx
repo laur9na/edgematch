@@ -866,6 +866,11 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
     }
   }
 
+  if (submitted) {
+    const firstName = data.name.trim().split(/\s+/)[0] ?? '';
+    return <WaitlistConfirmation firstName={firstName} />;
+  }
+
   const StepComponent = STEPS[step];
 
   return (
@@ -936,8 +941,8 @@ export default function Profile() {
   const [editMode, setEditMode] = useState(false);
   const [toast, setToast]       = useState(null);
 
-  // Show wizard when user has a session but has not yet created an athlete profile
-  const isNewAthlete = !!user && !athlete;
+  // Show wizard when: (a) no session (waitlist intake), or (b) has session but no athlete yet
+  const isNewAthlete = !athlete;
 
   if (isNewAthlete || editMode) {
     return (
@@ -949,17 +954,6 @@ export default function Profile() {
           onCancel={() => setEditMode(false)}
         />
         {toast && <Toast msg={toast} onHide={() => setToast(null)} />}
-      </main>
-    );
-  }
-
-  if (!user) {
-    return (
-      <main style={{ background: '#0d1b2e', padding: '24px 28px' }}>
-        <p style={{ color: 'rgba(253,252,248,0.65)', fontSize: '0.85rem' }}>
-          Sign in to view your profile.{' '}
-          <a href="/signup" style={{ color: '#c9a96e' }}>Sign in</a>
-        </p>
       </main>
     );
   }

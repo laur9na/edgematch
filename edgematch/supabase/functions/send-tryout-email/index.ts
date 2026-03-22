@@ -152,12 +152,14 @@ Deno.serve(async (req: Request) => {
   console.log(`Tryout ${record?.id}: ${oldStatus ?? 'new'} -> ${newStatus}`);
 
   try {
-    if (type === 'INSERT' && newStatus === 'requested') {
-      await handleRequested(record);
-    } else if (type === 'UPDATE' && newStatus !== oldStatus) {
-      if (newStatus === 'requested') await handleRequested(record);
-      else if (newStatus === 'confirmed') await handleConfirmed(record);
-    }
+    // DISABLED: soft launch — manual matching only
+    // if (type === 'INSERT' && newStatus === 'requested') {
+    //   await handleRequested(record);
+    // } else if (type === 'UPDATE' && newStatus !== oldStatus) {
+    //   if (newStatus === 'requested') await handleRequested(record);
+    //   else if (newStatus === 'confirmed') await handleConfirmed(record);
+    // }
+    console.log(`Tryout email skipped (soft launch): ${record?.id} -> ${newStatus}`);
   } catch (err) {
     console.error('Email handler error:', err);
     return new Response(JSON.stringify({ error: err.message }), {
