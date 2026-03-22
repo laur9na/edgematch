@@ -9,7 +9,7 @@ export function useAthletes(clubId) {
         .from('athletes')
         .select('*')
         .eq('club_id', clubId)
-        .eq('search_status', 'active');
+        .order('name', { ascending: true });
       if (error) throw error;
       return data ?? [];
     },

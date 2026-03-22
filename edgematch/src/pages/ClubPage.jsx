@@ -133,8 +133,7 @@ export default function ClubPage() {
   const { athlete: myAthlete } = useAuth();
 
   const { data: club = null, isLoading: clubLoading } = useClub(id);
-  const { data: athletes = [], isLoading: athletesLoading } = useAthletes(id);
-  const loading = clubLoading || athletesLoading;
+  const { data: athletes = [] } = useAthletes(id);
 
   const [filterDisc, setFilterDisc] = useState('');
   const [filterLevel, setFilterLevel] = useState('');
@@ -149,7 +148,7 @@ export default function ClubPage() {
     return true;
   });
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (clubLoading) return <div className="loading">Loading...</div>;
 
   if (!club) {
     return (
