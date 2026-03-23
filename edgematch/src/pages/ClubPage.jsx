@@ -299,7 +299,7 @@ export default function ClubPage() {
                 athlete={athlete}
                 index={i}
                 onTryout={setModalAthlete}
-                onProfile={() => navigate(`/skater/${athlete.id}`)}
+                onProfile={() => navigate(`/athletes/${athlete.id}`)}
               />
             ))}
           </div>

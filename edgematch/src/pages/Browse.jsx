@@ -321,7 +321,7 @@ export default function Browse() {
                     key={athlete.id}
                     athlete={athlete}
                     index={i}
-                    onProfile={() => navigate(`/skater/${athlete.id}`)}
+                    onProfile={() => navigate(`/athletes/${athlete.id}`)}
                     onTryout={setModalAthlete}
                   />
                 ))}
