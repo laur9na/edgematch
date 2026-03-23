@@ -59,11 +59,19 @@ function TryoutCard({ tryout, role, onUpdate }) {
   const isCancelled = tryout.status === 'cancelled' || tryout.status === 'no_show';
   const [showOutcome,   setShowOutcome]   = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [updating,      setUpdating]      = useState(false);
 
   async function updateStatus(status) {
     setUpdating(true);
     await supabase.from('tryouts').update({ status }).eq('id', tryout.id);
+    setUpdating(false);
+    onUpdate();
+  }
+
+  async function deleteTryout() {
+    setUpdating(true);
+    await supabase.from('tryouts').delete().eq('id', tryout.id);
     setUpdating(false);
     onUpdate();
   }
@@ -115,7 +123,7 @@ function TryoutCard({ tryout, role, onUpdate }) {
         </div>
       )}
 
-      {!showOutcome && !confirmCancel && (
+      {!showOutcome && !confirmCancel && !confirmDelete && (
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           {role === 'received' && tryout.status === 'requested' && (
             <>
@@ -141,6 +149,14 @@ function TryoutCard({ tryout, role, onUpdate }) {
               Cancel
             </button>
           )}
+          {role === 'sent' && (
+            <button disabled={updating} onClick={() => setConfirmDelete(true)}
+              style={{ background: 'transparent', border: 'none', color: 'rgba(253,252,248,0.25)', padding: '5px 8px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' }}
+              title="Delete"
+            >
+              &#128465;
+            </button>
+          )}
         </div>
       )}
 
@@ -153,6 +169,22 @@ function TryoutCard({ tryout, role, onUpdate }) {
               Yes, cancel
             </button>
             <button onClick={() => setConfirmCancel(false)}
+              style={{ background: 'transparent', border: '1px solid rgba(201,169,110,0.2)', color: 'rgba(253,252,248,0.5)', padding: '5px 12px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+              Keep it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div style={{ marginTop: 12, padding: '12px 14px', background: '#1c3050', borderRadius: 2, border: '1px solid rgba(220,38,38,0.2)', fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)' }}>
+          Delete this try-out permanently?
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button onClick={deleteTryout} disabled={updating}
+              style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+              Delete
+            </button>
+            <button onClick={() => setConfirmDelete(false)}
               style={{ background: 'transparent', border: '1px solid rgba(201,169,110,0.2)', color: 'rgba(253,252,248,0.5)', padding: '5px 12px', borderRadius: 2, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
               Keep it
             </button>

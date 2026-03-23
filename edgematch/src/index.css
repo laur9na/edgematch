@@ -522,6 +522,25 @@ select option { background: var(--navy-mid); color: var(--white); }
 /* ---------- Mobile bottom tab bar (desktop: hidden) ---------- */
 .mobile-bottom-nav { display: none; }
 
+/* ---------- Dual range slider: each input thumb is independently draggable ---------- */
+.dual-range-input {
+  position: absolute;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  height: 20px;
+  margin: 0;
+  pointer-events: none;
+}
+.dual-range-input::-webkit-slider-thumb {
+  pointer-events: all;
+  cursor: grab;
+}
+.dual-range-input::-moz-range-thumb {
+  pointer-events: all;
+  cursor: grab;
+}
+
 /* Tablet */
 @media (min-width: 641px) and (max-width: 1024px) {
   .how-steps { grid-template-columns: repeat(3, 1fr); }

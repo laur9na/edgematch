@@ -52,14 +52,12 @@ function SingleRangeSlider({ min, max, step, value, onChange }) {
   );
 }
 
-// Dual-handle range slider: two overlapping inputs sharing one visual track
+// Dual-handle range slider: pointer-events disabled on the track, enabled only on each thumb.
+// This lets both handles be dragged independently regardless of their position.
 function DualRangeSlider({ min, max, step, values, onChange }) {
   const [lo, hi] = values;
   const pctLo = ((lo - min) / (max - min)) * 100;
   const pctHi = ((hi - min) / (max - min)) * 100;
-  // When lo is in the upper half, bring lo input on top so it can be dragged left
-  const loZ = pctLo > 50 ? 5 : 3;
-  const hiZ = pctLo > 50 ? 3 : 5;
   return (
     <div style={{ position: 'relative', height: 20, margin: '4px 0' }}>
       <div style={{
@@ -75,12 +73,12 @@ function DualRangeSlider({ min, max, step, values, onChange }) {
       <div style={{ ...KNOB, left: `${pctLo}%` }} />
       <div style={{ ...KNOB, left: `${pctHi}%` }} />
       <input type="range" min={min} max={max} step={step} value={lo}
+        className="dual-range-input"
         onChange={e => onChange([Math.min(+e.target.value, hi), hi])}
-        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0, zIndex: loZ }}
       />
       <input type="range" min={min} max={max} step={step} value={hi}
+        className="dual-range-input"
         onChange={e => onChange([lo, Math.max(+e.target.value, lo)])}
-        style={{ position: 'absolute', width: '100%', opacity: 0, cursor: 'pointer', height: 20, margin: 0, zIndex: hiZ }}
       />
     </div>
   );
@@ -273,9 +271,15 @@ export default function Matches() {
           </div>
         )}
 
-        {!loading && filtered.length === 0 && (
+        {!loading && matches.length === 0 && (
           <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.65)', fontSize: 14, marginTop: 60 }}>
-            No matches found. Try adjusting the filters.
+            No matches yet. Compatibility scores are computed nightly — check back soon.
+          </div>
+        )}
+
+        {!loading && matches.length > 0 && filtered.length === 0 && (
+          <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.65)', fontSize: 14, marginTop: 60 }}>
+            No matches pass the current filters. Try widening the strength range or selecting more levels.
           </div>
         )}
 
