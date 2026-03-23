@@ -9,10 +9,10 @@ import { useMatches } from '../hooks/useMatches';
 import AthleteCard from '../components/AthleteCard';
 
 const LEVEL_LABEL = {
-  pre_juvenile: 'Pre-Juv', juvenile: 'Juvenile',
-  novice: 'Novice', junior: 'Junior', senior: 'Senior', adult: 'Adult',
+  juvenile: 'Juvenile', intermediate: 'Intermediate',
+  novice: 'Novice', junior: 'Junior', senior: 'Senior',
 };
-const LEVEL_KEYS = ['pre_juvenile', 'juvenile', 'novice', 'junior', 'senior', 'adult'];
+const LEVEL_KEYS = ['juvenile', 'intermediate', 'novice', 'junior', 'senior'];
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 const ROLE_LABEL = {

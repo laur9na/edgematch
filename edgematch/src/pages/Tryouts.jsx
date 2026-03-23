@@ -61,6 +61,7 @@ function TryoutCard({ tryout, role, onUpdate }) {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [updating,      setUpdating]      = useState(false);
+  const [deleteError,   setDeleteError]   = useState(null);
 
   async function updateStatus(status) {
     setUpdating(true);
@@ -71,9 +72,15 @@ function TryoutCard({ tryout, role, onUpdate }) {
 
   async function deleteTryout() {
     setUpdating(true);
-    await supabase.from('tryouts').delete().eq('id', tryout.id);
+    setDeleteError(null);
+    const { error } = await supabase.from('tryouts').delete().eq('id', tryout.id);
     setUpdating(false);
-    onUpdate();
+    if (error) {
+      setDeleteError('Delete failed — database policy not applied yet.');
+      setConfirmDelete(false);
+    } else {
+      onUpdate();
+    }
   }
 
   async function setOutcome(outcome) {
@@ -174,6 +181,10 @@ function TryoutCard({ tryout, role, onUpdate }) {
             </button>
           </div>
         </div>
+      )}
+
+      {deleteError && (
+        <div style={{ marginTop: 8, fontSize: '0.72rem', color: '#dc2626' }}>{deleteError}</div>
       )}
 
       {confirmDelete && (
