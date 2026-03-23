@@ -108,7 +108,8 @@ async function run() {
   try {
     for (let i = 0; i < newScores.length; i += BATCH_SIZE) {
       const batch = newScores.slice(i, i + BATCH_SIZE);
-      const { error } = await supabase.from('compatibility_scores').insert(batch);
+      const { error } = await supabase.from('compatibility_scores')
+        .upsert(batch, { onConflict: 'athlete_a_id,athlete_b_id', ignoreDuplicates: true });
       if (error) {
         console.error(`  Batch ${Math.floor(i / BATCH_SIZE) + 1} error: ${error.message}`);
       } else {
