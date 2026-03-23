@@ -280,8 +280,7 @@ export default function SkaterProfile() {
   const cells = Array.from({ length: 9 }, (_, i) => mediaUrls[i] ?? null);
   const hasMedia = cells.some(c => c !== null);
 
-  const hasAbout = partner.goals || partner.training_hours_wk || partner.coach_name;
-  const hasClub  = club || partner.club_name;
+  const hasClub = club || partner.club_name;
 
   const modalMatch = matchRow
     ? { ...matchRow, partner }
@@ -374,15 +373,20 @@ export default function SkaterProfile() {
             </div>
           )}
 
-          {/* Row 4: component dots */}
-          {matchRow && (
-            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-              <DotItem label="Height"      value={matchRow.height_score} />
-              <DotItem label="Skill level" value={matchRow.level_score} />
-              <DotItem label="Role fit"    value={matchRow.role_score} />
-              <DotItem label="Distance"    value={matchRow.location_score} />
-            </div>
-          )}
+          {/* Row 4: skater metrics summary */}
+          {(() => {
+            const parts = [
+              ht && `${ht}`,
+              partner.training_hours_wk && `Trains ${partner.training_hours_wk} hrs/week`,
+              partner.coach_name && `Coach: ${partner.coach_name}`,
+              loc && `Based in ${loc}`,
+            ].filter(Boolean);
+            return parts.length > 0 ? (
+              <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.5)', lineHeight: 1.7 }}>
+                {parts.join(' · ')}
+              </div>
+            ) : null;
+          })()}
         </div>
 
         {/* Media grid */}
@@ -419,34 +423,6 @@ export default function SkaterProfile() {
             ))}
           </div>
         )}
-
-        {/* About section */}
-        <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(201,169,110,0.1)' }}>
-          <div style={{
-            fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.14em', color: '#c9a96e', marginBottom: 10,
-          }}>
-            About
-          </div>
-          {partner.goals && (
-            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.65)', marginBottom: 6, lineHeight: 1.65 }}>
-              Goals: {partner.goals}
-            </div>
-          )}
-          {partner.training_hours_wk && (
-            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.65)', marginBottom: 6 }}>
-              Training: {partner.training_hours_wk} hrs/week
-            </div>
-          )}
-          {partner.coach_name && (
-            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.65)' }}>
-              Coach: {partner.coach_name}
-            </div>
-          )}
-          {!hasAbout && (
-            <div style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.4)' }}>No details added yet.</div>
-          )}
-        </div>
 
         {/* Club section: joined record > fuzzy lookup > raw club_name text */}
         {hasClub && (
