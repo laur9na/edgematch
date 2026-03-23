@@ -76,6 +76,7 @@ BUGS IDENTIFIED:
 [AGENT-2] [DONE] Phase 12.2 — scripts/seed_clubs.js: 1 club created (psc), 2 athletes linked.
 [AGENT-2] [DONE] Phase 12.3 — scripts/enrich_clubs.js: exits cleanly when OPENAI_API_KEY not set; pre-flights 011 migration.
 [AGENT-2] [DONE] Phase 14 — .env.local.example updated (added ANTHROPIC_API_KEY), vite.config.js explicit outDir:dist, build passes. vercel.json already correct.
+[AGENT-1] [DONE] Cleanup + perf: deleted ContactModal.jsx + OnboardingRoute.jsx (unused); column-specific selects on all hooks; server-side pagination on clubs (20/page) + matches (default limit 20); debounced search in Browse (300ms); lazy loading on AthleteCard profile photos; removed ReactQueryDevtools from bundle. Bundle: 399.01 kB gzip 118.24 kB (153 modules, was 161). Build clean, Puppeteer verified /, /browse, /matches at 375px. Pushed to main.
 
 [AGENT-3] [FIX] QA on Phase 13+12.4: removed 3 em dashes from SkaterProfile comments, re-applied last-initial-only rule (Agent 1 rewrite dropped lastInitial fn again), build+push clean
 [AGENT-1] [DONE] Phase 15.6: SkaterProfile single-column — sidebar removed, header has try-out button right-aligned, score bar + component dots inline in header, full-width media/about/club/results
