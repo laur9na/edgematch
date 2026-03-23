@@ -1,54 +1,72 @@
 /**
- * TryoutModal, Phase 3.1
- * Opens when athlete clicks "Request try-out" on a match card.
- * Inserts a row into the tryouts table with proposed date/time/location.
- * Email notification is handled server-side (Supabase Edge Function, Phase 3.2).
+ * TryoutModal — manual matching flow.
+ * Submits a tryout request and notifies Laurena via email.
+ * Shows a confirmation screen after the request is sent.
  */
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
-function lastInitial(fullName) {
-  if (!fullName) return 'Unknown';
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
-}
-
 export default function TryoutModal({ match, onClose, onSuccess }) {
   const { athlete } = useAuth();
   const partner = match.partner;
 
-  const [proposedDate, setProposedDate] = useState('');
-  const [proposedTime, setProposedTime] = useState('');
-  const [locationNote, setLocationNote] = useState('');
+  const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!proposedDate) { setError('Please select a proposed date.'); return; }
     setSubmitting(true);
     setError(null);
 
     const { error: insertErr } = await supabase.from('tryouts').insert({
       requester_id:  athlete.id,
       recipient_id:  partner.id,
-      score_id:      match.id,
-      proposed_date: proposedDate || null,
-      proposed_time: proposedTime || null,
-      location_note: locationNote || null,
+      score_id:      match.id ?? null,
+      location_note: note || null,
       status:        'requested',
     });
 
     setSubmitting(false);
     if (insertErr) { setError(insertErr.message); return; }
+    setSent(true);
     onSuccess?.();
-    onClose();
   }
 
-  // Today's date as minimum value for the date picker
-  const today = new Date().toISOString().split('T')[0];
+  const inputStyle = {
+    width: '100%', background: '#1c3050', border: '1px solid rgba(201,169,110,0.2)',
+    borderRadius: 2, color: '#fdfcf8', fontSize: '0.85rem', padding: '10px 14px',
+    fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical',
+  };
+
+  if (sent) {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()} style={{ textAlign: 'center', padding: '36px 32px' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>✓</div>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fdfcf8', marginBottom: 10 }}>
+            Request sent!
+          </h2>
+          <p style={{ fontSize: '0.85rem', color: 'rgba(253,252,248,0.65)', lineHeight: 1.6, marginBottom: 24 }}>
+            Laurena has been notified and will reach out to both clubs to coordinate the on-ice session. Keep an eye on your email.
+          </p>
+          <button
+            onClick={onClose}
+            style={{
+              background: '#c9a96e', color: '#0d1b2e', border: 'none',
+              padding: '10px 32px', borderRadius: 2, fontSize: '0.82rem',
+              fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+            }}
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -62,35 +80,30 @@ export default function TryoutModal({ match, onClose, onSuccess }) {
           with <strong style={{ color: '#fdfcf8' }}>{partner.name}</strong>
         </p>
 
+        <div style={{
+          background: 'rgba(201,169,110,0.08)', border: '1px solid rgba(201,169,110,0.2)',
+          borderRadius: 2, padding: '12px 14px', marginBottom: 20,
+          fontSize: '0.8rem', color: 'rgba(253,252,248,0.7)', lineHeight: 1.55,
+        }}>
+          EdgeMatch coordinates try-outs manually. Once you submit, Laurena will contact both clubs to arrange the on-ice session and follow up by email.
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <label>
-            Proposed date
-            <input
-              type="date"
-              min={today}
-              value={proposedDate}
-              onChange={e => setProposedDate(e.target.value)}
-              required
-            />
-          </label>
-
-          <label>
-            Proposed time <span className="optional">(optional)</span>
-            <input
-              type="time"
-              value={proposedTime}
-              onChange={e => setProposedTime(e.target.value)}
-            />
-          </label>
-
-          <label>
-            Location / rink <span className="optional">(optional)</span>
-            <input
-              type="text"
-              placeholder="e.g. Peninsula Skating Club, Rink 2"
-              value={locationNote}
-              onChange={e => setLocationNote(e.target.value)}
-              maxLength={200}
+          <label style={{ display: 'block', marginBottom: 16 }}>
+            <span style={{
+              display: 'block', fontSize: '0.7rem', fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: '#c9a96e', marginBottom: 8,
+            }}>
+              Message <span style={{ color: 'rgba(253,252,248,0.4)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+            </span>
+            <textarea
+              rows={3}
+              placeholder="Any preferences or context for Laurena (location, availability, etc.)"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              maxLength={400}
+              style={inputStyle}
             />
           </label>
 

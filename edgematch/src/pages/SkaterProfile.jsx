@@ -73,7 +73,22 @@ function DotItem({ label, value }) {
 
 function CompetitionResults({ results }) {
   const [showAll, setShowAll] = useState(false);
-  if (!results || results.length === 0) return null;
+
+  if (!results || results.length === 0) {
+    return (
+      <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(201,169,110,0.1)' }}>
+        <div style={{
+          fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+          letterSpacing: '0.14em', color: '#c9a96e', marginBottom: 10,
+        }}>
+          Competition results
+        </div>
+        <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.35)', fontStyle: 'italic' }}>
+          No competition results on file.
+        </div>
+      </div>
+    );
+  }
   const visible = showAll ? results : results.slice(0, 10);
 
   return (
@@ -164,36 +179,50 @@ export default function SkaterProfile() {
     return () => { cancelled = true; };
   }, [partner]);
 
-  // Load competition results: try First Last, Last First, then last name only
-  // IJS stores names as "LASTNAME Firstname", athletes table stores "Firstname Lastname"
+  // Load competition results: query by athlete_id first, then fall back to name matching
   useEffect(() => {
-    if (!partner?.name) return;
-    const parts = partner.name.trim().split(/\s+/);
-    const firstName = parts[0] ?? '';
-    const lastName = parts[parts.length - 1] ?? '';
-    if (!lastName) return;
+    if (!partner) return;
     let cancelled = false;
 
-    supabase
-      .from('competition_results')
-      .select('*')
-      .or(`skater_name.ilike.%${firstName}%${lastName}%,skater_name.ilike.%${lastName}%${firstName}%`)
-      .order('event_year', { ascending: false })
-      .then(({ data }) => {
+    async function loadResults() {
+      // Primary: query by athlete_id (most accurate)
+      if (partner.id) {
+        const { data } = await supabase
+          .from('competition_results')
+          .select('*')
+          .eq('athlete_id', partner.id)
+          .order('event_year', { ascending: false });
         if (cancelled) return;
-        if (data && data.length > 0) {
-          setResults(data);
-        } else {
-          supabase
-            .from('competition_results')
-            .select('*')
-            .ilike('skater_name', `%${lastName}%`)
-            .order('event_year', { ascending: false })
-            .then(({ data: fb }) => { if (!cancelled) setResults(fb ?? []); });
-        }
-      });
+        if (data && data.length > 0) { setResults(data); return; }
+      }
+
+      // Fallback: fuzzy name match
+      if (!partner.name) return;
+      const parts = partner.name.trim().split(/\s+/);
+      const firstName = parts[0] ?? '';
+      const lastName = parts[parts.length - 1] ?? '';
+      if (!lastName) return;
+
+      const { data } = await supabase
+        .from('competition_results')
+        .select('*')
+        .or(`skater_name.ilike.%${firstName}%${lastName}%,skater_name.ilike.%${lastName}%${firstName}%`)
+        .order('event_year', { ascending: false });
+      if (cancelled) return;
+      if (data && data.length > 0) { setResults(data); return; }
+
+      // Last resort: last name only
+      const { data: fb } = await supabase
+        .from('competition_results')
+        .select('*')
+        .ilike('skater_name', `%${lastName}%`)
+        .order('event_year', { ascending: false });
+      if (!cancelled) setResults(fb ?? []);
+    }
+
+    loadResults();
     return () => { cancelled = true; };
-  }, [partner?.name]);
+  }, [partner?.id, partner?.name]);
 
   // Load match score
   useEffect(() => {
