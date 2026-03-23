@@ -712,7 +712,7 @@ function WaitlistConfirmation({ firstName }) {
 }
 
 function EditForm({ athlete, user, onSaved, onCancel }) {
-  const { refreshAthlete, signUp, signIn } = useAuth();
+  const { refreshAthlete, updateAthleteLocally, signUp, signIn } = useAuth();
   const isEdit = !!athlete;
 
   const [step,      setStep]      = useState(0);
@@ -818,7 +818,7 @@ function EditForm({ athlete, user, onSaved, onCancel }) {
           .update(athletePayload())
           .eq('id', athlete.id);
         if (updateError) throw updateError;
-        await refreshAthlete();
+        updateAthleteLocally(athletePayload());
         onSaved();
         return;
       }

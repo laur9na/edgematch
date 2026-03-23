@@ -72,7 +72,14 @@ export function AuthProvider({ children }) {
   async function refreshAthlete() {
     if (!user) return;
     const row = await queryAthlete(user.id);
-    setAthlete(row);
+    // Only clear athlete if the query returned null AND the user is still logged in.
+    // A null result can mean RLS is blocking the read (e.g. search_status inactive),
+    // not necessarily that the row is gone. Preserve existing state in that case.
+    if (row !== null) setAthlete(row);
+  }
+
+  function updateAthleteLocally(partial) {
+    setAthlete(prev => (prev ? { ...prev, ...partial } : prev));
   }
 
   async function signUp(email, password) {
@@ -103,6 +110,7 @@ export function AuthProvider({ children }) {
       profileComplete,
       refreshAthlete,
       refetchAthlete: refreshAthlete,   // backward-compat alias
+      updateAthleteLocally,
       signUp,
       signIn,
       signOut,
