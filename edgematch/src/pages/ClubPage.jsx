@@ -9,7 +9,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useClub } from '../hooks/useClub';
 import { useAthletes } from '../hooks/useAthletes';
-import ContactModal from '../components/ContactModal';
+import TryoutModal from '../components/TryoutModal';
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 const LEVEL_LABEL = {
@@ -288,10 +288,10 @@ export default function ClubPage() {
       </div>
 
       {modalAthlete && (
-        <ContactModal
-          athlete={modalAthlete}
-          club={club}
+        <TryoutModal
+          match={{ id: null, partner: modalAthlete }}
           onClose={() => setModalAthlete(null)}
+          onSuccess={() => setModalAthlete(null)}
         />
       )}
     </main>

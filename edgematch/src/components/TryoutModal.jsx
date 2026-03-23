@@ -7,6 +7,29 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
+async function notifyEmail(tryoutId, requesterId, recipientId, note) {
+  try {
+    await supabase.functions.invoke('send-tryout-email', {
+      body: {
+        type: 'INSERT',
+        table: 'tryouts',
+        record: {
+          id: tryoutId,
+          requester_id: requesterId,
+          recipient_id: recipientId,
+          proposed_date: null,
+          proposed_time: null,
+          location_note: note || null,
+          status: 'requested',
+        },
+        old_record: null,
+      },
+    });
+  } catch {
+    // Non-fatal — tryout row was saved regardless
+  }
+}
+
 export default function TryoutModal({ match, onClose, onSuccess }) {
   const { athlete } = useAuth();
   const partner = match.partner;
@@ -21,16 +44,21 @@ export default function TryoutModal({ match, onClose, onSuccess }) {
     setSubmitting(true);
     setError(null);
 
-    const { error: insertErr } = await supabase.from('tryouts').insert({
+    const { data, error: insertErr } = await supabase.from('tryouts').insert({
       requester_id:  athlete.id,
       recipient_id:  partner.id,
       score_id:      match.id ?? null,
       location_note: note || null,
       status:        'requested',
-    });
+    }).select('id');
 
     setSubmitting(false);
     if (insertErr) { setError(insertErr.message); return; }
+
+    // Fire email notification (non-blocking)
+    const tryoutId = data?.[0]?.id ?? null;
+    notifyEmail(tryoutId, athlete.id, partner.id, note);
+
     setSent(true);
     onSuccess?.();
   }
