@@ -217,28 +217,20 @@ export default function SkaterProfile() {
         if (data && data.length > 0) { setResults(dedup(data)); return; }
       }
 
-      // Fallback: fuzzy name match
+      // Fallback: both first and last name must appear in skater_name
       if (!partner.name) return;
       const parts = partner.name.trim().split(/\s+/);
       const firstName = parts[0] ?? '';
       const lastName = parts[parts.length - 1] ?? '';
-      if (!lastName) return;
+      if (!firstName || !lastName || firstName === lastName) return;
 
       const { data } = await supabase
         .from('competition_results')
         .select('*')
-        .or(`skater_name.ilike.%${firstName}%${lastName}%,skater_name.ilike.%${lastName}%${firstName}%`)
-        .order('event_year', { ascending: false });
-      if (cancelled) return;
-      if (data && data.length > 0) { setResults(dedup(data)); return; }
-
-      // Last resort: last name only
-      const { data: fb } = await supabase
-        .from('competition_results')
-        .select('*')
+        .ilike('skater_name', `%${firstName}%`)
         .ilike('skater_name', `%${lastName}%`)
         .order('event_year', { ascending: false });
-      if (!cancelled) setResults(dedup(fb));
+      if (!cancelled) setResults(dedup(data));
     }
 
     loadResults();
