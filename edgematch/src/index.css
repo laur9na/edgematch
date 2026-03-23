@@ -491,6 +491,8 @@ select option { background: var(--navy-mid); color: var(--white); }
   .landing-hero h1 { font-size: 2rem; }
   .how-steps { grid-template-columns: 1fr; }
   .how-steps-grid { grid-template-columns: 1fr !important; }
+  .landing-cta-btn { display: block !important; width: 100% !important; text-align: center !important; box-sizing: border-box !important; }
+  .landing-section { padding-left: 20px !important; padding-right: 20px !important; }
   .matches-card-grid { grid-template-columns: 1fr !important; }
 
   .matches-layout { flex-direction: column; }
