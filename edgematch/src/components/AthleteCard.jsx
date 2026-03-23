@@ -107,6 +107,7 @@ export default function AthleteCard({ match, index, onClick }) {
           <img
             src={p.profile_photo_url}
             alt=""
+            loading="lazy"
             style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, objectFit: 'cover' }}
           />
         ) : (

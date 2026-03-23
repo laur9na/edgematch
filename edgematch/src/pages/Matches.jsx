@@ -194,7 +194,8 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
 export default function Matches() {
   const navigate = useNavigate();
   const { athlete, loading: authLoading } = useAuth();
-  const { matches, loading, error } = useMatches(athlete?.id);
+  const [matchLimit, setMatchLimit] = useState(20);
+  const { matches, loading, error } = useMatches(athlete?.id, { limit: matchLimit });
 
   // Restore filter state from sessionStorage so it survives navigate(-1)
   const saved = (() => { try { return JSON.parse(sessionStorage.getItem('matchFilters') || 'null'); } catch { return null; } })();
@@ -284,16 +285,32 @@ export default function Matches() {
         )}
 
         {!loading && filtered.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
-            {filtered.map((match, i) => (
-              <AthleteCard
-                key={match.id}
-                match={match}
-                index={i}
-                onClick={() => navigate(`/matches/${match.partner.id}`)}
-              />
-            ))}
-          </div>
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+              {filtered.map((match, i) => (
+                <AthleteCard
+                  key={match.id}
+                  match={match}
+                  index={i}
+                  onClick={() => navigate(`/matches/${match.partner.id}`)}
+                />
+              ))}
+            </div>
+            {matches.length === matchLimit && (
+              <div style={{ textAlign: 'center', marginTop: 24 }}>
+                <button
+                  onClick={() => setMatchLimit(l => l + 20)}
+                  style={{
+                    background: 'none', border: '1px solid rgba(201,169,110,0.3)', color: '#c9a96e',
+                    padding: '8px 24px', borderRadius: 2, fontSize: '0.78rem', fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em',
+                  }}
+                >
+                  Load more
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

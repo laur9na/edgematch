@@ -10,7 +10,7 @@ import { supabase } from '../lib/supabase';
  * implemented as a direct Supabase client join since we don't have
  * Edge Functions yet. RLS ensures only the participant can see their scores.
  */
-export function useMatches(athleteId, { minScore = 0.3, limit = 50 } = {}) {
+export function useMatches(athleteId, { minScore = 0.3, limit = 20 } = {}) {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError]   = useState(null);
@@ -52,7 +52,7 @@ export function useMatches(athleteId, { minScore = 0.3, limit = 50 } = {}) {
         setMatches(resolved);
         setLoading(false);
       });
-  }, [athleteId]);
+  }, [athleteId, minScore, limit]);
 
   return { matches, loading, error };
 }

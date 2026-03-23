@@ -4,8 +4,17 @@
  * Clubs: left filter panel + club card grid.
  * All athletes: name search + discipline/role filters + athlete card grid.
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
 import { useClubs } from '../hooks/useClubs';
 import { useAthletes } from '../hooks/useAthletes';
 import TryoutModal from '../components/TryoutModal';
@@ -171,6 +180,7 @@ function AthleteFilterPanel({ nameSearch, onNameSearch, disc, onDisc, role, onRo
         value={nameSearch}
         onChange={e => onNameSearch(e.target.value)}
         style={{ ...inputStyle, marginBottom: 16 }}
+        autoComplete="off"
       />
       <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Discipline</div>
       {['', 'pairs', 'ice_dance'].map(val => (
@@ -200,21 +210,43 @@ const inputStyle = {
 /* ---------- Main component ---------- */
 export default function Browse() {
   const navigate = useNavigate();
-  const { data: clubs = [], isLoading: clubsLoading, error: clubsError } = useClubs();
   const { data: allAthletes = [], isLoading: athletesLoading } = useAthletes();
 
   const [view, setView] = useState('clubs');
-  const [clubSearch, setClubSearch] = useState('');
-  const [nameSearch, setNameSearch] = useState('');
+
+  // Club pagination state
+  const [clubPage, setClubPage] = useState(0);
+  const [allClubs, setAllClubs] = useState([]);
+
+  const { data: clubPageData, isLoading: clubsLoading, error: clubsError } = useClubs(clubPage);
+
+  useEffect(() => {
+    if (!clubPageData) return;
+    setAllClubs(prev => clubPage === 0 ? clubPageData.rows : [...prev, ...clubPageData.rows]);
+  }, [clubPageData, clubPage]);
+
+  // Reset accumulated clubs when switching to clubs tab
+  useEffect(() => {
+    if (view === 'clubs') { setClubPage(0); setAllClubs([]); }
+  }, [view]);
+
+  const hasMoreClubs = clubPageData?.hasMore ?? false;
+
+  const [clubSearchInput, setClubSearchInput] = useState('');
+  const clubSearch = useDebounce(clubSearchInput, 300);
+
+  const [nameSearchInput, setNameSearchInput] = useState('');
+  const nameSearch = useDebounce(nameSearchInput, 300);
+
   const [disc, setDisc] = useState('');
   const [role, setRole] = useState('');
   const [modalAthlete, setModalAthlete] = useState(null);
 
   const filteredClubs = useMemo(() => {
-    if (!clubSearch.trim()) return clubs;
+    if (!clubSearch.trim()) return allClubs;
     const q = clubSearch.trim().toLowerCase();
-    return clubs.filter(c => (c.name ?? '').toLowerCase().includes(q));
-  }, [clubs, clubSearch]);
+    return allClubs.filter(c => (c.name ?? '').toLowerCase().includes(q));
+  }, [allClubs, clubSearch]);
 
   const filteredAthletes = useMemo(() => {
     return allAthletes.filter(a => {
@@ -238,7 +270,7 @@ export default function Browse() {
     <div style={{ display: 'flex', background: '#0d1b2e', minHeight: 'calc(100vh - 52px)', alignItems: 'flex-start' }}>
       {view === 'athletes' && (
         <AthleteFilterPanel
-          nameSearch={nameSearch} onNameSearch={setNameSearch}
+          nameSearch={nameSearchInput} onNameSearch={setNameSearchInput}
           disc={disc} onDisc={setDisc}
           role={role} onRole={setRole}
         />
@@ -257,29 +289,47 @@ export default function Browse() {
             <input
               type="text"
               placeholder="Search clubs..."
-              value={clubSearch}
-              onChange={e => setClubSearch(e.target.value)}
+              value={clubSearchInput}
+              onChange={e => setClubSearchInput(e.target.value)}
               style={{ ...inputStyle, maxWidth: 320, marginBottom: 16 }}
             />
             <p style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.5)', marginBottom: 20 }}>
-              {clubsLoading ? '' : `${filteredClubs.length} club${filteredClubs.length !== 1 ? 's' : ''}`}
+              {clubsLoading && allClubs.length === 0 ? '' : `${filteredClubs.length} club${filteredClubs.length !== 1 ? 's' : ''}`}
             </p>
             {clubsError && <div style={{ color: '#dc2626', fontSize: '0.82rem', marginBottom: 16 }}>{clubsError.message}</div>}
-            {clubsLoading && (
+            {clubsLoading && allClubs.length === 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
                 {[...Array(6)].map((_, i) => <div key={i} className="card-skeleton" style={{ height: 160 }} />)}
               </div>
             )}
-            {!clubsLoading && filteredClubs.length === 0 && (
+            {filteredClubs.length === 0 && !clubsLoading && (
               <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.4)', fontSize: '0.85rem', marginTop: 80 }}>
                 No clubs found.
               </div>
             )}
-            {!clubsLoading && filteredClubs.length > 0 && (
+            {filteredClubs.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
                 {filteredClubs.map((club, i) => (
                   <ClubCard key={club.id} club={club} index={i} onClick={() => navigate(`/clubs/${club.id}`)} />
                 ))}
+              </div>
+            )}
+            {hasMoreClubs && !clubSearch.trim() && (
+              <div style={{ textAlign: 'center', marginTop: 24 }}>
+                {clubsLoading ? (
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(201,169,110,0.3)', borderTopColor: '#c9a96e', animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
+                ) : (
+                  <button
+                    onClick={() => setClubPage(p => p + 1)}
+                    style={{
+                      background: 'none', border: '1px solid rgba(201,169,110,0.3)', color: '#c9a96e',
+                      padding: '8px 24px', borderRadius: 2, fontSize: '0.78rem', fontWeight: 600,
+                      cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em',
+                    }}
+                  >
+                    Load more
+                  </button>
+                )}
               </div>
             )}
           </>

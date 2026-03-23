@@ -405,6 +405,9 @@ select option { background: var(--navy-mid); color: var(--white); }
 @keyframes auth-spin {
   to { transform: rotate(360deg); }
 }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 .empty-state { text-align: center; padding: 60px 20px; color: var(--white-dim); }
 .empty-state button {
   margin-top: 12px; padding: 8px 20px; border: 1px solid var(--border);
