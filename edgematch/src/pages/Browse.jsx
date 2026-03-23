@@ -152,8 +152,8 @@ function AthleteCard({ athlete, index, onTryout, onProfile }) {
   );
 }
 
-/* ---------- Filter panel ---------- */
-function FilterPanel({ view, country, onCountry, nameSearch, onNameSearch, disc, onDisc, role, onRole }) {
+/* ---------- Athletes filter panel (sidebar) ---------- */
+function AthleteFilterPanel({ nameSearch, onNameSearch, disc, onDisc, role, onRole }) {
   return (
     <aside style={{
       width: 220, flexShrink: 0,
@@ -162,47 +162,31 @@ function FilterPanel({ view, country, onCountry, nameSearch, onNameSearch, disc,
       position: 'sticky', top: 52, minHeight: 'calc(100vh - 52px)',
     }}>
       <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.18em', color: '#c9a96e', marginBottom: 20, textTransform: 'uppercase' }}>
-        Filter {view === 'clubs' ? 'clubs' : 'athletes'}
+        Filter athletes
       </div>
-
-      {view === 'clubs' ? (
-        <>
-          <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Country</div>
-          <input
-            type="text"
-            placeholder="e.g. United States"
-            value={country}
-            onChange={e => onCountry(e.target.value)}
-            style={inputStyle}
-          />
-        </>
-      ) : (
-        <>
-          <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Name</div>
-          <input
-            type="text"
-            placeholder="Search by name..."
-            value={nameSearch}
-            onChange={e => onNameSearch(e.target.value)}
-            style={{ ...inputStyle, marginBottom: 16 }}
-          />
-          <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Discipline</div>
-          {['', 'pairs', 'ice_dance'].map(val => (
-            <label key={val || 'all'} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', marginBottom: 6 }}>
-              <input type="radio" name="disc" checked={disc === val} onChange={() => onDisc(val)} style={{ margin: 0, accentColor: '#c9a96e' }} />
-              {val ? (DISCIPLINE_LABEL[val] ?? val) : 'All'}
-            </label>
-          ))}
-          <hr style={{ border: 'none', borderTop: '1px solid rgba(201,169,110,0.1)', margin: '14px 0' }} />
-          <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Role</div>
-          {['', 'man', 'lady'].map(val => (
-            <label key={val || 'all'} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', marginBottom: 6 }}>
-              <input type="radio" name="role" checked={role === val} onChange={() => onRole(val)} style={{ margin: 0, accentColor: '#c9a96e' }} />
-              {val ? ({ man: 'Man', lady: 'Lady' }[val]) : 'All'}
-            </label>
-          ))}
-        </>
-      )}
+      <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Name</div>
+      <input
+        type="text"
+        placeholder="Search by name..."
+        value={nameSearch}
+        onChange={e => onNameSearch(e.target.value)}
+        style={{ ...inputStyle, marginBottom: 16 }}
+      />
+      <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Discipline</div>
+      {['', 'pairs', 'ice_dance'].map(val => (
+        <label key={val || 'all'} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', marginBottom: 6 }}>
+          <input type="radio" name="disc" checked={disc === val} onChange={() => onDisc(val)} style={{ margin: 0, accentColor: '#c9a96e' }} />
+          {val ? (DISCIPLINE_LABEL[val] ?? val) : 'All'}
+        </label>
+      ))}
+      <hr style={{ border: 'none', borderTop: '1px solid rgba(201,169,110,0.1)', margin: '14px 0' }} />
+      <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Role</div>
+      {['', 'man', 'lady'].map(val => (
+        <label key={val || 'all'} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', marginBottom: 6 }}>
+          <input type="radio" name="role" checked={role === val} onChange={() => onRole(val)} style={{ margin: 0, accentColor: '#c9a96e' }} />
+          {val ? ({ man: 'Man', lady: 'Lady' }[val]) : 'All'}
+        </label>
+      ))}
     </aside>
   );
 }
@@ -220,21 +204,17 @@ export default function Browse() {
   const { data: allAthletes = [], isLoading: athletesLoading } = useAthletes();
 
   const [view, setView] = useState('clubs');
-  const [country, setCountry] = useState('');
+  const [clubSearch, setClubSearch] = useState('');
   const [nameSearch, setNameSearch] = useState('');
   const [disc, setDisc] = useState('');
   const [role, setRole] = useState('');
   const [modalAthlete, setModalAthlete] = useState(null);
 
   const filteredClubs = useMemo(() => {
-    if (!country.trim()) return clubs;
-    const q = country.trim().toLowerCase();
-    return clubs.filter(c =>
-      (c.country ?? '').toLowerCase().includes(q) ||
-      (c.state ?? '').toLowerCase().includes(q) ||
-      (c.city ?? '').toLowerCase().includes(q)
-    );
-  }, [clubs, country]);
+    if (!clubSearch.trim()) return clubs;
+    const q = clubSearch.trim().toLowerCase();
+    return clubs.filter(c => (c.name ?? '').toLowerCase().includes(q));
+  }, [clubs, clubSearch]);
 
   const filteredAthletes = useMemo(() => {
     return allAthletes.filter(a => {
@@ -256,13 +236,13 @@ export default function Browse() {
 
   return (
     <div style={{ display: 'flex', background: '#0d1b2e', minHeight: 'calc(100vh - 52px)', alignItems: 'flex-start' }}>
-      <FilterPanel
-        view={view}
-        country={country} onCountry={setCountry}
-        nameSearch={nameSearch} onNameSearch={setNameSearch}
-        disc={disc} onDisc={setDisc}
-        role={role} onRole={setRole}
-      />
+      {view === 'athletes' && (
+        <AthleteFilterPanel
+          nameSearch={nameSearch} onNameSearch={setNameSearch}
+          disc={disc} onDisc={setDisc}
+          role={role} onRole={setRole}
+        />
+      )}
 
       <main style={{ flex: 1, padding: '28px 28px' }}>
         {/* Tab switcher */}
@@ -274,6 +254,13 @@ export default function Browse() {
         {/* Clubs view */}
         {view === 'clubs' && (
           <>
+            <input
+              type="text"
+              placeholder="Search clubs..."
+              value={clubSearch}
+              onChange={e => setClubSearch(e.target.value)}
+              style={{ ...inputStyle, maxWidth: 320, marginBottom: 16 }}
+            />
             <p style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.5)', marginBottom: 20 }}>
               {clubsLoading ? '' : `${filteredClubs.length} club${filteredClubs.length !== 1 ? 's' : ''}`}
             </p>
