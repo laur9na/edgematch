@@ -17,7 +17,7 @@ const LEVEL_LABELS = {
   pre_juvenile: 'Pre-Juv', juvenile: 'Juvenile', intermediate: 'Intermediate',
   novice: 'Novice', junior: 'Junior', senior: 'Senior', adult: 'Adult',
 };
-const ROLE_LABELS = { lady: 'Lady', man: 'Man', either: 'Either' };
+const ROLE_LABELS = { lady: 'Lady', man: 'Man' };
 const STATUS_LABELS = { active: 'Looking', matched: 'Matched', paused: 'Paused', inactive: 'Inactive' };
 
 function lastInitial(fullName) {

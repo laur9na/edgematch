@@ -72,6 +72,18 @@ const MALE_NAMES = new Set([
   'laszlo','marton','peter','tibor','viktor','zoltan',
   // Gender-ambiguous leaning male in skating context
   'misha','sasha', // Russian diminutives often male in skating
+  // Additional male names found in dataset
+  'denis','tristan','jakub','carter','kenny','daniil','samir','kieran','matthis',
+  'dawid','yohnatan','hector','zoard','wenqiang','edoardo','yuto','jachym','mozes',
+  'robbe','jacopo','timon','hektor','ryuichi','trennt','michal','yihang','berk',
+  'saulius','michail','linghao','urho','ibuki','tianyi','hanchong','maximilien',
+  'luciano','jared','rowan','balazs','lachlan','timmy','gage','dimitry','reede',
+  'yann','michel','oskari','niccolo','filippo','luc','charly','linus','gleb',
+  'juho','andrii','danijil','shingo','atsuhiko','jolan','seiji','szymon','laurin',
+  'andreas','matyas','nikolaj','wiktor','istvan','miron','dmytriy','riccardo',
+  'loucas','dmitrii','denys','martin','drake','vadym','maximiliano','jindrich',
+  'namu','devin','filip','marian','sherim','han','wiles','boyisangur',
+  'theo','sam','brendan','alejandro','aleksander','kristoffer',
 ]);
 
 const FEMALE_NAMES = new Set([
@@ -126,6 +138,13 @@ const FEMALE_NAMES = new Set([
   // Diminutives
   'sasha', // female context when not Russian male skating
   'alexia','alicia',
+  // Additional female names found in dataset
+  'effie','linzy','mazie','graceann','kaho','annelise','anaelle','ambre','annabelle',
+  'yahli','neamh','matilde','eniko','maite','ashlie','annabel','leonie','sae',
+  'charlene','phebe','piper','marjorie','lilah','harlow','gaukhar','noemie',
+  'xinyi','xinai','nelly','katalin','renee','jihu','eleonore','sumire','riku',
+  'xuanqi','yuxuan','jiaxuan','rui','zixi','ran','cheng','xinai','phebe',
+  'shirui','mimi','reagan',
 ]);
 
 // Heuristic fallback: infer from name endings common in skating
@@ -136,8 +155,10 @@ function heuristicGender(first) {
   if (f.endsWith('a') && !['misha','sasha','nikita','kosta','luca','toma','ilia','ilya'].includes(f)) return 'lady';
   // Strong male suffixes
   if (/(?:ovic|evic|ovic|enko|enko|enko|enko|ov|ev|off|eff|ski|sky|sey|ley|rey|son|ton|den|gen|ken|len|ren|wen|zen|ert|bert|fred|ward|ford|land|mond|rand|hard|bald|wald)$/.test(f)) return 'man';
-  if (/^(el|al|ed|le|ol|em|on|am|im|um)/.test(f) && f.length > 3 && !f.endsWith('a')) return null; // ambiguous
-  return null;
+  // Force-assign: default to 'lady' for short Asian/unclear names, 'man' otherwise
+  // Asian male names tend to end in consonants; female in vowels
+  if (f.endsWith('i') || f.endsWith('e') || f.endsWith('u')) return 'lady';
+  return 'man';
 }
 
 function inferGender(fullName) {

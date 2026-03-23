@@ -17,7 +17,7 @@ const SIGNALS = [
   {
     n: 3,
     title: 'Role fit',
-    desc: 'Lady, man, or open to either. Only compatible roles are shown.',
+    desc: 'Lady or man. Only compatible roles are shown.',
   },
   {
     n: 4,

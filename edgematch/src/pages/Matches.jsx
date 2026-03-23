@@ -16,7 +16,7 @@ const LEVEL_KEYS = ['juvenile', 'intermediate', 'novice', 'junior', 'senior'];
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 const ROLE_LABEL = {
-  man: 'Skates as man', lady: 'Skates as lady', either: 'Either role',
+  man: 'Skates as man', lady: 'Skates as lady',
 };
 
 const LEVEL_ORDER = ['pre_juvenile','juvenile','intermediate','novice','junior','senior','adult'];
@@ -180,7 +180,7 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       {/* Role */}
       <div style={{ ...SECTION_LABEL }}>Role</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {['man', 'lady', 'either'].map(val => (
+        {['man', 'lady'].map(val => (
           <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" style={{ accentColor: '#c9a96e', width: 13, height: 13, flexShrink: 0, margin: 0 }} checked={roles.includes(val)} onChange={() => toggleRole(val)} />
             <span style={{ fontSize: 12, color: 'rgba(253,252,248,0.65)' }}>{ROLE_LABEL[val]}</span>
@@ -202,7 +202,7 @@ export default function Matches() {
   const [distance, setDistance]       = useState(saved?.distance       ?? 1000);
   const [levels, setLevels]           = useState(saved?.levels         ?? []);
   const [disciplines, setDisciplines] = useState(saved?.disciplines    ?? ['pairs', 'ice_dance']);
-  const [roles, setRoles]             = useState(saved?.roles          ?? ['man', 'lady', 'either']);
+  const [roles, setRoles]             = useState(saved?.roles          ?? ['man', 'lady']);
 
   useEffect(() => {
     sessionStorage.setItem('matchFilters', JSON.stringify({ strength, distance, levels, disciplines, roles }));

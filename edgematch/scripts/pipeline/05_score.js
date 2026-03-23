@@ -27,6 +27,7 @@ try {
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const DRY_RUN      = process.argv.includes('--dry-run');
+const RESCORE      = process.argv.includes('--rescore');
 const BATCH_SIZE   = 500;
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -64,7 +65,7 @@ async function run() {
   const scoredPairs = new Set(existing.map(s => `${s.athlete_a_id}|${s.athlete_b_id}`));
   console.log(`Existing scored pairs: ${scoredPairs.size}`);
 
-  // Compute new scores for unscored pairs
+  // Compute new scores for unscored pairs (or all pairs if --rescore)
   const newScores = [];
   let skipped = 0;
   let incompatible = 0;
@@ -75,7 +76,7 @@ async function run() {
       const [aid, bid] = canonicalPair(a.id, b.id);
       const key = `${aid}|${bid}`;
 
-      if (scoredPairs.has(key)) { skipped++; continue; }
+      if (!RESCORE && scoredPairs.has(key)) { skipped++; continue; }
 
       const scores = computeScore(a, b);
       if (!scores) { incompatible++; continue; }
@@ -109,7 +110,7 @@ async function run() {
     for (let i = 0; i < newScores.length; i += BATCH_SIZE) {
       const batch = newScores.slice(i, i + BATCH_SIZE);
       const { error } = await supabase.from('compatibility_scores')
-        .upsert(batch, { onConflict: 'athlete_a_id,athlete_b_id', ignoreDuplicates: true });
+        .upsert(batch, { onConflict: 'athlete_a_id,athlete_b_id', ignoreDuplicates: !RESCORE });
       if (error) {
         console.error(`  Batch ${Math.floor(i / BATCH_SIZE) + 1} error: ${error.message}`);
       } else {

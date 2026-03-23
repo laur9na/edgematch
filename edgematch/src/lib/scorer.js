@@ -21,7 +21,6 @@ function levelIndex(l) {
 // Are two partner_roles compatible?
 function rolesCompatible(ra, rb) {
   if (!ra || !rb) return true; // unknown — allow
-  if (ra === 'either' || rb === 'either') return true;
   return ra !== rb; // one must be lady, other man
 }
 
@@ -33,7 +32,7 @@ function heightScore(a, b, discipline) {
   if (!hA || !hB) return 0.5; // unknown height — neutral
 
   // Determine who is "man" and who is "lady"
-  const aIsMan = a.partner_role === 'man' || (a.partner_role === 'either' && hA >= hB);
+  const aIsMan = a.partner_role === 'man' || (a.partner_role !== 'lady' && hA >= hB);
   const manH   = aIsMan ? hA : hB;
   const ladyH  = aIsMan ? hB : hA;
   const delta  = manH - ladyH;
@@ -62,14 +61,10 @@ function levelScore(a, b) {
   return Math.max(0, 0.3 - (diff - 3) * 0.1);
 }
 
-// Role score: compatible roles score 1, incompatible 0
+// Role score: complementary man+lady = 1, unknown = 0.9
 function roleScore(a, b) {
   if (!rolesCompatible(a.partner_role, b.partner_role)) return 0;
-  // Exact complementary (man+lady) > either+either > either+man/lady
-  if ((a.partner_role === 'man' && b.partner_role === 'lady') ||
-      (a.partner_role === 'lady' && b.partner_role === 'man')) return 1;
-  if (a.partner_role === 'either' && b.partner_role === 'either') return 0.85;
-  return 0.9; // one either + one specific
+  return 1;
 }
 
 // Location score: based on lat/lng distance and willingness

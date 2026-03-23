@@ -18,7 +18,7 @@ const LEVEL_LABEL = {
   junior: 'Junior', senior: 'Senior', adult: 'Adult',
 };
 const ROLE_LABEL = {
-  lady: 'Skates as lady', man: 'Skates as man', either: 'Either role',
+  lady: 'Skates as lady', man: 'Skates as man',
 };
 const JUMP_LABEL = {
   clockwise: 'Clockwise', counter_clockwise: 'Counter-clockwise', not_applicable: 'Not applicable',
@@ -42,9 +42,8 @@ const DISCIPLINES = [
   { value: 'ice_dance', label: 'Ice dance' },
 ];
 const ROLES = [
-  { value: 'lady',   label: 'Lady' },
-  { value: 'man',    label: 'Man' },
-  { value: 'either', label: 'Either / Flexible' },
+  { value: 'lady', label: 'Lady' },
+  { value: 'man',  label: 'Man' },
 ];
 const LEVELS = [
   { value: 'pre_juvenile', label: 'Pre-Juvenile' },

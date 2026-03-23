@@ -10,7 +10,7 @@ const LEVEL_LABEL = {
   junior: 'Junior', senior: 'Senior', adult: 'Adult',
 };
 const ROLE_LABEL = {
-  lady: 'Skates as lady', man: 'Skates as man', either: 'Either role',
+  lady: 'Skates as lady', man: 'Skates as man',
 };
 const JUMP_LABEL = {
   clockwise: 'CW', counter_clockwise: 'CCW',

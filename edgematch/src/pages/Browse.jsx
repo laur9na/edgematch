@@ -10,7 +10,7 @@ import { useClubs } from '../hooks/useClubs';
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 
-const ROLE_LABEL = { man: 'Man', lady: 'Lady', either: 'Either' };
+const ROLE_LABEL = { man: 'Man', lady: 'Lady' };
 
 const FEDERATION_LABEL = {
   usfs: 'USFS', isu: 'ISU', skate_canada: 'Skate Canada',
@@ -90,7 +90,7 @@ function FilterPanel({ disciplines, onDisciplines, roles, onRoles, country, onCo
 
       <FilterLabel>Role</FilterLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {['man', 'lady', 'either'].map(val => (
+        {['man', 'lady'].map(val => (
           <label key={val} style={{
             display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem',
             color: 'rgba(253,252,248,0.65)', cursor: 'pointer',
@@ -210,7 +210,7 @@ export default function Browse() {
   const error = queryError?.message ?? null;
 
   const [disciplines, setDisciplines] = useState(['pairs', 'ice_dance']);
-  const [roles, setRoles]             = useState(['man', 'lady', 'either']);
+  const [roles, setRoles]             = useState(['man', 'lady']);
   const [country, setCountry]         = useState('');
 
   const filtered = useMemo(() => {
