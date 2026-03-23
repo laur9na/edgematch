@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const LEVEL_LABEL = {
@@ -132,9 +132,9 @@ export default function Nav() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
-        <span style={{ color: '#c9a96e', fontFamily: "'Great Vibes', cursive", fontSize: 26, lineHeight: 1 }}>
+        <Link to="/" style={{ color: '#c9a96e', fontFamily: "'Great Vibes', cursive", fontSize: 26, lineHeight: 1, textDecoration: 'none' }}>
           EdgeMatch
-        </span>
+        </Link>
 
         <div className="nav-links-desktop" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {NAV_LINKS.map(link => (
