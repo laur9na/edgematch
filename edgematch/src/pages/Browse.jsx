@@ -120,7 +120,7 @@ const AVATAR_COLORS = [
 function ClubCard({ club, index, onClick }) {
   const avatarStyle = AVATAR_COLORS[index % AVATAR_COLORS.length];
   const initial = (club.name ?? '?')[0].toUpperCase();
-  const location = [club.city, club.state, club.country].filter(Boolean).join(', ');
+  const location = [club.city, club.state].filter(Boolean).join(', ');
   const disciplines = club.disciplines ?? [];
   const athleteCount = club.athlete_count ?? 0;
 
@@ -155,26 +155,9 @@ function ClubCard({ club, index, onClick }) {
           <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#fdfcf8', lineHeight: 1.3 }}>
             {club.name}
           </div>
-          {location && (
-            <div style={{ fontSize: '0.72rem', color: 'rgba(253,252,248,0.5)', marginTop: 2 }}>
-              {location}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Federation badge */}
-      {club.federation && (
-        <div style={{ marginBottom: 10 }}>
-          <span style={{
-            fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.1em',
-            background: 'rgba(201,169,110,0.1)', color: '#c9a96e',
-            padding: '2px 8px', borderRadius: 2,
-          }}>
-            {FEDERATION_LABEL[club.federation] ?? club.federation}
-          </span>
-        </div>
-      )}
 
       {/* Discipline tags */}
       {disciplines.length > 0 && (
