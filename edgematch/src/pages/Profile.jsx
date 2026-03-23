@@ -299,28 +299,22 @@ function ProfileView({ athlete, onEdit }) {
           }}>
             About
           </div>
-          {(athlete.jump_direction || athlete.willing_to_relocate) && (
+          {athlete.willing_to_relocate && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-              {athlete.jump_direction && (
-                <span style={{
-                  fontSize: '0.68rem', padding: '3px 9px', borderRadius: 2,
-                  background: 'rgba(201,169,110,0.1)', color: '#c9a96e',
-                  border: '1px solid rgba(201,169,110,0.2)', fontWeight: 600, letterSpacing: '0.04em',
-                }}>
-                  {JUMP_LABEL[athlete.jump_direction] ?? athlete.jump_direction}
-                </span>
-              )}
-              {athlete.willing_to_relocate && (
-                <span style={{
-                  fontSize: '0.68rem', padding: '3px 9px', borderRadius: 2,
-                  background: 'rgba(201,169,110,0.1)', color: '#c9a96e',
-                  border: '1px solid rgba(201,169,110,0.2)', fontWeight: 600, letterSpacing: '0.04em',
-                }}>
-                  {RELOCATE_LABEL[athlete.willing_to_relocate] === 'Yes' ? 'Will relocate'
-                    : RELOCATE_LABEL[athlete.willing_to_relocate] === 'Open to it' ? 'Open to relocating'
-                    : 'Prefers local'}
-                </span>
-              )}
+              <span style={{
+                fontSize: '0.68rem', padding: '3px 9px', borderRadius: 2,
+                background: 'rgba(201,169,110,0.1)', color: '#c9a96e',
+                border: '1px solid rgba(201,169,110,0.2)', fontWeight: 600, letterSpacing: '0.04em',
+              }}>
+                {RELOCATE_LABEL[athlete.willing_to_relocate] === 'Yes' ? 'Will relocate'
+                  : RELOCATE_LABEL[athlete.willing_to_relocate] === 'Open to it' ? 'Open to relocating'
+                  : 'Prefers local'}
+              </span>
+            </div>
+          )}
+          {athlete.jump_direction && athlete.jump_direction !== 'not_applicable' && (
+            <div style={{ fontSize: '0.8rem', color: 'rgba(253,252,248,0.65)', marginBottom: 4 }}>
+              Jump direction: {JUMP_LABEL[athlete.jump_direction] ?? athlete.jump_direction}
             </div>
           )}
           {athlete.goals && (
