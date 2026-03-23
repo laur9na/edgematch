@@ -419,33 +419,38 @@ export default function SkaterProfile() {
               background: '#1c3050', border: '1px solid rgba(201,169,110,0.15)',
               borderRadius: 2, padding: 14,
             }}>
-              <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#fdfcf8', marginBottom: 8 }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#fdfcf8', marginBottom: 6 }}>
                 {club ? club.name : partner.club_name}
               </div>
-              {club?.website && (
-                <div style={{ marginBottom: 4 }}>
-                  <a
-                    href={club.website}
-                    target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: '0.78rem', color: '#c9a96e', textDecoration: 'none' }}
-                  >
-                    Visit website
-                  </a>
+              {club && (club.city || club.state) && (
+                <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.5)', marginBottom: 6 }}>
+                  {[club.city, club.state].filter(Boolean).join(', ')}
                 </div>
               )}
               {club?.contact_email && (
                 <div style={{ marginBottom: 4 }}>
-                  <a
-                    href={`mailto:${club.contact_email}`}
-                    style={{ fontSize: '0.78rem', color: '#c9a96e', textDecoration: 'none' }}
-                  >
+                  <a href={`mailto:${club.contact_email}`}
+                    style={{ fontSize: '0.78rem', color: '#c9a96e', textDecoration: 'none' }}>
                     {club.contact_email}
+                  </a>
+                </div>
+              )}
+              {club?.website && (
+                <div style={{ marginBottom: 4 }}>
+                  <a href={club.website} target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: '0.78rem', color: '#c9a96e', textDecoration: 'none' }}>
+                    {club.website.replace(/^https?:\/\//, '')}
                   </a>
                 </div>
               )}
               {club?.phone && (
                 <div style={{ fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)' }}>
                   {club.phone}
+                </div>
+              )}
+              {club && !club.contact_email && !club.website && !club.phone && (
+                <div style={{ fontSize: '0.75rem', color: 'rgba(253,252,248,0.35)', fontStyle: 'italic' }}>
+                  No contact info on file
                 </div>
               )}
             </div>

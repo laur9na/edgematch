@@ -8,21 +8,19 @@
  *   URL: {SUPABASE_URL}/functions/v1/send-tryout-email
  *   Method: POST
  *
- * Sends:
- *   - status = 'requested'  -> email to recipient
- *   - status = 'confirmed'  -> email to requester
- *
- * Uses Resend API (RESEND_API_KEY env var).
- * FROM address: EdgeMatch <noreply@edgematch.app>  (configure in Resend dashboard)
+ * On every new tryout request, sends a notification email to
+ * laurenaletter@gmail.com with full details so she can
+ * manually contact the clubs and pair them.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL       = Deno.env.get('SUPABASE_URL') ?? '';
-const SERVICE_ROLE_KEY   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-const RESEND_API_KEY     = Deno.env.get('RESEND_API_KEY') ?? '';
-const APP_URL            = Deno.env.get('APP_URL') ?? 'https://edgematch.app';
-const FROM_EMAIL         = 'EdgeMatch <noreply@edgematch.app>';
+const SUPABASE_URL     = Deno.env.get('SUPABASE_URL') ?? '';
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const RESEND_API_KEY   = Deno.env.get('RESEND_API_KEY') ?? '';
+const APP_URL          = Deno.env.get('APP_URL') ?? 'https://app.edgematch.co';
+const FROM_EMAIL       = 'EdgeMatch <onboarding@resend.dev>';
+const LAURENA_EMAIL    = 'laurenaletter@gmail.com';
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -34,7 +32,6 @@ interface TryoutRecord {
   proposed_time: string | null;
   location_note: string | null;
   status: string;
-  outcome: string | null;
 }
 
 interface WebhookPayload {
@@ -44,96 +41,116 @@ interface WebhookPayload {
   old_record: TryoutRecord | null;
 }
 
-async function getAthlete(id: string) {
+async function getAthleteWithClub(id: string) {
   const { data } = await supabase
     .from('athletes')
-    .select('id, name, email')
+    .select('id, name, email, discipline, skating_level, partner_role, location_city, location_state, club_name, clubs(name, contact_email, website, phone, city, state)')
     .eq('id', id)
     .single();
   return data;
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
+function levelLabel(l: string | null): string {
+  const map: Record<string, string> = {
+    pre_juvenile: 'Pre-Juvenile', juvenile: 'Juvenile', intermediate: 'Intermediate',
+    novice: 'Novice', junior: 'Junior', senior: 'Senior', adult: 'Adult',
+  };
+  return l ? (map[l] ?? l) : '';
+}
+
+function disciplineLabel(d: string | null): string {
+  return d === 'pairs' ? 'Pairs' : d === 'ice_dance' ? 'Ice dance' : (d ?? '');
+}
+
+function roleLabel(r: string | null): string {
+  return r === 'man' ? 'Man' : r === 'lady' ? 'Lady' : (r ?? '');
+}
+
+function formatDate(date: string | null, time: string | null): string {
+  if (!date) return 'TBD';
+  const d = new Date(date + 'T00:00:00');
+  const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  return time ? `${dateStr} at ${time}` : dateStr;
+}
+
+function athleteBlock(a: any, label: string): string {
+  if (!a) return `<p><em>${label} info unavailable</em></p>`;
+  const club = a.clubs ?? null;
+  const loc = [a.location_city, a.location_state].filter(Boolean).join(', ');
+  const clubName = club?.name ?? a.club_name ?? null;
+  const clubCity = [club?.city, club?.state].filter(Boolean).join(', ');
+
+  return `
+<table style="border:1px solid #e2e8f0;border-radius:4px;padding:12px 16px;margin:8px 0;background:#f8fafc;width:100%;border-collapse:collapse;">
+  <tr><td colspan="2" style="font-weight:700;font-size:15px;padding:4px 8px;color:#0d1b2e;">${a.name}</td></tr>
+  <tr><td style="padding:3px 8px;color:#64748b;width:120px;">Discipline</td><td style="padding:3px 8px;">${disciplineLabel(a.discipline)} · ${levelLabel(a.skating_level)} · ${roleLabel(a.partner_role)}</td></tr>
+  ${loc ? `<tr><td style="padding:3px 8px;color:#64748b;">Location</td><td style="padding:3px 8px;">${loc}</td></tr>` : ''}
+  ${a.email ? `<tr><td style="padding:3px 8px;color:#64748b;">Email</td><td style="padding:3px 8px;"><a href="mailto:${a.email}">${a.email}</a></td></tr>` : ''}
+  ${clubName ? `<tr><td style="padding:3px 8px;color:#64748b;vertical-align:top;">Club</td><td style="padding:3px 8px;"><strong>${clubName}</strong>${clubCity ? ` · ${clubCity}` : ''}${club?.contact_email ? `<br><a href="mailto:${club.contact_email}">${club.contact_email}</a>` : ''}${club?.website ? `<br><a href="${club.website}">${club.website}</a>` : ''}${club?.phone ? `<br>${club.phone}` : ''}</td></tr>` : ''}
+</table>`;
+}
+
+async function notifyLaurena(tryout: TryoutRecord) {
+  const [requester, recipient] = await Promise.all([
+    getAthleteWithClub(tryout.requester_id),
+    getAthleteWithClub(tryout.recipient_id),
+  ]);
+
+  const dateStr = formatDate(tryout.proposed_date, tryout.proposed_time);
+
+  const html = `
+<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+<h2 style="color:#0d1b2e;margin-bottom:4px;">New try-out request on EdgeMatch</h2>
+<p style="color:#64748b;margin-top:0;">${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+
+<hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;">
+
+<p style="margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;">Requested by</p>
+${athleteBlock(requester, 'Requester')}
+
+<p style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;">Wants to try out with</p>
+${athleteBlock(recipient, 'Recipient')}
+
+<hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;">
+
+<p><strong>Proposed date:</strong> ${dateStr}</p>
+${tryout.location_note ? `<p><strong>Location note:</strong> ${tryout.location_note}</p>` : ''}
+
+<p style="margin-top:20px;">
+  <a href="${APP_URL}/matches" style="display:inline-block;background:#c9a96e;color:#0d1b2e;padding:10px 24px;border-radius:4px;text-decoration:none;font-weight:700;font-size:14px;">View in EdgeMatch</a>
+</p>
+
+<p style="color:#94a3b8;font-size:12px;margin-top:24px;">EdgeMatch · automated notification</p>
+</div>`;
+
   if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not set — skipping email send');
+    console.warn('RESEND_API_KEY not set — skipping email');
     return;
   }
+
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${RESEND_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: LAURENA_EMAIL,
+      subject: `Try-out request: ${requester?.name ?? '?'} + ${recipient?.name ?? '?'}`,
+      html,
+    }),
   });
+
   if (!res.ok) {
     const body = await res.text();
     console.error(`Resend error ${res.status}: ${body}`);
+  } else {
+    console.log(`Notified ${LAURENA_EMAIL}: ${requester?.name} -> ${recipient?.name}`);
   }
 }
 
-function formatDate(date: string | null, time: string | null): string {
-  if (!date) return 'TBD';
-  const d = new Date(date);
-  const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  return time ? `${dateStr} at ${time}` : dateStr;
-}
-
-async function handleRequested(tryout: TryoutRecord) {
-  const [requester, recipient] = await Promise.all([
-    getAthlete(tryout.requester_id),
-    getAthlete(tryout.recipient_id),
-  ]);
-  if (!recipient?.email) { console.warn('Recipient has no email'); return; }
-
-  const requesterUrl = `${APP_URL}/athletes/${requester?.id}`;
-  const dateStr = formatDate(tryout.proposed_date, tryout.proposed_time);
-
-  const html = `
-<p>Hi ${recipient.name ?? 'there'},</p>
-
-<p><strong>${requester?.name ?? 'A skater'}</strong> has sent you a try-out request on EdgeMatch.</p>
-
-<p><strong>Proposed date:</strong> ${dateStr}</p>
-${tryout.location_note ? `<p><strong>Location:</strong> ${tryout.location_note}</p>` : ''}
-
-<p><a href="${requesterUrl}" style="display:inline-block;background:#c9a96e;color:#0d1b2e;padding:12px 28px;border-radius:4px;text-decoration:none;font-weight:700;">View their profile</a></p>
-
-<p style="color:#888;font-size:12px;">You are receiving this because you are registered on EdgeMatch. <a href="${APP_URL}/tryouts">Manage your try-out requests</a>.</p>
-`;
-
-  await sendEmail(recipient.email, `Try-out request from ${requester?.name ?? 'a skater'}`, html);
-  console.log(`Sent 'requested' email to ${recipient.email}`);
-}
-
-async function handleConfirmed(tryout: TryoutRecord) {
-  const [requester, recipient] = await Promise.all([
-    getAthlete(tryout.requester_id),
-    getAthlete(tryout.recipient_id),
-  ]);
-  if (!requester?.email) { console.warn('Requester has no email'); return; }
-
-  const dateStr = formatDate(tryout.proposed_date, tryout.proposed_time);
-
-  const html = `
-<p>Hi ${requester.name ?? 'there'},</p>
-
-<p>Your try-out request with <strong>${recipient?.name ?? 'your match'}</strong> has been confirmed.</p>
-
-<p><strong>Date:</strong> ${dateStr}</p>
-${tryout.location_note ? `<p><strong>Location:</strong> ${tryout.location_note}</p>` : ''}
-
-<p><a href="${APP_URL}/tryouts" style="display:inline-block;background:#c9a96e;color:#0d1b2e;padding:12px 28px;border-radius:4px;text-decoration:none;font-weight:700;">View your try-outs</a></p>
-
-<p style="color:#888;font-size:12px;">You are receiving this because you requested a try-out on EdgeMatch.</p>
-`;
-
-  await sendEmail(requester.email, `Try-out confirmed with ${recipient?.name ?? 'your match'}`, html);
-  console.log(`Sent 'confirmed' email to ${requester.email}`);
-}
-
 Deno.serve(async (req: Request) => {
-  // Only accept POST
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
   }
@@ -152,14 +169,11 @@ Deno.serve(async (req: Request) => {
   console.log(`Tryout ${record?.id}: ${oldStatus ?? 'new'} -> ${newStatus}`);
 
   try {
-    // DISABLED: soft launch — manual matching only
-    // if (type === 'INSERT' && newStatus === 'requested') {
-    //   await handleRequested(record);
-    // } else if (type === 'UPDATE' && newStatus !== oldStatus) {
-    //   if (newStatus === 'requested') await handleRequested(record);
-    //   else if (newStatus === 'confirmed') await handleConfirmed(record);
-    // }
-    console.log(`Tryout email skipped (soft launch): ${record?.id} -> ${newStatus}`);
+    if (type === 'INSERT' && newStatus === 'requested') {
+      await notifyLaurena(record);
+    } else if (type === 'UPDATE' && newStatus === 'requested' && oldStatus !== 'requested') {
+      await notifyLaurena(record);
+    }
   } catch (err) {
     console.error('Email handler error:', err);
     return new Response(JSON.stringify({ error: err.message }), {
