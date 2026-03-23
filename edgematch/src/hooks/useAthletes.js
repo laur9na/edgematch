@@ -5,15 +5,12 @@ export function useAthletes(clubId) {
   return useQuery({
     queryKey: ['athletes', { clubId }],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('athletes')
-        .select('*')
-        .eq('club_id', clubId)
-        .order('name', { ascending: true });
+      let q = supabase.from('athletes').select('*').order('name', { ascending: true });
+      if (clubId) q = q.eq('club_id', clubId);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!clubId,
     staleTime: 5 * 60 * 1000,
   });
 }

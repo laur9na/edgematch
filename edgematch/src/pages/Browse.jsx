@@ -1,115 +1,23 @@
 /**
- * Browse.jsx (Phase 1.3)
- * Two-panel layout: left 240px filter panel, right club cards grid.
- * Left panel: gold labels, level pills, discipline/role checkboxes.
- * Right panel: club cards in 2-column grid.
+ * Browse.jsx
+ * Two tabs: Clubs | All athletes.
+ * Clubs: left filter panel + club card grid.
+ * All athletes: name search + discipline/role filters + athlete card grid.
  */
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClubs } from '../hooks/useClubs';
+import { useAthletes } from '../hooks/useAthletes';
+import TryoutModal from '../components/TryoutModal';
 
 const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
-
-const ROLE_LABEL = { man: 'Man', lady: 'Lady' };
-
-const FEDERATION_LABEL = {
-  usfs: 'USFS', isu: 'ISU', skate_canada: 'Skate Canada',
-  ffsg: 'FFSG', fisg: 'FISG',
+const LEVEL_LABEL = {
+  pre_juvenile: 'Pre-Juvenile', juvenile: 'Juvenile',
+  intermediate: 'Intermediate', novice: 'Novice',
+  junior: 'Junior', senior: 'Senior', adult: 'Adult',
 };
+const ROLE_LABEL = { man: 'Skates as man', lady: 'Skates as lady' };
 
-function FilterLabel({ children }) {
-  return (
-    <div style={{
-      fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em',
-      textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-function Divider() {
-  return <hr style={{ border: 'none', borderTop: '1px solid rgba(201,169,110,0.1)', margin: '16px 0' }} />;
-}
-
-function FilterPanel({ disciplines, onDisciplines, roles, onRoles, country, onCountry }) {
-  function toggleDiscipline(val) {
-    onDisciplines(prev => prev.includes(val) ? prev.filter(d => d !== val) : [...prev, val]);
-  }
-  function toggleRole(val) {
-    onRoles(prev => prev.includes(val) ? prev.filter(r => r !== val) : [...prev, val]);
-  }
-
-  return (
-    <aside style={{
-      width: 240, flexShrink: 0,
-      background: '#142236', borderRight: '1px solid rgba(201,169,110,0.1)',
-      padding: '24px 18px', alignSelf: 'flex-start',
-      position: 'sticky', top: 52,
-      minHeight: 'calc(100vh - 52px)',
-    }}>
-      <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.18em', color: '#c9a96e', marginBottom: 20, textTransform: 'uppercase' }}>
-        Filter clubs
-      </div>
-
-      <FilterLabel>Country</FilterLabel>
-      <input
-        type="text"
-        placeholder="e.g. United States"
-        value={country}
-        onChange={e => onCountry(e.target.value)}
-        style={{
-          width: '100%', padding: '8px 10px', fontSize: '0.78rem',
-          background: '#1c3050', border: '1px solid rgba(201,169,110,0.2)',
-          borderRadius: 2, color: '#fdfcf8', fontFamily: 'inherit',
-          marginBottom: 0,
-        }}
-      />
-
-      <Divider />
-
-      <FilterLabel>Discipline</FilterLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {['pairs', 'ice_dance'].map(val => (
-          <label key={val} style={{
-            display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem',
-            color: 'rgba(253,252,248,0.65)', cursor: 'pointer',
-            textTransform: 'none', letterSpacing: 0, fontWeight: 400,
-          }}>
-            <input type="checkbox"
-              style={{ margin: 0, flexShrink: 0, accentColor: '#c9a96e' }}
-              checked={disciplines.includes(val)}
-              onChange={() => toggleDiscipline(val)}
-            />
-            <span>{DISCIPLINE_LABEL[val]}</span>
-          </label>
-        ))}
-      </div>
-
-      <Divider />
-
-      <FilterLabel>Role</FilterLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {['man', 'lady'].map(val => (
-          <label key={val} style={{
-            display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem',
-            color: 'rgba(253,252,248,0.65)', cursor: 'pointer',
-            textTransform: 'none', letterSpacing: 0, fontWeight: 400,
-          }}>
-            <input type="checkbox"
-              style={{ margin: 0, flexShrink: 0, accentColor: '#c9a96e' }}
-              checked={roles.includes(val)}
-              onChange={() => toggleRole(val)}
-            />
-            <span>{ROLE_LABEL[val]}</span>
-          </label>
-        ))}
-      </div>
-    </aside>
-  );
-}
-
-// Pastel avatar circles using first letter of club name
 const AVATAR_COLORS = [
   { bg: 'rgba(201,169,110,0.15)', color: '#c9a96e' },
   { bg: 'rgba(99,102,241,0.15)',  color: '#a5b4fc' },
@@ -117,10 +25,17 @@ const AVATAR_COLORS = [
   { bg: 'rgba(239,68,68,0.15)',   color: '#f87171' },
 ];
 
+function getInitials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/* ---------- Club card ---------- */
 function ClubCard({ club, index, onClick }) {
   const avatarStyle = AVATAR_COLORS[index % AVATAR_COLORS.length];
   const initial = (club.name ?? '?')[0].toUpperCase();
-  const location = [club.city, club.state].filter(Boolean).join(', ');
   const disciplines = club.disciplines ?? [];
   const athleteCount = club.athlete_count ?? 0;
 
@@ -132,16 +47,9 @@ function ClubCard({ club, index, onClick }) {
         borderRadius: 4, padding: 20, cursor: 'pointer',
         transition: 'border-color 250ms, transform 250ms',
       }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = 'rgba(201,169,110,0.35)';
-        e.currentTarget.style.transform = 'translateY(-4px)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'rgba(201,169,110,0.12)';
-        e.currentTarget.style.transform = 'none';
-      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.35)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.12)'; e.currentTarget.style.transform = 'none'; }}
     >
-      {/* Club avatar + name */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 14 }}>
         <div style={{
           width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
@@ -151,15 +59,11 @@ function ClubCard({ club, index, onClick }) {
         }}>
           {initial}
         </div>
-        <div>
-          <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#fdfcf8', lineHeight: 1.3 }}>
-            {club.name}
-          </div>
+        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#fdfcf8', lineHeight: 1.3 }}>
+          {club.name}
         </div>
       </div>
 
-
-      {/* Discipline tags */}
       {disciplines.length > 0 && (
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
           {disciplines.map(d => (
@@ -174,7 +78,6 @@ function ClubCard({ club, index, onClick }) {
         </div>
       )}
 
-      {/* Footer: skater count + view link */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '0.72rem', color: 'rgba(253,252,248,0.4)' }}>
           {athleteCount > 0 ? `${athleteCount} skater${athleteCount !== 1 ? 's' : ''}` : ''}
@@ -187,76 +90,254 @@ function ClubCard({ club, index, onClick }) {
   );
 }
 
+/* ---------- Athlete card (All athletes tab) ---------- */
+function AthleteCard({ athlete, index, onTryout, onProfile }) {
+  const avatarStyle = AVATAR_COLORS[index % AVATAR_COLORS.length];
+  const meta = [
+    DISCIPLINE_LABEL[athlete.discipline],
+    ROLE_LABEL[athlete.partner_role],
+    LEVEL_LABEL[athlete.skating_level] ?? athlete.skating_level,
+  ].filter(Boolean).join(' · ');
+
+  return (
+    <div
+      onClick={onProfile}
+      style={{
+        background: '#142236', border: '1px solid rgba(201,169,110,0.12)',
+        borderRadius: 4, padding: 18, cursor: 'pointer',
+        transition: 'border-color 250ms, transform 250ms',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.3)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.12)'; e.currentTarget.style.transform = 'none'; }}
+    >
+      <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+          background: avatarStyle.bg, color: avatarStyle.color,
+          fontSize: 12, fontWeight: 700,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {getInitials(athlete.name)}
+        </div>
+        <div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fdfcf8' }}>
+            {athlete.name}
+          </div>
+          {athlete.club_name && (
+            <div style={{ fontSize: '0.68rem', color: 'rgba(253,252,248,0.4)', marginTop: 1 }}>
+              {athlete.club_name}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {meta && (
+        <div style={{ fontSize: '0.72rem', color: 'rgba(253,252,248,0.55)', marginBottom: 12 }}>
+          {meta}
+        </div>
+      )}
+
+      <button
+        onClick={e => { e.stopPropagation(); onTryout(athlete); }}
+        style={{
+          width: '100%', padding: '7px 0',
+          background: '#c9a96e', color: '#0d1b2e', border: 'none',
+          borderRadius: 2, fontSize: '0.7rem', fontWeight: 700,
+          cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'inherit',
+        }}
+      >
+        Request try-out
+      </button>
+    </div>
+  );
+}
+
+/* ---------- Filter panel ---------- */
+function FilterPanel({ view, country, onCountry, nameSearch, onNameSearch, disc, onDisc, role, onRole }) {
+  return (
+    <aside style={{
+      width: 220, flexShrink: 0,
+      background: '#142236', borderRight: '1px solid rgba(201,169,110,0.1)',
+      padding: '24px 18px', alignSelf: 'flex-start',
+      position: 'sticky', top: 52, minHeight: 'calc(100vh - 52px)',
+    }}>
+      <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.18em', color: '#c9a96e', marginBottom: 20, textTransform: 'uppercase' }}>
+        Filter {view === 'clubs' ? 'clubs' : 'athletes'}
+      </div>
+
+      {view === 'clubs' ? (
+        <>
+          <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Country</div>
+          <input
+            type="text"
+            placeholder="e.g. United States"
+            value={country}
+            onChange={e => onCountry(e.target.value)}
+            style={inputStyle}
+          />
+        </>
+      ) : (
+        <>
+          <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Name</div>
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={nameSearch}
+            onChange={e => onNameSearch(e.target.value)}
+            style={{ ...inputStyle, marginBottom: 16 }}
+          />
+          <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Discipline</div>
+          {['', 'pairs', 'ice_dance'].map(val => (
+            <label key={val || 'all'} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', marginBottom: 6 }}>
+              <input type="radio" name="disc" checked={disc === val} onChange={() => onDisc(val)} style={{ margin: 0, accentColor: '#c9a96e' }} />
+              {val ? (DISCIPLINE_LABEL[val] ?? val) : 'All'}
+            </label>
+          ))}
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(201,169,110,0.1)', margin: '14px 0' }} />
+          <div style={{ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c9a96e', marginBottom: 8 }}>Role</div>
+          {['', 'man', 'lady'].map(val => (
+            <label key={val || 'all'} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'rgba(253,252,248,0.65)', cursor: 'pointer', marginBottom: 6 }}>
+              <input type="radio" name="role" checked={role === val} onChange={() => onRole(val)} style={{ margin: 0, accentColor: '#c9a96e' }} />
+              {val ? ({ man: 'Man', lady: 'Lady' }[val]) : 'All'}
+            </label>
+          ))}
+        </>
+      )}
+    </aside>
+  );
+}
+
+const inputStyle = {
+  width: '100%', padding: '8px 10px', fontSize: '0.78rem',
+  background: '#1c3050', border: '1px solid rgba(201,169,110,0.2)',
+  borderRadius: 2, color: '#fdfcf8', fontFamily: 'inherit', boxSizing: 'border-box',
+};
+
+/* ---------- Main component ---------- */
 export default function Browse() {
   const navigate = useNavigate();
-  const { data: clubs = [], isLoading: loading, error: queryError } = useClubs();
-  const error = queryError?.message ?? null;
+  const { data: clubs = [], isLoading: clubsLoading, error: clubsError } = useClubs();
+  const { data: allAthletes = [], isLoading: athletesLoading } = useAthletes();
 
-  const [disciplines, setDisciplines] = useState(['pairs', 'ice_dance']);
-  const [roles, setRoles]             = useState(['man', 'lady']);
-  const [country, setCountry]         = useState('');
+  const [view, setView] = useState('clubs');
+  const [country, setCountry] = useState('');
+  const [nameSearch, setNameSearch] = useState('');
+  const [disc, setDisc] = useState('');
+  const [role, setRole] = useState('');
+  const [modalAthlete, setModalAthlete] = useState(null);
 
-  const filtered = useMemo(() => {
-    return clubs.filter(c => {
-      if (country.trim()) {
-        const q = country.trim().toLowerCase();
-        if (!(c.country ?? '').toLowerCase().includes(q) &&
-            !(c.state ?? '').toLowerCase().includes(q) &&
-            !(c.city ?? '').toLowerCase().includes(q)) return false;
-      }
+  const filteredClubs = useMemo(() => {
+    if (!country.trim()) return clubs;
+    const q = country.trim().toLowerCase();
+    return clubs.filter(c =>
+      (c.country ?? '').toLowerCase().includes(q) ||
+      (c.state ?? '').toLowerCase().includes(q) ||
+      (c.city ?? '').toLowerCase().includes(q)
+    );
+  }, [clubs, country]);
+
+  const filteredAthletes = useMemo(() => {
+    return allAthletes.filter(a => {
+      if (nameSearch.trim() && !(a.name ?? '').toLowerCase().includes(nameSearch.trim().toLowerCase())) return false;
+      if (disc && a.discipline !== disc) return false;
+      if (role && a.partner_role !== role) return false;
       return true;
     });
-  }, [clubs, country]);
+  }, [allAthletes, nameSearch, disc, role]);
+
+  const tabStyle = active => ({
+    background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+    fontSize: '0.82rem', fontWeight: active ? 700 : 400,
+    color: active ? '#c9a96e' : 'rgba(253,252,248,0.5)',
+    padding: '6px 0',
+    borderBottom: `2px solid ${active ? '#c9a96e' : 'transparent'}`,
+    marginRight: 24,
+  });
 
   return (
     <div style={{ display: 'flex', background: '#0d1b2e', minHeight: 'calc(100vh - 52px)', alignItems: 'flex-start' }}>
       <FilterPanel
-        disciplines={disciplines} onDisciplines={setDisciplines}
-        roles={roles} onRoles={setRoles}
+        view={view}
         country={country} onCountry={setCountry}
+        nameSearch={nameSearch} onNameSearch={setNameSearch}
+        disc={disc} onDisc={setDisc}
+        role={role} onRole={setRole}
       />
 
       <main style={{ flex: 1, padding: '28px 28px' }}>
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 300, color: '#fdfcf8', marginBottom: 4 }}>
-            Browse clubs
-          </h1>
-          <p style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.5)' }}>
-            {loading ? '' : `${filtered.length} club${filtered.length !== 1 ? 's' : ''}`}
-          </p>
+        {/* Tab switcher */}
+        <div style={{ display: 'flex', marginBottom: 24, borderBottom: '1px solid rgba(201,169,110,0.1)', paddingBottom: 0 }}>
+          <button style={tabStyle(view === 'clubs')} onClick={() => setView('clubs')}>Clubs</button>
+          <button style={tabStyle(view === 'athletes')} onClick={() => setView('athletes')}>All athletes</button>
         </div>
 
-        {error && (
-          <div style={{ color: '#dc2626', fontSize: '0.82rem', marginBottom: 16 }}>{error}</div>
+        {/* Clubs view */}
+        {view === 'clubs' && (
+          <>
+            <p style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.5)', marginBottom: 20 }}>
+              {clubsLoading ? '' : `${filteredClubs.length} club${filteredClubs.length !== 1 ? 's' : ''}`}
+            </p>
+            {clubsError && <div style={{ color: '#dc2626', fontSize: '0.82rem', marginBottom: 16 }}>{clubsError.message}</div>}
+            {clubsLoading && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+                {[...Array(6)].map((_, i) => <div key={i} className="card-skeleton" style={{ height: 160 }} />)}
+              </div>
+            )}
+            {!clubsLoading && filteredClubs.length === 0 && (
+              <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.4)', fontSize: '0.85rem', marginTop: 80 }}>
+                No clubs found.
+              </div>
+            )}
+            {!clubsLoading && filteredClubs.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+                {filteredClubs.map((club, i) => (
+                  <ClubCard key={club.id} club={club} index={i} onClick={() => navigate(`/clubs/${club.id}`)} />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
-        {loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="card-skeleton" style={{ height: 160 }} />
-            ))}
-          </div>
-        )}
-
-        {!loading && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.4)', fontSize: '0.85rem', marginTop: 80 }}>
-            No clubs found. Try adjusting filters.
-          </div>
-        )}
-
-        {!loading && filtered.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
-            {filtered.map((club, i) => (
-              <ClubCard
-                key={club.id}
-                club={club}
-                index={i}
-                onClick={() => navigate(`/clubs/${club.id}`)}
-              />
-            ))}
-          </div>
+        {/* All athletes view */}
+        {view === 'athletes' && (
+          <>
+            <p style={{ fontSize: '0.82rem', color: 'rgba(253,252,248,0.5)', marginBottom: 20 }}>
+              {athletesLoading ? '' : `${filteredAthletes.length} athlete${filteredAthletes.length !== 1 ? 's' : ''}`}
+            </p>
+            {athletesLoading && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+                {[...Array(6)].map((_, i) => <div key={i} className="card-skeleton" style={{ height: 140 }} />)}
+              </div>
+            )}
+            {!athletesLoading && filteredAthletes.length === 0 && (
+              <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.4)', fontSize: '0.85rem', marginTop: 80 }}>
+                No athletes found.
+              </div>
+            )}
+            {!athletesLoading && filteredAthletes.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+                {filteredAthletes.map((athlete, i) => (
+                  <AthleteCard
+                    key={athlete.id}
+                    athlete={athlete}
+                    index={i}
+                    onProfile={() => navigate(`/skater/${athlete.id}`)}
+                    onTryout={setModalAthlete}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
+
+      {modalAthlete && (
+        <TryoutModal
+          match={{ id: null, partner: modalAthlete }}
+          onClose={() => setModalAthlete(null)}
+          onSuccess={() => setModalAthlete(null)}
+        />
+      )}
     </div>
   );
 }

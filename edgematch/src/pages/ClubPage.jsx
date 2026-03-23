@@ -50,19 +50,21 @@ const AVATAR_COLORS = [
   { bg: 'rgba(239,68,68,0.15)',   color: '#f87171' },
 ];
 
-function AthleteRosterCard({ athlete, index, onTryout }) {
+function AthleteRosterCard({ athlete, index, onTryout, onProfile }) {
   const avatarStyle = AVATAR_COLORS[index % AVATAR_COLORS.length];
   const loc = [athlete.location_city, athlete.location_state].filter(Boolean).join(', ');
   const ht = heightStr(athlete.height_cm);
 
   return (
-    <div style={{
-      background: '#1c3050', border: '1px solid rgba(201,169,110,0.12)',
-      borderRadius: 4, padding: 18,
-      transition: 'border-color 250ms, transform 250ms',
-    }}
-    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.3)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.12)'; e.currentTarget.style.transform = 'none'; }}
+    <div
+      onClick={onProfile}
+      style={{
+        background: '#1c3050', border: '1px solid rgba(201,169,110,0.12)',
+        borderRadius: 4, padding: 18, cursor: 'pointer',
+        transition: 'border-color 250ms, transform 250ms',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.3)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,169,110,0.12)'; e.currentTarget.style.transform = 'none'; }}
     >
       {/* Header row */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
@@ -113,7 +115,7 @@ function AthleteRosterCard({ athlete, index, onTryout }) {
 
       {/* Try-out button */}
       <button
-        onClick={() => onTryout(athlete)}
+        onClick={e => { e.stopPropagation(); onTryout(athlete); }}
         style={{
           width: '100%', padding: '7px 0',
           background: '#c9a96e', color: '#0d1b2e', border: 'none',
@@ -137,6 +139,7 @@ export default function ClubPage() {
 
   const [filterDisc, setFilterDisc] = useState('');
   const [filterLevel, setFilterLevel] = useState('');
+  const [filterName, setFilterName] = useState('');
   const [modalAthlete, setModalAthlete] = useState(null);
 
   const disciplines = [...new Set(athletes.map(a => a.discipline).filter(Boolean))];
@@ -145,6 +148,7 @@ export default function ClubPage() {
   const filtered = athletes.filter(a => {
     if (filterDisc && a.discipline !== filterDisc) return false;
     if (filterLevel && a.skating_level !== filterLevel) return false;
+    if (filterName.trim() && !(a.name ?? '').toLowerCase().includes(filterName.trim().toLowerCase())) return false;
     return true;
   });
 
@@ -231,6 +235,20 @@ export default function ClubPage() {
           Athletes searching for partners
         </div>
 
+        {/* Name search */}
+        <input
+          type="text"
+          placeholder="Search by name..."
+          value={filterName}
+          onChange={e => setFilterName(e.target.value)}
+          style={{
+            width: '100%', maxWidth: 320, padding: '8px 12px', marginBottom: 14,
+            background: '#1c3050', border: '1px solid rgba(201,169,110,0.2)',
+            borderRadius: 2, color: '#fdfcf8', fontSize: '0.82rem', fontFamily: 'inherit',
+            boxSizing: 'border-box',
+          }}
+        />
+
         {/* Filter pills */}
         {(disciplines.length > 1 || levels.length > 1) && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
@@ -281,6 +299,7 @@ export default function ClubPage() {
                 athlete={athlete}
                 index={i}
                 onTryout={setModalAthlete}
+                onProfile={() => navigate(`/skater/${athlete.id}`)}
               />
             ))}
           </div>

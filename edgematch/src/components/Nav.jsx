@@ -142,10 +142,11 @@ export default function Nav() {
               key={link}
               to={toPath(link)}
               style={({ isActive }) => ({
-                color: isActive ? '#fdfcf8' : 'rgba(253,252,248,0.65)',
-                background: 'transparent',
+                color: isActive ? '#c9a96e' : 'rgba(253,252,248,0.65)',
+                background: isActive ? 'rgba(201,169,110,0.08)' : 'transparent',
+                borderRadius: 4,
                 fontSize: 13, padding: '6px 10px',
-                textDecoration: 'none', fontWeight: isActive ? 600 : 400,
+                textDecoration: 'none', fontWeight: isActive ? 700 : 400,
                 fontFamily: "'Nunito', sans-serif",
               })}
             >
