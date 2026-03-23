@@ -116,7 +116,18 @@ function CompetitionResults({ results }) {
           {visible.map((r, i) => (
             <tr key={i}>
               <td style={{ padding: '7px 8px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: '#fdfcf8' }}>
-                {r.event_name}{r.event_year ? ` (${r.event_year})` : ''}
+                {r.segment_url ? (
+                  <a
+                    href={r.segment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: '#c9a96e', textDecoration: 'none' }}
+                    onMouseEnter={e => { e.currentTarget.style.textDecoration = 'underline'; }}
+                    onMouseLeave={e => { e.currentTarget.style.textDecoration = 'none'; }}
+                  >
+                    {r.event_name}
+                  </a>
+                ) : r.event_name}
               </td>
               <td style={{ padding: '7px 8px', borderBottom: '1px solid rgba(201,169,110,0.06)', color: 'rgba(253,252,248,0.65)' }}>
                 {LEVEL_LABEL[r.level] ?? r.level}
@@ -184,6 +195,16 @@ export default function SkaterProfile() {
     if (!partner) return;
     let cancelled = false;
 
+    function dedup(rows) {
+      const seen = new Set();
+      return (rows ?? []).filter(r => {
+        const key = `${r.event_id ?? r.event_name}|${r.segment}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
     async function loadResults() {
       // Primary: query by athlete_id (most accurate)
       if (partner.id) {
@@ -193,7 +214,7 @@ export default function SkaterProfile() {
           .eq('athlete_id', partner.id)
           .order('event_year', { ascending: false });
         if (cancelled) return;
-        if (data && data.length > 0) { setResults(data); return; }
+        if (data && data.length > 0) { setResults(dedup(data)); return; }
       }
 
       // Fallback: fuzzy name match
@@ -209,7 +230,7 @@ export default function SkaterProfile() {
         .or(`skater_name.ilike.%${firstName}%${lastName}%,skater_name.ilike.%${lastName}%${firstName}%`)
         .order('event_year', { ascending: false });
       if (cancelled) return;
-      if (data && data.length > 0) { setResults(data); return; }
+      if (data && data.length > 0) { setResults(dedup(data)); return; }
 
       // Last resort: last name only
       const { data: fb } = await supabase
@@ -217,7 +238,7 @@ export default function SkaterProfile() {
         .select('*')
         .ilike('skater_name', `%${lastName}%`)
         .order('event_year', { ascending: false });
-      if (!cancelled) setResults(fb ?? []);
+      if (!cancelled) setResults(dedup(fb));
     }
 
     loadResults();
