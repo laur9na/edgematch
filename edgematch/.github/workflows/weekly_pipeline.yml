@@ -1,0 +1,56 @@
+name: Weekly data pipeline
+
+on:
+  schedule:
+    # Every Sunday at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch: # allow manual trigger from GitHub UI
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Write secrets to .env.local so all scripts can load them
+      - name: Write .env.local
+        run: |
+          cat > .env.local << 'EOF'
+          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+          EOF
+
+      # Step 1: Scrape new competition results (USFS + ISU) and score new pairs
+      - name: Scrape competition results and score
+        run: node scripts/pipeline/run_pipeline.js --skip-clubs
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      # Step 2: Scrape IcePartnerSearch for new athletes actively looking for partners
+      - name: Scrape IcePartnerSearch for new athletes
+        run: node scripts/scrape_ips.js
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      # Step 3: Fix any new unknown levels from newly scraped results
+      - name: Backfill unknown competition levels
+        run: node scripts/fix_unknown_levels.js
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
