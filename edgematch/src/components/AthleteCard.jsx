@@ -53,7 +53,7 @@ function ScoreBar({ score }) {
           }} />
         </div>
         <span style={{ fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'right', color: textColor }}>
-          {pct}%
+          {pct}% match
         </span>
       </div>
     </div>
@@ -141,9 +141,6 @@ export default function AthleteCard({ match, index, onClick }) {
               DISCIPLINE_LABEL[p.discipline] ?? p.discipline,
               ROLE_LABEL[p.partner_role] ?? p.partner_role,
             ].filter(Boolean).join(' · ')}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'rgba(253,252,248,0.45)' }}>
-            {[loc, ht].filter(Boolean).join(' · ')}
           </div>
           {p.jump_direction && p.jump_direction !== 'not_applicable' && (
             <span style={{

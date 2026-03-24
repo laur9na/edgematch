@@ -90,7 +90,7 @@ function DualRangeSlider({ min, max, step, values, onChange }) {
   );
 }
 
-function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels, disciplines, onDisciplines, roles, onRoles }) {
+function Sidebar({ distance, onDistance, levels, onLevels, disciplines, onDisciplines, roles, onRoles }) {
   function toggleLevel(key) {
     onLevels(prev => prev.includes(key) ? prev.filter(l => l !== key) : [...prev, key]);
   }
@@ -118,20 +118,9 @@ function Sidebar({ strength, onStrength, distance, onDistance, levels, onLevels,
       position: 'sticky', top: 52,
       minHeight: 'calc(100vh - 52px)',
     }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color: '#c9a96e', marginBottom: 14, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#fdfcf8', marginBottom: 14, letterSpacing: '0.01em' }}>
         Filter matches
       </div>
-
-      {/* Match strength: single dual-handle slider */}
-      <div style={{ ...SECTION_LABEL }}>
-        Match strength &nbsp;
-        <span style={{ color: 'rgba(253,252,248,0.65)', fontWeight: 400, letterSpacing: 0, textTransform: 'none' }}>
-          {strength[0]}% – {strength[1]}%
-        </span>
-      </div>
-      <DualRangeSlider min={0} max={100} step={1} values={strength} onChange={onStrength} />
-
-      {divider}
 
       {/* Distance */}
       <div style={{ ...SECTION_LABEL }}>
@@ -205,21 +194,17 @@ export default function Matches() {
 
   // Restore filter state from sessionStorage so it survives navigate(-1)
   const saved = (() => { try { return JSON.parse(sessionStorage.getItem('matchFilters') || 'null'); } catch { return null; } })();
-  const [strength, setStrength]       = useState(saved?.strength       ?? [40, 100]);
   const [distance, setDistance]       = useState(saved?.distance       ?? 1000);
   const [levels, setLevels]           = useState(saved?.levels         ?? []);
   const [disciplines, setDisciplines] = useState(saved?.disciplines    ?? ['pairs', 'ice_dance']);
   const [roles, setRoles]             = useState(saved?.roles          ?? ['man', 'lady']);
 
   useEffect(() => {
-    sessionStorage.setItem('matchFilters', JSON.stringify({ strength, distance, levels, disciplines, roles }));
-  }, [strength, distance, levels, disciplines, roles]);
+    sessionStorage.setItem('matchFilters', JSON.stringify({ distance, levels, disciplines, roles }));
+  }, [distance, levels, disciplines, roles]);
 
   const filtered = useMemo(() => {
     let list = matches.filter(m => {
-      const pct = Math.round(m.total_score * 100);
-      if (pct < strength[0] || pct > strength[1]) return false;
-
       // Distance proxy: use location_score (0=far, 1=same city)
       // distance 500km ~ location_score 0.3, 100km ~ 0.7, 5000km ~ 0
       if (distance < 5000) {
@@ -237,7 +222,7 @@ export default function Matches() {
     list = [...list].sort((a, b) => b.total_score - a.total_score);
 
     return list;
-  }, [matches, strength, distance, levels, disciplines, roles]);
+  }, [matches, distance, levels, disciplines, roles]);
 
   if (authLoading) return <div className="loading">Loading...</div>;
 
@@ -256,7 +241,6 @@ export default function Matches() {
   return (
     <div style={{ display: 'flex', background: '#0d1b2e', minHeight: 'calc(100vh - 52px)', alignItems: 'flex-start' }}>
       <Sidebar
-        strength={strength} onStrength={setStrength}
         distance={distance} onDistance={setDistance}
         levels={levels} onLevels={setLevels}
         disciplines={disciplines} onDisciplines={setDisciplines}
