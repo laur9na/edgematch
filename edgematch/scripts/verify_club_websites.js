@@ -1,7 +1,7 @@
 /**
  * scripts/verify_club_websites.js
  *
- * STEP 1: Verify existing websites — check each club's URL actually belongs to that club.
+ * STEP 1: Verify existing websites : check each club's URL actually belongs to that club.
  * STEP 2: Find correct website for clubs that failed verification.
  * STEP 3: Enrich newly-found websites with contact info.
  *

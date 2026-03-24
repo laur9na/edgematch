@@ -98,7 +98,7 @@ async function main() {
     }
 
     if (processed % 50 === 0) {
-      console.log(`  Progress: ${processed}/${athletes.length} — linked so far: ${linked}`);
+      console.log(`  Progress: ${processed}/${athletes.length} : linked so far: ${linked}`);
     }
   }
 

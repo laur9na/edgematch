@@ -1,4 +1,4 @@
--- 001_schema.sql — EdgeMatch database schema
+-- 001_schema.sql : EdgeMatch database schema
 -- Run against Supabase via: supabase db push  OR  paste into SQL editor
 
 -- ---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
--- raw_athletes (staging — receives scraper output)
+-- raw_athletes (staging : receives scraper output)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS raw_athletes (
   id               uuid DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -183,7 +183,7 @@ async function run() {
       // Keep the one with more results; if tied, keep the one claimed or older (id sort)
       const [keep, drop] = aCount >= bCount ? [a, b] : [b, a];
 
-      console.log(`  Duplicate: "${keep.name}" (${aCount} results) vs "${drop.name}" (${bCount} results) — ratio ${ratio.toFixed(3)}`);
+      console.log(`  Duplicate: "${keep.name}" (${aCount} results) vs "${drop.name}" (${bCount} results) : ratio ${ratio.toFixed(3)}`);
       console.log(`    Keeping ${keep.id}, dropping ${drop.id}`);
 
       if (!DRY_RUN) {
@@ -226,7 +226,7 @@ async function run() {
   console.log(`Athletes with normalized_name updated: ${normUpdated}`);
   console.log(`Results with normalized_name updated:  ${resNormUpdated}`);
   console.log(`Duplicate pairs found: ${duplicatePairs}`);
-  console.log(`Duplicates deleted:    ${deleted}${DRY_RUN ? ' (dry-run — no changes made)' : ''}`);
+  console.log(`Duplicates deleted:    ${deleted}${DRY_RUN ? ' (dry-run : no changes made)' : ''}`);
 }
 
 run().catch(err => {

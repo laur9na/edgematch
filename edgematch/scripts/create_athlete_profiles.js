@@ -2,7 +2,7 @@
  * scripts/create_athlete_profiles.js
  *
  * For every skater in competition_results with athlete_id IS NULL:
- *  1. Check if an athlete with ilike name match already exists — if yes, link and skip.
+ *  1. Check if an athlete with ilike name match already exists : if yes, link and skip.
  *  2. If no match: INSERT into athletes. Only creates profiles for skaters
  *     whose most recent competition is 2023 or newer.
  *     search_status = 'active'  if max event_year >= 2024
@@ -152,7 +152,7 @@ async function run() {
     let athleteId = athleteIndex.get(nameLower);
 
     if (athleteId) {
-      // Already exists — just link results
+      // Already exists : just link results
       alreadyExisted++;
     } else {
       // Create new profile
@@ -170,13 +170,13 @@ async function run() {
           search_status: status,
           verified: false,
           source: 'usfs_results',
-          height_cm: 0, // placeholder — skater can update after claiming profile
+          height_cm: 0, // placeholder : skater can update after claiming profile
         })
         .select('id')
         .single();
 
       if (insertErr) {
-        console.error(`  "${skater.name}": insert failed — ${insertErr.message}`);
+        console.error(`  "${skater.name}": insert failed : ${insertErr.message}`);
         continue;
       }
 
@@ -197,7 +197,7 @@ async function run() {
         .update({ athlete_id: athleteId })
         .in('id', skater.resultIds);
       if (linkErr) {
-        console.error(`  "${skater.name}": link failed — ${linkErr.message}`);
+        console.error(`  "${skater.name}": link failed : ${linkErr.message}`);
       } else {
         linked += skater.resultIds.length;
       }

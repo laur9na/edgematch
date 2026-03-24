@@ -1,9 +1,9 @@
 /**
- * scripts/run_migrations.js — Phase 8.5
+ * scripts/run_migrations.js : Phase 8.5
  *
  * Applies instagram_handle, profile_photo_url, media_urls columns to athletes table.
  * Reads VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY directly from .env.local.
- * Uses supabase-js with service role key — no CLI, no keychain.
+ * Uses supabase-js with service role key : no CLI, no keychain.
  *
  * Usage: node scripts/run_migrations.js
  */

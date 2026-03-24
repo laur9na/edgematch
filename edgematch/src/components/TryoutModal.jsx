@@ -1,5 +1,5 @@
 /**
- * TryoutModal — manual matching flow.
+ * TryoutModal: manual matching flow.
  * Submits a tryout request and notifies Laurena via email.
  * Shows a confirmation screen after the request is sent.
  */
@@ -26,7 +26,7 @@ async function notifyEmail(tryoutId, requesterId, recipientId, note) {
       },
     });
   } catch {
-    // Non-fatal — tryout row was saved regardless
+    // Non-fatal; tryout row was saved regardless
   }
 }
 

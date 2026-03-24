@@ -1,16 +1,16 @@
-# PLAN.md — EdgeMatch
+# PLAN.md : EdgeMatch
 > Read every session. Source of truth for what we're building and what's next.
 
 ---
 
 ## Two products
 
-### Product 1 — edgematch.co (landing page)
+### Product 1 : edgematch.co (landing page)
 Goal: convert Instagram visitors into waitlist signups.
 Laurena personally emails matches back within 48h.
 Success metric: waitlist signups per week.
 
-### Product 2 — app.edgematch.co (matching tool)
+### Product 2 : app.edgematch.co (matching tool)
 Goal: Laurena uses this internally to find compatible partners for signups.
 Eventually becomes the self-serve product skaters pay for.
 Success metric: how fast Laurena can find a good match for a signup.
@@ -23,7 +23,7 @@ Success metric: how fast Laurena can find a good match for a signup.
 2. Waitlist signup captures name + email + basics, Laurena gets notified
 3. App shows competition results on athlete profiles (Laurena needs this to do matching)
 4. App shows club card on athlete profiles (context for reaching out)
-5. Athlete data is accurate — linked to clubs and results
+5. Athlete data is accurate : linked to clubs and results
 
 ---
 
@@ -52,10 +52,10 @@ Success metric: how fast Laurena can find a good match for a signup.
 ## Landing page spec
 
 ### What makes it convert
-- 75% of visitors decide in 3 seconds — hero is everything
+- 75% of visitors decide in 3 seconds : hero is everything
 - Forms with 5 or fewer fields convert 120% better
 - Named social proof beats generic quotes
-- Mobile-first — 83% of traffic is mobile
+- Mobile-first : 83% of traffic is mobile
 - First-person CTAs convert better ("Get me matched")
 - Showing the product (screenshot/demo) builds more trust than describing it
 
@@ -64,7 +64,7 @@ Headline (large, Great Vibes or Nunito bold):
 "Find your skating partner."
 
 Subheadline (small, white-dim):
-"I'm a 3x National finalist who built a data-driven way to find compatible pairs and ice dance partners. Tell me what you're looking for — I'll find your matches personally."
+"I'm a 3x National finalist who built a data-driven way to find compatible pairs and ice dance partners. Tell me what you're looking for : I'll find your matches personally."
 
 CTA button (gold, full width on mobile):
 "Get me matched"
@@ -74,25 +74,25 @@ This is the entire above-the-fold. Nothing else.
 ### Why us section (3 columns)
 Differentiates from IcePartnerSearch explicitly:
 
-Column 1 — "Not just a listing board"
-IcePartnerSearch shows you a list. EdgeMatch scores compatibility by level, height ratio, role, jump direction, and location — then I personally review your matches before sending them.
+Column 1 : "Not just a listing board"
+IcePartnerSearch shows you a list. EdgeMatch scores compatibility by level, height ratio, role, jump direction, and location : then I personally review your matches before sending them.
 
-Column 2 — "Competition data built in"
-Your matches come with their actual competition history — events, placements, levels. No guessing whether someone is actually at your level.
+Column 2 : "Competition data built in"
+Your matches come with their actual competition history : events, placements, levels. No guessing whether someone is actually at your level.
 
-Column 3 — "Club context included"
+Column 3 : "Club context included"
 Every match shows their training club, coach, and contact info. You know exactly who to reach out to and how.
 
 ### Social proof section
 One real quote, named and attributed:
 "I found my partner in 2 weeks. I'd been searching for 8 months."
-— Emma R., Junior ice dance, Detroit SC
+: Emma R., Junior ice dance, Detroit SC
 
 One number:
 "713 competitive skaters in the database. Growing daily."
 
 ### Demo section
-Screenshot of the actual app — athlete profile showing competition results and club card.
+Screenshot of the actual app : athlete profile showing competition results and club card.
 Caption: "This is what your matches look like."
 This is the single biggest trust builder. Show the product.
 
@@ -104,7 +104,7 @@ Same gold button: "Get me matched" → /signup
 Five fields maximum:
 1. First name
 2. Email
-3. Discipline (Ice dance / Pairs — pill select)
+3. Discipline (Ice dance / Pairs : pill select)
 4. Level (pill select)
 5. Role (pill select)
 
@@ -112,15 +112,15 @@ Submit: "Submit my matching request"
 
 On submit:
 - Insert to waitlist table
-- Fire-and-forget email to user: "Hi [name], I got your info and I'll be in touch soon. — Laurena"
+- Fire-and-forget email to user: "Hi [name], I got your info and I'll be in touch soon. : Laurena"
 - Fire-and-forget email to laurenaletter@gmail.com with all fields
-- Show confirmation: "You're on the list. I'll be in touch soon. — Laurena"
+- Show confirmation: "You're on the list. I'll be in touch soon. : Laurena"
 
 ---
 
 ## App spec
 
-### Athlete profile — two broken things to fix
+### Athlete profile : two broken things to fix
 
 **Competition results**
 Query by athlete_id first, fall back to name ilike match:
@@ -175,7 +175,7 @@ node scripts/verify_club_websites.js
 
 ## Database
 
-### waitlist (new — for landing page signups)
+### waitlist (new : for landing page signups)
 ```sql
 id, first_name, last_name, email,
 discipline, skating_level, partner_role,
@@ -209,7 +209,7 @@ No other component makes routing decisions based on auth state.
 ### Error handling
 Every app route wrapped in ErrorBoundary.
 Every hook returns { data, isLoading, error }.
-Empty states always shown — never a blank screen.
+Empty states always shown : never a blank screen.
 
 ---
 
@@ -229,4 +229,4 @@ Empty states always shown — never a blank screen.
 - Duplicate level pills in filter sidebar
 - Some club websites inaccurate (verify script partially run)
 - International athletes (543) not linked to clubs
-- IPS login pending approval — cross-reference blocked
+- IPS login pending approval : cross-reference blocked

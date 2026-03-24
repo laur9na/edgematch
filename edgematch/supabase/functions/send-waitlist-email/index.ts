@@ -3,11 +3,11 @@
  *
  * Called from the frontend after a user submits the waitlist intake form.
  * Sends two emails via Resend:
- *   1. Confirmation to the user — warm, personal, no links
- *   2. Notification to Laurena — all submitted fields as a simple list
+ *   1. Confirmation to the user : warm, personal, no links
+ *   2. Notification to Laurena : all submitted fields as a simple list
  *
  * Invoke: POST {SUPABASE_URL}/functions/v1/send-waitlist-email
- * Auth:   anon key (no JWT required — public endpoint)
+ * Auth:   anon key (no JWT required : public endpoint)
  */
 
 const RESEND_API_KEY  = Deno.env.get('RESEND_API_KEY') ?? '';
@@ -31,7 +31,7 @@ interface WaitlistPayload {
 
 async function sendEmail(to: string, subject: string, text: string) {
   if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not set — skipping email');
+    console.warn('RESEND_API_KEY not set : skipping email');
     return;
   }
   const res = await fetch('https://api.resend.com/emails', {
@@ -82,15 +82,15 @@ Deno.serve(async (req: Request) => {
 
   const fullName = `${first_name} ${last_name}`.trim();
 
-  // Email 1 — to the user
+  // Email 1 : to the user
   const userText = `Hi ${first_name},
 
 Thanks for submitting your matching request. We received everything and we'll be in touch within 48 hours.
 
-— Laurena
+Laurena
 Founder, EdgeMatch`;
 
-  // Email 2 — to Laurena
+  // Email 2 : to Laurena
   const adminLines = [
     `Name: ${fullName}`,
     discipline         ? `Discipline: ${discipline}`                : null,

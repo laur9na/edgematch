@@ -1,6 +1,6 @@
 /**
  * ProtectedRoute.jsx
- * Requires session only — profileComplete is not enforced since the app is
+ * Requires session only; profileComplete is not enforced since the app is
  * waitlist-only and admin access must always work regardless of athlete data.
  * - Loading  → spinner
  * - No session → /login

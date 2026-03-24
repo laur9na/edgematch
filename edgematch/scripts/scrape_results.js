@@ -1,5 +1,5 @@
 /**
- * scripts/scrape_results.js — Phase 11 + live detection
+ * scripts/scrape_results.js : Phase 11 + live detection
  *
  * Scrapes competition results from ijs.usfigureskating.org for events in event_ids.json.
  * Matches results to athletes table by name + club. Inserts into competition_results.
@@ -11,9 +11,9 @@
  * not yet in event_ids.json. Any found are auto-added and persisted to disk.
  *
  * URL patterns:
- *   /leaderboard/results/{year}/                       — year calendar (new event discovery)
- *   /leaderboard/results/{year}/{event_id}/index.asp   — event index
- *   /leaderboard/results/{year}/{event_id}/CAT{N}SEG{N}.html — segment results
+ *   /leaderboard/results/{year}/                       : year calendar (new event discovery)
+ *   /leaderboard/results/{year}/{event_id}/index.asp   : event index
+ *   /leaderboard/results/{year}/{event_id}/CAT{N}SEG{N}.html : segment results
  *
  * Usage:
  *   node scripts/scrape_results.js
@@ -120,7 +120,7 @@ async function discoverNewEvents(year) {
         if (h1Match) name = h1Match[1].replace(/\s+/g, ' ').trim();
       }
     } catch {
-      // event not live yet or 404 — skip
+      // event not live yet or 404 : skip
       continue;
     }
     newEvents.push({ year, event_id: id, event_name: name, source: 'usfs' });
@@ -131,7 +131,7 @@ async function discoverNewEvents(year) {
 }
 
 // ---------------------------------------------------------------------------
-// Name fuzzy match — Levenshtein-based similarity
+// Name fuzzy match : Levenshtein-based similarity
 // ---------------------------------------------------------------------------
 
 function levenshtein(a, b) {
@@ -448,7 +448,7 @@ async function insertResult(record, upsert = false) {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Insert failed: HTTP ${res.status} — ${text}`);
+    throw new Error(`Insert failed: HTTP ${res.status} : ${text}`);
   }
 }
 
@@ -495,12 +495,12 @@ async function main() {
   const eventsToRun = SOURCE_FILTER
     ? EVENT_IDS.filter(e => e.source === SOURCE_FILTER)
     : EVENT_IDS;
-  if (SOURCE_FILTER) console.log(`Source filter: ${SOURCE_FILTER} — ${eventsToRun.length} event(s) selected`);
+  if (SOURCE_FILTER) console.log(`Source filter: ${SOURCE_FILTER} : ${eventsToRun.length} event(s) selected`);
 
   for (const event of eventsToRun) {
     const isCurrentYear = event.year === CURRENT_YEAR;
     const isIsu = event.source === 'isu';
-    console.log(`\nEvent: ${event.event_name} (${event.year}/${event.event_id}) [${isIsu ? 'ISU' : 'USFS'}]${isCurrentYear ? ' [live — upsert]' : ''}`);
+    console.log(`\nEvent: ${event.event_name} (${event.year}/${event.event_id}) [${isIsu ? 'ISU' : 'USFS'}]${isCurrentYear ? ' [live : upsert]' : ''}`);
 
     let segments;
     if (isIsu) {
@@ -512,7 +512,7 @@ async function main() {
     }
 
     for (const seg of segments) {
-      console.log(`  Segment: ${seg.discipline} ${seg.level} ${seg.segment} — ${seg.url}`);
+      console.log(`  Segment: ${seg.discipline} ${seg.level} ${seg.segment} : ${seg.url}`);
       await sleep(DELAY_MS);
 
       let html;

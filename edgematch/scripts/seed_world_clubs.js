@@ -211,7 +211,7 @@ async function fromUSFS() {
     return stateClubs;
   }
 
-  console.log('  USFS live fetch failed — using hardcoded list');
+  console.log('  USFS live fetch failed : using hardcoded list');
   return [];
 }
 
@@ -522,7 +522,7 @@ async function fromSkateCanada() {
     { name: 'Halifax FSC',          city: 'Halifax',       state: 'NS' },
   ].map(c => ({ ...c, country: 'Canada', federation: 'Skate Canada' }));
 
-  console.log(`  Skate Canada API failed — using hardcoded (${hardcoded.length} clubs)`);
+  console.log(`  Skate Canada API failed : using hardcoded (${hardcoded.length} clubs)`);
   return hardcoded;
 }
 
@@ -587,7 +587,7 @@ async function main() {
     process.exit(1);
   }
   if (!cols.has('website')) {
-    console.log('Note: website column not found (migration 011 not applied) — website field skipped\n');
+    console.log('Note: website column not found (migration 011 not applied) : website field skipped\n');
   }
 
   // Load existing names for dedup

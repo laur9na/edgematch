@@ -20,7 +20,7 @@ const sb = createClient(get('VITE_SUPABASE_URL'), get('SUPABASE_SERVICE_ROLE_KEY
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // ---------------------------------------------------------------------------
-// Name lists — covering English, Russian, French, Italian, Spanish, German,
+// Name lists : covering English, Russian, French, Italian, Spanish, German,
 // Chinese, Korean, Japanese, and other names common in competitive figure skating
 // ---------------------------------------------------------------------------
 const MALE_NAMES = new Set([
@@ -205,7 +205,7 @@ async function main() {
     console.log('  Ambiguous names:', updates.ambiguous.map(r => r.name).join(', '));
   }
 
-  if (DRY_RUN) { console.log('\nDry run — no writes.'); return; }
+  if (DRY_RUN) { console.log('\nDry run : no writes.'); return; }
 
   const BATCH = 200;
   let updated = 0;

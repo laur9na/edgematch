@@ -99,7 +99,7 @@ async function run() {
   console.log(`New pairs to score: ${newScores.length} (${skipped} already scored, ${incompatible} incompatible)`);
 
   if (DRY_RUN) {
-    console.log('Dry run — no writes.');
+    console.log('Dry run : no writes.');
     return newScores.length;
   }
 

@@ -11,7 +11,7 @@ const ATHLETE_FIELDS = `
 /**
  * Fetches ranked compatibility matches for the given athlete.
  * Splits the OR query into two targeted queries (one per index) and
- * merges in JS — avoids the slow OR scan and the per-row RLS subquery.
+ * merges in JS; avoids the slow OR scan and the per-row RLS subquery.
  * Results are cached for 5 minutes via React Query.
  */
 export function useMatches(athleteId, { minScore = 0.3, limit = 20 } = {}) {
@@ -20,7 +20,7 @@ export function useMatches(athleteId, { minScore = 0.3, limit = 20 } = {}) {
     queryFn: async () => {
       if (!athleteId) return [];
 
-      // Two focused queries — each can use its dedicated index.
+      // Two focused queries; each can use its dedicated index.
       const [resA, resB] = await Promise.all([
         supabase
           .from('compatibility_scores')

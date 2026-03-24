@@ -44,7 +44,7 @@ const EMAIL_FORMAT_RE  = /^[\w.\-+]+@[\w.\-]+\.\w{2,}$/;
 const EMAIL_EXTRACT_RE = /[\w.\-+]+@[\w.\-]+\.\w{2,}/g;
 const PHONE_EXTRACT_RE = /[\+\(]?[\d][\d\s\-\(\)]{6,}/g;
 
-// Personal/generic providers — never a club's official email domain
+// Personal/generic providers : never a club's official email domain
 const PERSONAL_DOMAINS = new Set([
   'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com',
   'live.com', 'msn.com', 'me.com', 'mac.com', 'protonmail.com',
@@ -62,7 +62,7 @@ const BAD_DOMAINS = new Set([
   'telepathy.com', 'purposemedia.com', 'domain.com', 'wintersports.az',
   'hongkong.org', 'hketowashington.gov.hk', 'state.nm.us', 'mitrani.com',
   'justinhavre.com', 'bwchockey.com',
-  // Error-tracking and site-builder infrastructure — never club emails
+  // Error-tracking and site-builder infrastructure : never club emails
   'sentry.io', 'sentry.wixpress.com', 'sentry-next.wixpress.com',
   'wixpress.com', 'godaddy.com', 'musictoday.com', 'bayarea.com',
   // Personal ISPs scraped by mistake
@@ -141,7 +141,7 @@ async function validateEmail(email) {
 // STEP 2: Normalize phones
 // ---------------------------------------------------------------------------
 
-// Matches YYYY-YYYY, YYYY/YYYY, or YYYY-MM-DD patterns — never real phone numbers
+// Matches YYYY-YYYY, YYYY/YYYY, or YYYY-MM-DD patterns : never real phone numbers
 const YEAR_RANGE_RE = /^(19|20)\d{2}[\s\-\/](19|20)\d{2}$/;
 const DATE_RE       = /^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
@@ -160,11 +160,11 @@ function normalizePhone(raw) {
   if (lines.length >= 2) {
     const firstDigits = lines[0].replace(/\D/g, '');
     const secondDigits = lines[1].replace(/\D/g, '');
-    // First line is a zip code (5 digits) and second is a phone — use only the phone
+    // First line is a zip code (5 digits) and second is a phone : use only the phone
     if (firstDigits.length === 5 && secondDigits.length >= 7 && secondDigits.length <= 11) {
       raw = lines[1]; // use the phone line only
     } else {
-      // Multi-line without clear zip+phone — treat as junk
+      // Multi-line without clear zip+phone : treat as junk
       const allDigits = trimmed.replace(/\D/g, '');
       if (allDigits.length > 15) return null;
     }
@@ -196,7 +196,7 @@ function normalizePhone(raw) {
     if (hasPlus) return `+${digits}`;
     return `+${digits}`;
   }
-  // 7-9 digit local numbers — keep digits only, no country code assumed
+  // 7-9 digit local numbers : keep digits only, no country code assumed
   return digits;
 }
 
@@ -314,10 +314,10 @@ async function run() {
     const { ok, reason } = await validateEmail(club.contact_email);
 
     if (ok) {
-      console.log(`  [OK      ] ${club.name} — ${club.contact_email}`);
+      console.log(`  [OK      ] ${club.name} : ${club.contact_email}`);
       stats.emailOk++;
     } else {
-      console.log(`  [CLEARED ] ${club.name} — cleared bad email: ${club.contact_email} (${reason})`);
+      console.log(`  [CLEARED ] ${club.name} : cleared bad email: ${club.contact_email} (${reason})`);
       if (!DRY_RUN) {
         const { error } = await supabase.from('clubs').update({ contact_email: null }).eq('id', club.id);
         if (error) console.error(`    DB error: ${error.message}`);
@@ -345,13 +345,13 @@ async function run() {
     const normalized = normalizePhone(club.phone);
 
     if (normalized === null) {
-      console.log(`  [CLEARED ] ${club.name} — cleared bad phone: ${JSON.stringify(club.phone)}`);
+      console.log(`  [CLEARED ] ${club.name} : cleared bad phone: ${JSON.stringify(club.phone)}`);
       if (!DRY_RUN) {
         await supabase.from('clubs').update({ phone: null }).eq('id', club.id);
       }
       stats.phoneCleared++;
     } else if (normalized !== club.phone) {
-      console.log(`  [NORM    ] ${club.name} — "${club.phone}" -> "${normalized}"`);
+      console.log(`  [NORM    ] ${club.name} : "${club.phone}" -> "${normalized}"`);
       if (!DRY_RUN) {
         await supabase.from('clubs').update({ phone: normalized }).eq('id', club.id);
       }
@@ -373,14 +373,14 @@ async function run() {
     for (const club of cleared) {
       const email = await refetchEmail(club);
       if (email) {
-        console.log(`  [REFOUND ] ${club.name} — ${email}`);
+        console.log(`  [REFOUND ] ${club.name} : ${email}`);
         if (!DRY_RUN) {
           const { error } = await supabase.from('clubs').update({ contact_email: email }).eq('id', club.id);
           if (error) console.error(`    DB error: ${error.message}`);
         }
         stats.emailRefound++;
       } else {
-        console.log(`  [NONE    ] ${club.name} — no replacement found`);
+        console.log(`  [NONE    ] ${club.name} : no replacement found`);
       }
     }
   }

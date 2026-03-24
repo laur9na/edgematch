@@ -1,8 +1,8 @@
 /**
- * scripts/create_storage_bucket.js — Phase 15.5
+ * scripts/create_storage_bucket.js : Phase 15.5
  *
  * Creates the athlete-media storage bucket in Supabase using the service role key.
- * Safe to run multiple times — no-ops if bucket already exists.
+ * Safe to run multiple times : no-ops if bucket already exists.
  *
  * Usage: node scripts/create_storage_bucket.js
  * Requires: VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env.local
@@ -49,7 +49,7 @@ async function run() {
     return;
   }
 
-  // Create bucket — public: false (signed URLs for private access)
+  // Create bucket : public: false (signed URLs for private access)
   const { data, error } = await supabase.storage.createBucket(BUCKET, {
     public: false,
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],

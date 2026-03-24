@@ -3,12 +3,12 @@
  *
  * Three steps run in order:
  *   Step 0: Populate athletes.club_name from competition_results
- *           (athletes were created without club_name — find it from their results)
+ *           (athletes were created without club_name : find it from their results)
  *   Step 1: Link athletes to clubs (athletes.club_id) via fuzzy club_name match
  *   Step 2: Link competition_results to athletes (results.athlete_id) via name match
  *   Step 3: Verify and print summary
  *
- * Safe to re-run — skips already-linked rows.
+ * Safe to re-run : skips already-linked rows.
  * Run: node scripts/link_athletes_and_results.js
  * Requires: VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env.local
  */
@@ -22,10 +22,10 @@ const getEnv = (key) => env.match(new RegExp(`^${key}=(.+)`, 'm'))?.[1]?.trim();
 const sb = createClient(getEnv('VITE_SUPABASE_URL'), getEnv('SUPABASE_SERVICE_ROLE_KEY'));
 
 // Name normalization handles all IJS/ISU formats:
-//   "Sophia Kartashov"  — already correct
-//   "CHEN Nathan"       — IJS all-caps surname
-//   "DUHAMEL Meagan"    — same
-//   "Chen, Nathan"      — comma-separated
+//   "Sophia Kartashov"  : already correct
+//   "CHEN Nathan"       : IJS all-caps surname
+//   "DUHAMEL Meagan"    : same
+//   "Chen, Nathan"      : comma-separated
 function normalizeName(raw) {
   if (!raw) return '';
   let name = raw.trim();

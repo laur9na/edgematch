@@ -30,18 +30,18 @@ function AppRoutes() {
       <Nav />
       <Suspense fallback={<Spinner />}>
         <Routes>
-          {/* Public — redirects logged-in users with complete profiles to /browse */}
+          {/* Public: redirects logged-in users with complete profiles to /browse */}
           <Route path="/"       element={<Landing />} />
           <Route path="/login"  element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/signin" element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/about"  element={<EB><About /></EB>} />
 
-          {/* Waitlist intake form — fully public, no session required */}
+          {/* Waitlist intake form, fully public, no session required */}
           <Route path="/profile/new" element={<EB><Profile /></EB>} />
           <Route path="/onboarding"  element={<EB><Profile /></EB>} />
 
-          {/* Protected — needs session + complete profile */}
+          {/* Protected: needs session + complete profile */}
           <Route path="/profile"      element={<EB><ProtectedRoute><Profile /></ProtectedRoute></EB>} />
           <Route path="/browse"       element={<EB><ProtectedRoute><Browse /></ProtectedRoute></EB>} />
           <Route path="/clubs/:id"    element={<EB><ProtectedRoute><ClubPage /></ProtectedRoute></EB>} />

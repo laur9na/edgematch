@@ -698,7 +698,7 @@ function WaitlistConfirmation({ firstName }) {
         We'll review your profile and be in touch within 48 hours with your top matches.
       </p>
       <p style={{ fontSize: '0.95rem', color: 'rgba(253,252,248,0.5)', fontStyle: 'italic' }}>
-        — Laurena
+        Laurena
       </p>
     </div>
   );

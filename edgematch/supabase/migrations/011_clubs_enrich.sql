@@ -1,4 +1,4 @@
--- 011_clubs_enrich.sql — Phase 12.1
+-- 011_clubs_enrich.sql : Phase 12.1
 -- Adds website, phone, name_aliases to clubs table for contact enrichment.
 
 ALTER TABLE clubs

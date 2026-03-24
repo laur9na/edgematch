@@ -1,5 +1,5 @@
 /**
- * scorer.js — compatibility scoring for pairs and ice dance athletes.
+ * scorer.js: compatibility scoring for pairs and ice dance athletes.
  *
  * computeScore(a, b) → { height, level, role, location, goals, total } (all 0–1)
  *   or null if the pair is discipline-incompatible or role-incompatible.
@@ -20,7 +20,7 @@ function levelIndex(l) {
 
 // Are two partner_roles compatible?
 function rolesCompatible(ra, rb) {
-  if (!ra || !rb) return true; // unknown — allow
+  if (!ra || !rb) return true; // unknown; allow
   return ra !== rb; // one must be lady, other man
 }
 
@@ -29,7 +29,7 @@ function rolesCompatible(ra, rb) {
 // Ice dance: man should be 3–15 cm taller (ideal 8 cm delta)
 function heightScore(a, b, discipline) {
   const hA = a.height_cm, hB = b.height_cm;
-  if (!hA || !hB) return 0.5; // unknown height — neutral
+  if (!hA || !hB) return 0.5; // unknown height; neutral
 
   // Determine who is "man" and who is "lady"
   const aIsMan = a.partner_role === 'man' || (a.partner_role !== 'lady' && hA >= hB);
@@ -72,7 +72,7 @@ function locationScore(a, b) {
   const lat1 = a.location_lat, lon1 = a.location_lng;
   const lat2 = b.location_lat, lon2 = b.location_lng;
 
-  if (!lat1 || !lon1 || !lat2 || !lon2) return 0.5; // unknown — neutral
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 0.5; // unknown; neutral
 
   // Haversine distance in km
   const R = 6371;

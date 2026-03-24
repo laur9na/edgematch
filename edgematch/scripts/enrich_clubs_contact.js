@@ -1,11 +1,11 @@
 /**
  * scripts/enrich_clubs_contact.js
  *
- * PART 1 — clubs with a website but missing contact_email or phone:
+ * PART 1 : clubs with a website but missing contact_email or phone:
  *   Navigate to the club site, find contact/about/info pages,
  *   extract email + phone, write back to DB.
  *
- * PART 2 — clubs with no website:
+ * PART 2 : clubs with no website:
  *   DuckDuckGo search for "<name> <city> figure skating contact",
  *   take first non-search-engine result, extract email + phone + website.
  *
@@ -75,7 +75,7 @@ async function extractMailtos(page) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ---------------------------------------------------------------------------
-// Browser factory — re-launch on crash
+// Browser factory : re-launch on crash
 // ---------------------------------------------------------------------------
 
 let puppeteer;
@@ -109,7 +109,7 @@ async function safeFetch(page, url) {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
     return true;
   } catch (err) {
-    console.warn(`    Nav failed: ${url.slice(0, 80)} — ${err.message.split('\n')[0]}`);
+    console.warn(`    Nav failed: ${url.slice(0, 80)} : ${err.message.split('\n')[0]}`);
     return false;
   }
 }
@@ -169,7 +169,7 @@ async function enrichWithWebsite(browser, clubs) {
   let emailsFound = 0, phonesFound = 0;
 
   for (const club of clubs) {
-    console.log(`\n[Part 1] ${club.name} — ${club.website}`);
+    console.log(`\n[Part 1] ${club.name} : ${club.website}`);
     try {
       const { email, phone } = await scrapeWithSubs(browser, club.website);
       console.log(`  email: ${email ?? '(none)'}  phone: ${phone ?? '(none)'}`);
@@ -192,11 +192,11 @@ async function enrichWithWebsite(browser, clubs) {
 }
 
 // ---------------------------------------------------------------------------
-// Part 2: clubs with no website — DuckDuckGo search
+// Part 2: clubs with no website : DuckDuckGo search
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// URL probing — tries candidate domains for a club, no search engine needed
+// URL probing : tries candidate domains for a club, no search engine needed
 // ---------------------------------------------------------------------------
 
 function slugify(name) {

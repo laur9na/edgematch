@@ -2,7 +2,7 @@
  * Landing.jsx
  * Public landing page for edgematch.co.
  * Sections: Hero, Why Us, Product Screenshot, Second CTA.
- * Dark luxury design — navy, gold, Nunito.
+ * Dark luxury design: navy, gold, Nunito.
  */
 import { Link } from 'react-router-dom';
 
@@ -32,7 +32,7 @@ function Hero() {
         maxWidth: 480, marginBottom: 36,
       }}>
         I'm a 3x National finalist who built a data-driven way to find compatible pairs
-        and ice dance partners. Tell me what you're looking for — I'll find your matches personally.
+        and ice dance partners. Tell me what you're looking for. I'll find your matches personally.
       </p>
       <Link
         to="/signup"
@@ -58,11 +58,11 @@ function Hero() {
 const WHY_US = [
   {
     title: 'Not just a listing board',
-    body: 'IcePartnerSearch shows you a list. EdgeMatch scores compatibility by level, height ratio, role, jump direction, and location — then I personally review your matches before sending them.',
+    body: 'IcePartnerSearch shows you a list. EdgeMatch scores compatibility by level, height ratio, role, jump direction, and location, then I personally review your matches before sending them.',
   },
   {
     title: 'Competition data built in',
-    body: "Your matches come with their actual competition history — events, placements, levels. No guessing whether someone is actually at your level.",
+    body: "Your matches come with their actual competition history: events, placements, levels. No guessing whether someone is actually at your level.",
   },
   {
     title: 'Club context included',
@@ -153,7 +153,7 @@ function ProductDemo() {
       <p style={{
         fontSize: '0.9rem', color: 'rgba(253,252,248,0.65)', marginBottom: 28, lineHeight: 1.6,
       }}>
-        Your matches, their full profile, their competition history — all in one place.
+        Your matches, their full profile, their competition history, all in one place.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>

@@ -1,4 +1,4 @@
--- 009_competition_results.sql — Phase 11 competition results pipeline
+-- 009_competition_results.sql : Phase 11 competition results pipeline
 
 CREATE TABLE IF NOT EXISTS competition_results (
   id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,

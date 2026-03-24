@@ -1,5 +1,5 @@
 /**
- * scripts/enrich_clubs.js — Phase 12.3
+ * scripts/enrich_clubs.js : Phase 12.3
  *
  * For each club where website IS NULL:
  *   - Ask OpenAI to find website, contact_email, phone
@@ -37,7 +37,7 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 }
 
 if (!OPENAI_KEY) {
-  console.warn('OPENAI_API_KEY not set in .env.local — skipping club enrichment');
+  console.warn('OPENAI_API_KEY not set in .env.local : skipping club enrichment');
   process.exit(0);
 }
 
@@ -137,7 +137,7 @@ async function run() {
           .eq('id', club.id);
 
         if (updateErr) {
-          console.error(`[${i + 1}/${clubs.length}] "${club.name}": update failed — ${updateErr.message}`);
+          console.error(`[${i + 1}/${clubs.length}] "${club.name}": update failed : ${updateErr.message}`);
           errors++;
         } else {
           updated++;

@@ -76,7 +76,7 @@ function TryoutCard({ tryout, role, onUpdate }) {
     const { error } = await supabase.from('tryouts').delete().eq('id', tryout.id);
     setUpdating(false);
     if (error) {
-      setDeleteError('Delete failed — database policy not applied yet.');
+      setDeleteError('Delete failed: database policy not applied yet.');
       setConfirmDelete(false);
     } else {
       onUpdate();

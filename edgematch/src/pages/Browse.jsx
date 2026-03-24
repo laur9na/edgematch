@@ -225,9 +225,11 @@ export default function Browse() {
     setAllClubs(prev => clubPage === 0 ? clubPageData.rows : [...prev, ...clubPageData.rows]);
   }, [clubPageData, clubPage]);
 
-  // Reset accumulated clubs when switching to clubs tab
+  // Reset pagination when switching to clubs tab.
+  // Do NOT clear allClubs; clearing it while clubPage/clubPageData haven't changed
+  // means the repopulation effect never re-fires, leaving 0 clubs displayed.
   useEffect(() => {
-    if (view === 'clubs') { setClubPage(0); setAllClubs([]); }
+    if (view === 'clubs') setClubPage(0);
   }, [view]);
 
   const hasMoreClubs = clubPageData?.hasMore ?? false;

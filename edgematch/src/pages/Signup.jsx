@@ -1,7 +1,7 @@
 /**
  * Signup.jsx
  * Handles sign-up (redirects to wizard) and sign-in (redirects via onAuthStateChange).
- * Route guards in App.jsx handle all auth-based redirects — no Navigate needed here.
+ * Route guards in App.jsx handle all auth-based redirects; no Navigate needed here.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';

@@ -5,7 +5,7 @@
  * detection), falling back to Puppeteer for JS-heavy sites.
  *
  * For clubs that fail verification:
- *   1. DuckDuckGo HTML search (plain fetch — avoids Google bot block)
+ *   1. DuckDuckGo HTML search (plain fetch : avoids Google bot block)
  *   2. URL slug probing (HEAD requests) as final fallback
  *
  * Usage: node scripts/recheck_clubs.js [--dry-run]
@@ -77,7 +77,7 @@ function isClubPage(text, club) {
 }
 
 // ---------------------------------------------------------------------------
-// Plain fetch verification (primary — bypasses headless detection)
+// Plain fetch verification (primary : bypasses headless detection)
 // ---------------------------------------------------------------------------
 
 async function fetchVerify(url, club) {
@@ -106,7 +106,7 @@ async function fetchVerify(url, club) {
 
     return { verified: isClubPage(text, club), text };
   } catch (err) {
-    // timeout or network error — try puppeteer
+    // timeout or network error : try puppeteer
     if (err.name === 'TimeoutError' || err.name === 'AbortError') return null;
     return null;
   }
@@ -152,7 +152,7 @@ async function verifyClub(browser, club) {
     return { method: 'fetch', verified: fetchResult.verified };
   }
 
-  // fetch returned null — site needs JS or blocked plain fetch
+  // fetch returned null : site needs JS or blocked plain fetch
   if (!browser) return { method: 'skip', verified: null }; // no puppeteer
 
   const puppResult = await puppeteerVerify(browser, club.website, club);
@@ -161,7 +161,7 @@ async function verifyClub(browser, club) {
 }
 
 // ---------------------------------------------------------------------------
-// Search: DuckDuckGo HTML (plain fetch — bypasses bot detection)
+// Search: DuckDuckGo HTML (plain fetch : bypasses bot detection)
 // ---------------------------------------------------------------------------
 
 async function ddgSearch(query) {
@@ -371,7 +371,7 @@ async function run() {
   try {
     puppeteer = (await import('puppeteer')).default;
   } catch {
-    console.warn('Puppeteer not available — fetch-only mode');
+    console.warn('Puppeteer not available : fetch-only mode');
     puppeteer = null;
   }
 

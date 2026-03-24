@@ -1,4 +1,4 @@
--- 012_athletes_extend.sql — Phase 2.2
+-- 012_athletes_extend.sql : Phase 2.2
 -- Adds normalized_name, is_claimed, first_name, last_name to athletes.
 -- Adds federation to clubs.
 -- Adds normalized_name to competition_results.
@@ -21,7 +21,7 @@ ALTER TABLE competition_results
 CREATE INDEX IF NOT EXISTS idx_results_normalized ON competition_results(normalized_name);
 
 -- ---------------------------------------------------------------------------
--- pipeline_runs — one row per step per run
+-- pipeline_runs : one row per step per run
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pipeline_runs (
   id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,

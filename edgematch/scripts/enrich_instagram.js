@@ -1,5 +1,5 @@
 /**
- * scripts/enrich_instagram.js — Phase 9.3
+ * scripts/enrich_instagram.js : Phase 9.3
  *
  * For athletes where instagram_handle IS NULL and contact_note IS NOT NULL:
  *   - Prompt Claude: extract Instagram handle from contact_note text
@@ -26,7 +26,7 @@ try {
     if (m) process.env[m[1].trim()] = m[2].trim();
   }
 } catch {
-  // .env.local not found — rely on environment variables
+  // .env.local not found : rely on environment variables
 }
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
@@ -38,7 +38,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 if (!ANTHROPIC_KEY) {
-  console.warn('ANTHROPIC_API_KEY not set in .env.local — skipping Instagram enrichment');
+  console.warn('ANTHROPIC_API_KEY not set in .env.local : skipping Instagram enrichment');
   process.exit(0);
 }
 

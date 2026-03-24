@@ -143,7 +143,7 @@ async function main() {
   let skipped = 0;
 
   for (const [key, event] of eventMap) {
-    console.log(`\nEvent: ${event.name} (${key}) — ${event.rows.length} unknown rows`);
+    console.log(`\nEvent: ${event.name} (${key}) : ${event.rows.length} unknown rows`);
     await sleep(DELAY_MS);
 
     const catMap = await buildCatLevelMap(event.year, event.eventId);

@@ -1,4 +1,4 @@
--- 004_rls_policies.sql — Row-Level Security for Phase 1
+-- 004_rls_policies.sql : Row-Level Security for Phase 1
 -- Run AFTER 001_schema.sql.
 -- Idempotent: uses CREATE POLICY IF NOT EXISTS / OR REPLACE.
 
@@ -46,7 +46,7 @@ CREATE POLICY "scores_read_by_participant"
   );
 
 -- Service role can insert/update scores (batch scorer uses service key)
--- No INSERT policy needed for anon/authenticated users — only service role writes scores.
+-- No INSERT policy needed for anon/authenticated users : only service role writes scores.
 
 -- ---------------------------------------------------------------------------
 -- tryouts
@@ -82,5 +82,5 @@ CREATE POLICY "tryouts_participant_update"
 
 -- ---------------------------------------------------------------------------
 -- Service-role bypass (used by Node scripts; no RLS applied to service key)
--- Nothing to add here — Supabase service key bypasses RLS by design.
+-- Nothing to add here : Supabase service key bypasses RLS by design.
 -- ---------------------------------------------------------------------------

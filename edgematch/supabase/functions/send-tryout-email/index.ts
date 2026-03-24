@@ -124,7 +124,7 @@ ${tryout.location_note ? `<p><strong>Location note:</strong> ${tryout.location_n
 </div>`;
 
   if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not set — skipping email');
+    console.warn('RESEND_API_KEY not set : skipping email');
     return;
   }
 

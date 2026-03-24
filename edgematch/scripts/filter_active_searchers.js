@@ -131,7 +131,7 @@ async function scrapeIPS() {
           }
         }
 
-        if (found > 5) break; // Good enough — stop trying other pages
+        if (found > 5) break; // Good enough : stop trying other pages
       } catch (_) { /* try next */ }
     }
 
@@ -142,7 +142,7 @@ async function scrapeIPS() {
 
   } catch (err) {
     console.warn(`  IPS scrape failed: ${err.message}`);
-    console.warn('  Continuing without IPS data — classification will rely on competition_results only');
+    console.warn('  Continuing without IPS data : classification will rely on competition_results only');
   } finally {
     await browser.close();
   }
@@ -256,7 +256,7 @@ function classifyAthletes(athletes, results, ipsNames) {
     } else if (athleteResults.length === 0) {
       newStatus = 'inactive';
     } else {
-      // Has results 2023+ with confirmed partnership — leave as-is or mark paused
+      // Has results 2023+ with confirmed partnership : leave as-is or mark paused
       newStatus = athlete.search_status ?? 'paused';
     }
 
@@ -303,7 +303,7 @@ async function main() {
 
   const classification = classifyAthletes(athletes, results, ipsNames);
 
-  // Step 3 — Summary
+  // Step 3 : Summary
   console.log('\n── Step 3: Summary (no changes made yet) ──');
   console.log(`  Would set active:   ${classification.active.length}`);
   console.log(`  Would set paused:   ${classification.paused.length}`);
@@ -314,11 +314,11 @@ async function main() {
 
   const answer = await ask('\nUpdate DB? (y/n): ');
   if (answer.toLowerCase() !== 'y') {
-    console.log('Aborted — no changes made.');
+    console.log('Aborted : no changes made.');
     process.exit(0);
   }
 
-  // Step 4 — Run updates
+  // Step 4 : Run updates
   console.log('\n── Step 4: Updating athletes ──');
   const [ua, up, ui] = await Promise.all([
     batchUpdate(classification.active,   'active'),

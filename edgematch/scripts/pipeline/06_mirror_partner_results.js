@@ -2,7 +2,7 @@
  * scripts/pipeline/06_mirror_partner_results.js
  *
  * The scraper only inserted one row per ice dance/pairs team (the first
- * skater — almost always the lady). This script generates the mirror row
+ * skater : almost always the lady). This script generates the mirror row
  * for the partner (man), then links both rows to athlete IDs.
  *
  * Usage: node scripts/pipeline/06_mirror_partner_results.js [--dry-run]
@@ -103,7 +103,7 @@ async function run() {
   console.log(`Unlinked: ${mirrors.length - linked}`);
 
   if (DRY_RUN) {
-    console.log('\nDry run — no writes.');
+    console.log('\nDry run : no writes.');
     console.log('Sample linked:', JSON.stringify(mirrors.filter(m => m.athlete_id).slice(0, 3).map(m => ({
       skater: m.skater_name, athlete_id: m.athlete_id, event: m.event_name,
     }))));

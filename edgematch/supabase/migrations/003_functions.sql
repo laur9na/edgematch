@@ -1,4 +1,4 @@
--- 003_functions.sql — Scoring stored procedure
+-- 003_functions.sql : Scoring stored procedure
 -- Requires: 001_schema.sql + 002_seed.sql already applied.
 
 CREATE OR REPLACE FUNCTION score_new_athlete(new_athlete_id uuid)
@@ -50,8 +50,8 @@ BEGIN
       h_score := GREATEST(0.0, 1.0 - delta / 15.0);
     END IF;
 
-    level_idx_a := array_position(levels, a.skating_level::text);
-    level_idx_b := array_position(levels, b.skating_level::text);
+    level_idx_a := array_position(levels, a.skating_level:text);
+    level_idx_b := array_position(levels, b.skating_level:text);
     ldelta := ABS(level_idx_a - level_idx_b);
     l_score := CASE ldelta WHEN 0 THEN 1.0 WHEN 1 THEN 0.7 WHEN 2 THEN 0.4 WHEN 3 THEN 0.15 ELSE 0.0 END;
 
@@ -70,7 +70,7 @@ BEGIN
       r_score := 0.5;
     END IF;
 
-    total := ROUND((h_score * 0.35 + l_score * 0.30 + r_score * 0.15 + 0.5 * 0.15 + 0.5 * 0.05)::numeric, 3);
+    total := ROUND((h_score * 0.35 + l_score * 0.30 + r_score * 0.15 + 0.5 * 0.15 + 0.5 * 0.05):numeric, 3);
 
     INSERT INTO compatibility_scores
       (athlete_a_id, athlete_b_id, height_score, level_score, role_score,

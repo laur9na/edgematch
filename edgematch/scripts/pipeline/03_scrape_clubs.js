@@ -110,7 +110,7 @@ async function scrapeClub(browser, club) {
           results.coaches.push(name);
         }
       } catch (err) {
-        console.warn(`    Page fetch failed: ${url} — ${err.message}`);
+        console.warn(`    Page fetch failed: ${url} : ${err.message}`);
       }
     }
   } finally {
@@ -127,7 +127,7 @@ async function scrapeClub(browser, club) {
 }
 
 async function run() {
-  // Dynamically import puppeteer — exit gracefully if not installed
+  // Dynamically import puppeteer : exit gracefully if not installed
   let puppeteer;
   try {
     puppeteer = (await import('puppeteer')).default;

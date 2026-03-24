@@ -1,4 +1,4 @@
-# CLAUDE.md — EdgeMatch
+# CLAUDE.md : EdgeMatch
 > Read this every session before touching anything.
 
 ---
@@ -7,9 +7,9 @@
 
 Two products, one codebase:
 
-**edgematch.co** — public landing page. Converts skating Instagram visitors into waitlist signups. Laurena personally does the matching. No login required. One job: email capture.
+**edgematch.co** : public landing page. Converts skating Instagram visitors into waitlist signups. Laurena personally does the matching. No login required. One job: email capture.
 
-**app.edgematch.co** — the internal matching tool. Laurena uses this to browse athletes, view competition results, and find compatible partners. Eventually becomes the self-serve product.
+**app.edgematch.co** : the internal matching tool. Laurena uses this to browse athletes, view competition results, and find compatible partners. Eventually becomes the self-serve product.
 
 Never mix their concerns. Landing page code lives in `src/pages/Landing.jsx` and `src/pages/Signup.jsx`. App code lives in `src/features/`.
 
@@ -21,9 +21,9 @@ React + Vite · Supabase · TailwindCSS · Resend · React Query
 ---
 
 ## Rules
-- Enums display as human-readable labels — import from `src/lib/labels.js`
+- Enums display as human-readable labels : import from `src/lib/labels.js`
 - Last names shown as initial only on cards and browse views
-- `npm run build` passes after every change — fix before moving on
+- `npm run build` passes after every change : fix before moving on
 - Commit after every step, push immediately: `git push origin main`
 - Log every commit: `[AGENT-N] [DONE] description` in AGENT_STATUS.md
 - Rewrite any sentence containing an em dash
@@ -70,7 +70,7 @@ Cards lift on hover. Score bars animate in on scroll. Sections fade up on scroll
 
 ---
 
-## Display labels — src/lib/labels.js
+## Display labels : src/lib/labels.js
 ```js
 DISCIPLINE: { pairs: 'Pairs', ice_dance: 'Ice dance' }
 LEVEL:      { pre_juvenile: 'Pre-Juvenile', juvenile: 'Juvenile',
@@ -83,11 +83,11 @@ STATUS:     { active: 'Actively searching', matched: 'Matched',
 
 ---
 
-## Visual verification — before every UI commit
+## Visual verification : before every UI commit
 ```
 1. npm run dev (port 5173)
 2. Puppeteer MCP: screenshot route at 1280px
-3. Puppeteer MCP: screenshot at 375px — mobile is 83% of traffic
+3. Puppeteer MCP: screenshot at 375px : mobile is 83% of traffic
 4. Fix anything broken, screenshot again
 5. npm run build
 6. Commit and push

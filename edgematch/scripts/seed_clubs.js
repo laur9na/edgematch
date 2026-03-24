@@ -1,5 +1,5 @@
 /**
- * scripts/seed_clubs.js — Phase 12.2
+ * scripts/seed_clubs.js : Phase 12.2
  *
  * 1. SELECT DISTINCT club_name FROM athletes WHERE club_name IS NOT NULL
  * 2. For each unique name: insert into clubs if not already there
@@ -100,7 +100,7 @@ async function run() {
     // Supabase doesn't support ilike on update filter easily, so handle both cases
     const variants = [name, name.toLowerCase(), name.toUpperCase(),
       name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()];
-    // Use ilike via raw approach — just match all rows and filter in JS
+    // Use ilike via raw approach : just match all rows and filter in JS
     const { data: toLink, error: linkFetchErr } = await supabase
       .from('athletes')
       .select('id, club_name')

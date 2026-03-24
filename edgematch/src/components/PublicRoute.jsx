@@ -2,7 +2,7 @@
  * PublicRoute.jsx
  * For pages that logged-in users should skip (landing, login, signup).
  * - Loading  → spinner
- * - Session exists → /browse (already logged in — profileComplete not required)
+ * - Session exists → /browse (already logged in, profileComplete not required)
  * - Otherwise → render children
  */
 import { Navigate } from 'react-router-dom';
