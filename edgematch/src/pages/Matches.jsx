@@ -18,6 +18,8 @@ const DISCIPLINE_LABEL = { pairs: 'Pairs', ice_dance: 'Ice dance' };
 const ROLE_LABEL = {
   man: 'Skates as man', lady: 'Skates as lady',
 };
+const JUMP_LABEL = { clockwise: 'Clockwise', counter_clockwise: 'Counter-clockwise' };
+const JUMP_KEYS = ['clockwise', 'counter_clockwise'];
 
 const LEVEL_ORDER = ['pre_juvenile','juvenile','intermediate','novice','junior','senior','adult'];
 
@@ -90,7 +92,7 @@ function DualRangeSlider({ min, max, step, values, onChange }) {
   );
 }
 
-function Sidebar({ distance, onDistance, levels, onLevels, disciplines, onDisciplines, roles, onRoles }) {
+function Sidebar({ distance, onDistance, levels, onLevels, disciplines, onDisciplines, roles, onRoles, jumps, onJumps }) {
   function toggleLevel(key) {
     onLevels(prev => prev.includes(key) ? prev.filter(l => l !== key) : [...prev, key]);
   }
@@ -99,6 +101,9 @@ function Sidebar({ distance, onDistance, levels, onLevels, disciplines, onDiscip
   }
   function toggleRole(val) {
     onRoles(prev => prev.includes(val) ? prev.filter(r => r !== val) : [...prev, val]);
+  }
+  function toggleJump(val) {
+    onJumps(prev => prev.includes(val) ? prev.filter(j => j !== val) : [...prev, val]);
   }
 
   const SECTION_LABEL = {
@@ -182,6 +187,19 @@ function Sidebar({ distance, onDistance, levels, onLevels, disciplines, onDiscip
           </label>
         ))}
       </div>
+
+      {divider}
+
+      {/* Jump direction */}
+      <div style={{ ...SECTION_LABEL }}>Jump direction</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {JUMP_KEYS.map(val => (
+          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" style={{ accentColor: '#c9a96e', width: 13, height: 13, flexShrink: 0, margin: 0 }} checked={jumps.includes(val)} onChange={() => toggleJump(val)} />
+            <span style={{ fontSize: 12, color: 'rgba(253,252,248,0.65)' }}>{JUMP_LABEL[val]}</span>
+          </label>
+        ))}
+      </div>
     </aside>
   );
 }
@@ -198,10 +216,11 @@ export default function Matches() {
   const [levels, setLevels]           = useState(saved?.levels         ?? []);
   const [disciplines, setDisciplines] = useState(saved?.disciplines    ?? ['pairs', 'ice_dance']);
   const [roles, setRoles]             = useState(saved?.roles          ?? ['man', 'lady']);
+  const [jumps, setJumps]             = useState(saved?.jumps          ?? ['clockwise', 'counter_clockwise']);
 
   useEffect(() => {
-    sessionStorage.setItem('matchFilters', JSON.stringify({ distance, levels, disciplines, roles }));
-  }, [distance, levels, disciplines, roles]);
+    sessionStorage.setItem('matchFilters', JSON.stringify({ distance, levels, disciplines, roles, jumps }));
+  }, [distance, levels, disciplines, roles, jumps]);
 
   const filtered = useMemo(() => {
     let list = matches.filter(m => {
@@ -215,6 +234,8 @@ export default function Matches() {
       if (levels.length > 0 && !levels.includes(m.partner?.skating_level)) return false;
       if (disciplines.length > 0 && !disciplines.includes(m.partner?.discipline)) return false;
       if (roles.length > 0 && !roles.includes(m.partner?.partner_role)) return false;
+      const jd = m.partner?.jump_direction;
+      if (jd && jd !== 'not_applicable' && jumps.length > 0 && !jumps.includes(jd)) return false;
 
       return true;
     });
@@ -222,7 +243,7 @@ export default function Matches() {
     list = [...list].sort((a, b) => b.total_score - a.total_score);
 
     return list;
-  }, [matches, distance, levels, disciplines, roles]);
+  }, [matches, distance, levels, disciplines, roles, jumps]);
 
   if (authLoading) return <div className="loading">Loading...</div>;
 
@@ -245,6 +266,7 @@ export default function Matches() {
         levels={levels} onLevels={setLevels}
         disciplines={disciplines} onDisciplines={setDisciplines}
         roles={roles} onRoles={setRoles}
+        jumps={jumps} onJumps={setJumps}
       />
 
       <main style={{ flex: 1, padding: '24px 24px' }}>
@@ -264,7 +286,7 @@ export default function Matches() {
 
         {!loading && matches.length === 0 && (
           <div style={{ textAlign: 'center', color: 'rgba(253,252,248,0.65)', fontSize: 14, marginTop: 60 }}>
-            No matches yet. Compatibility scores are computed nightly — check back soon.
+            No matches yet. Compatibility scores are computed nightly. Check back soon.
           </div>
         )}
 
