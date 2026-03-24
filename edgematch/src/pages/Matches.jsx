@@ -58,6 +58,10 @@ function DualRangeSlider({ min, max, step, values, onChange }) {
   const [lo, hi] = values;
   const pctLo = ((lo - min) / (max - min)) * 100;
   const pctHi = ((hi - min) / (max - min)) * 100;
+  // hi input sits above lo (zIndex 2 vs 1) so the right handle is always reachable.
+  // When handles meet at the same position, promote lo to zIndex 3 so it can still be dragged left.
+  const zLo = lo >= hi ? 3 : 1;
+  const zHi = 2;
   return (
     <div style={{ position: 'relative', height: 20, margin: '4px 0' }}>
       <div style={{
@@ -70,14 +74,16 @@ function DualRangeSlider({ min, max, step, values, onChange }) {
           left: `${pctLo}%`, right: `${100 - pctHi}%`,
         }} />
       </div>
-      <div style={{ ...KNOB, left: `${pctLo}%` }} />
-      <div style={{ ...KNOB, left: `${pctHi}%` }} />
+      <div style={{ ...KNOB, left: `${pctLo}%`, zIndex: zLo + 2 }} />
+      <div style={{ ...KNOB, left: `${pctHi}%`, zIndex: zHi + 2 }} />
       <input type="range" min={min} max={max} step={step} value={lo}
         className="dual-range-input"
+        style={{ zIndex: zLo }}
         onChange={e => onChange([Math.min(+e.target.value, hi), hi])}
       />
       <input type="range" min={min} max={max} step={step} value={hi}
         className="dual-range-input"
+        style={{ zIndex: zHi }}
         onChange={e => onChange([lo, Math.max(+e.target.value, lo)])}
       />
     </div>
