@@ -110,9 +110,40 @@ function WhyUs() {
 // ---------------------------------------------------------------------------
 // Product screenshot
 // ---------------------------------------------------------------------------
-function ProductDemo() {
+function BrowserChrome({ url, children }) {
   return (
-    <section className="landing-section" style={{ padding: '0 40px 72px', maxWidth: 900 }}>
+    <div style={{
+      background: '#142236', border: '1px solid rgba(201,169,110,0.15)',
+      borderRadius: 6, overflow: 'hidden',
+      boxShadow: '0 16px 48px rgba(0,0,0,0.45)',
+    }}>
+      <div style={{ background: '#1a3a6b', padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 7 }}>
+        {[0,1,2].map(i => (
+          <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(253,252,248,0.15)' }} />
+        ))}
+        <div style={{
+          flex: 1, marginLeft: 6, background: 'rgba(253,252,248,0.06)',
+          borderRadius: 2, height: 18, maxWidth: 220,
+          display: 'flex', alignItems: 'center', padding: '0 8px',
+        }}>
+          <span style={{ fontSize: 9, color: 'rgba(253,252,248,0.3)' }}>{url}</span>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ProductDemo() {
+  const matches = [
+    { initials: 'SK', color: '#c9a96e', bg: 'rgba(201,169,110,0.15)', name: 'Sarah K.', level: 'Junior', disc: 'Pairs', score: 94, info: "5'4\" · Detroit SC" },
+    { initials: 'MR', color: '#a5b4fc', bg: 'rgba(99,102,241,0.15)',  name: 'Maya R.',  level: 'Senior', disc: 'Ice dance', score: 88, info: "5'3\" · Chicago FSC" },
+    { initials: 'EP', color: '#4ade80', bg: 'rgba(22,163,74,0.15)',   name: 'Emma P.',  level: 'Junior', disc: 'Pairs',     score: 81, info: "5'5\" · Twin Rinks" },
+    { initials: 'AL', color: '#f87171', bg: 'rgba(239,68,68,0.15)',   name: 'Ava L.',   level: 'Novice', disc: 'Pairs',     score: 76, info: "5'3\" · Skating Club of Boston" },
+  ];
+
+  return (
+    <section className="landing-section" style={{ padding: '0 40px 72px', maxWidth: 1080 }}>
       <div style={{
         fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.18em',
         color: '#c9a96e', textTransform: 'uppercase', marginBottom: 20,
@@ -120,107 +151,133 @@ function ProductDemo() {
         The product
       </div>
       <p style={{
-        fontSize: '0.9rem', color: 'rgba(253,252,248,0.65)', marginBottom: 24, lineHeight: 1.6,
+        fontSize: '0.9rem', color: 'rgba(253,252,248,0.65)', marginBottom: 28, lineHeight: 1.6,
       }}>
-        This is what your matches look like.
+        Your matches, their full profile, their competition history — all in one place.
       </p>
-      <div style={{
-        background: '#142236', border: '1px solid rgba(201,169,110,0.15)',
-        borderRadius: 6, overflow: 'hidden',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-      }}>
-        <div style={{
-          background: '#1a3a6b', padding: '10px 16px',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          {[0,1,2].map(i => (
-            <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(253,252,248,0.15)' }} />
-          ))}
-          <div style={{
-            flex: 1, marginLeft: 8, background: 'rgba(253,252,248,0.06)',
-            borderRadius: 2, height: 20, maxWidth: 260,
-            display: 'flex', alignItems: 'center', padding: '0 10px',
-          }}>
-            <span style={{ fontSize: 10, color: 'rgba(253,252,248,0.3)' }}>app.edgematch.co/matches</span>
-          </div>
-        </div>
 
-        {/* Mock match card */}
-        <div style={{ padding: '24px 24px 28px' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#c9a96e', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 16 }}>
-            Your matches
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-            {[
-              { initials: 'SK', name: 'Sarah K.', level: 'Junior', disc: 'Pairs', score: 94, club: 'Detroit SC', ht: "5'4\"" },
-              { initials: 'MR', name: 'Maya R.', level: 'Senior', disc: 'Ice dance', score: 88, club: 'Chicago FSC', ht: "5'3\"" },
-            ].map((m, i) => (
-              <div key={i} style={{
-                background: '#1c3050', border: '1px solid rgba(201,169,110,0.15)',
-                borderRadius: 4, padding: 16,
-              }}>
-                <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                    background: i === 0 ? 'rgba(201,169,110,0.15)' : 'rgba(99,102,241,0.15)',
-                    color: i === 0 ? '#c9a96e' : '#a5b4fc',
-                    fontSize: 12, fontWeight: 700,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {m.initials}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fdfcf8', marginBottom: 2 }}>{m.name}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(253,252,248,0.5)' }}>{m.disc} · {m.level}</div>
-                  </div>
-                  <div style={{
-                    background: 'rgba(201,169,110,0.12)', color: '#c9a96e',
-                    fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 2,
-                  }}>
-                    {m.score}%
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(253,252,248,0.4)', marginBottom: 4 }}>{m.ht} · {m.club}</div>
-                <div style={{ height: 4, background: 'rgba(201,169,110,0.12)', borderRadius: 99, marginTop: 10 }}>
-                  <div style={{ height: '100%', width: `${m.score}%`, background: '#c9a96e', borderRadius: 99 }} />
-                </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+
+        {/* Left: skater profile */}
+        <BrowserChrome url="app.edgematch.co/athletes/sarah-k">
+          <div style={{ padding: 20 }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
+                background: 'rgba(201,169,110,0.15)', color: '#c9a96e',
+                fontSize: 16, fontWeight: 700, border: '1px solid rgba(201,169,110,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>SK</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 300, color: '#fdfcf8', marginBottom: 3 }}>Sarah K.</div>
+                <div style={{ fontSize: 10, color: 'rgba(253,252,248,0.5)' }}>Pairs · Skates as lady · Junior</div>
               </div>
-            ))}
-          </div>
-
-          {/* Competition results preview */}
-          <div style={{
-            marginTop: 16, background: '#1c3050', border: '1px solid rgba(201,169,110,0.12)',
-            borderRadius: 4, padding: 16,
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: '#c9a96e', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>
-              Competition results — Sarah K.
+              <div style={{
+                background: 'rgba(201,169,110,0.12)', color: '#c9a96e',
+                fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 2,
+              }}>94% match</div>
             </div>
-            <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  {['Event', 'Level', 'Segment', 'Place'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '3px 6px', color: 'rgba(253,252,248,0.35)', fontWeight: 600, fontSize: 10 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ['2024 Nationals', 'Junior', 'FS', '4th'],
-                  ['2024 Sectionals', 'Junior', 'SP', '2nd'],
-                  ['2023 Regionals', 'Junior', 'FS', '1st'],
-                ].map(([evt, lvl, seg, place], i) => (
-                  <tr key={i}>
-                    <td style={{ padding: '5px 6px', color: '#fdfcf8', borderTop: '1px solid rgba(201,169,110,0.06)' }}>{evt}</td>
-                    <td style={{ padding: '5px 6px', color: 'rgba(253,252,248,0.5)', borderTop: '1px solid rgba(201,169,110,0.06)' }}>{lvl}</td>
-                    <td style={{ padding: '5px 6px', color: 'rgba(253,252,248,0.5)', borderTop: '1px solid rgba(201,169,110,0.06)' }}>{seg}</td>
-                    <td style={{ padding: '5px 6px', color: '#c9a96e', fontWeight: 700, borderTop: '1px solid rgba(201,169,110,0.06)' }}>{place}</td>
+
+            {/* Score bar */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ flex: 1, height: 3, background: 'rgba(201,169,110,0.12)', borderRadius: 99 }}>
+                  <div style={{ height: '100%', width: '94%', background: '#4ade80', borderRadius: 99 }} />
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#4ade80' }}>94%</span>
+              </div>
+            </div>
+
+            {/* Metrics */}
+            <div style={{ fontSize: 11, color: 'rgba(253,252,248,0.45)', marginBottom: 16, lineHeight: 1.7 }}>
+              5'4" · Trains 20 hrs/week · Coach: Mark Ladwig · Based in Detroit, MI
+            </div>
+
+            {/* Club */}
+            <div style={{
+              background: '#1c3050', border: '1px solid rgba(201,169,110,0.1)',
+              borderRadius: 3, padding: '10px 12px', marginBottom: 14,
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: '#c9a96e', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Club</div>
+              <div style={{ fontSize: 11, color: '#fdfcf8' }}>Detroit Skating Club</div>
+              <div style={{ fontSize: 10, color: 'rgba(253,252,248,0.4)', marginTop: 2 }}>Detroit, MI</div>
+            </div>
+
+            {/* Competition results */}
+            <div style={{
+              background: '#1c3050', border: '1px solid rgba(201,169,110,0.1)',
+              borderRadius: 3, padding: '10px 12px',
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: '#c9a96e', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
+                Competition results
+              </div>
+              <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['Event', 'Level', 'Seg', 'Place'].map(h => (
+                      <th key={h} style={{ textAlign: 'left', padding: '2px 5px', color: 'rgba(253,252,248,0.35)', fontWeight: 600 }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {[
+                    ['2024 Nationals', 'Junior', 'FS', '4th'],
+                    ['2024 Sectionals', 'Junior', 'SP', '2nd'],
+                    ['2023 Nationals', 'Junior', 'FS', '6th'],
+                    ['2023 Regionals', 'Novice', 'FS', '1st'],
+                  ].map(([evt, lvl, seg, place], i) => (
+                    <tr key={i}>
+                      <td style={{ padding: '4px 5px', color: '#fdfcf8', borderTop: '1px solid rgba(201,169,110,0.06)' }}>{evt}</td>
+                      <td style={{ padding: '4px 5px', color: 'rgba(253,252,248,0.45)', borderTop: '1px solid rgba(201,169,110,0.06)' }}>{lvl}</td>
+                      <td style={{ padding: '4px 5px', color: 'rgba(253,252,248,0.45)', borderTop: '1px solid rgba(201,169,110,0.06)' }}>{seg}</td>
+                      <td style={{ padding: '4px 5px', color: '#c9a96e', fontWeight: 700, borderTop: '1px solid rgba(201,169,110,0.06)' }}>{place}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </BrowserChrome>
+
+        {/* Right: matches grid */}
+        <BrowserChrome url="app.edgematch.co/matches">
+          <div style={{ padding: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#c9a96e', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 14 }}>
+              Your matches
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              {matches.map((m, i) => (
+                <div key={i} style={{
+                  background: '#1c3050', border: '1px solid rgba(201,169,110,0.12)',
+                  borderRadius: 4, padding: 13,
+                }}>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                      background: m.bg, color: m.color,
+                      fontSize: 10, fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>{m.initials}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#fdfcf8', marginBottom: 1 }}>{m.name}</div>
+                      <div style={{ fontSize: 9, color: 'rgba(253,252,248,0.45)' }}>{m.disc} · {m.level}</div>
+                    </div>
+                    <div style={{
+                      background: 'rgba(201,169,110,0.12)', color: '#c9a96e',
+                      fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 2, flexShrink: 0,
+                    }}>{m.score}%</div>
+                  </div>
+                  <div style={{ fontSize: 9, color: 'rgba(253,252,248,0.4)', marginBottom: 6 }}>{m.info}</div>
+                  <div style={{ height: 3, background: 'rgba(201,169,110,0.12)', borderRadius: 99 }}>
+                    <div style={{ height: '100%', width: `${m.score}%`, background: '#c9a96e', borderRadius: 99 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </BrowserChrome>
+
       </div>
     </section>
   );

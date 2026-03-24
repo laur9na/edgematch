@@ -7,7 +7,7 @@ export function useAthlete(id) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('athletes')
-        .select('*, clubs(id, name, city, state, country, website, contact_email, phone, rink_address)')
+        .select('*, clubs(id, name, city, state, country, website, contact_email, phone)')
         .eq('id', id)
         .single();
       if (error) throw error;
