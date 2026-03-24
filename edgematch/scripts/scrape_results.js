@@ -182,6 +182,8 @@ function detectDiscipline(text) {
 function detectLevel(text) {
   const t = text.toLowerCase();
   if (t.includes('senior')) return 'senior';
+  // "Championship" at US Figure Skating Championships = Senior
+  if (t.includes('championship')) return 'senior';
   if (t.includes('junior')) return 'junior';
   if (t.includes('novice')) return 'novice';
   if (t.includes('intermediate')) return 'intermediate';
