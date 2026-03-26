@@ -1,24 +1,25 @@
 /**
  * scripts/scrape_ips.js
  *
- * Scrapes IcePartnerSearch for pairs and ice dance athletes actively
- * looking for partners. Upserts into raw_athletes, promotes validated
- * profiles to athletes, and scores new athletes against all existing ones.
+ * Logs in to IcePartnerSearch with Puppeteer, scrapes all pairs and
+ * ice dance skaters actively looking for partners, then cross-references
+ * against the athletes table:
  *
- * Deduplication: keyed on source_url (IPS bio URL). Profiles already in
- * raw_athletes are skipped. Existing athletes with a matching source_url
- * are updated (name/level/height may change over time).
+ *   Match found (name similarity >= 0.85): UPDATE search_status = 'active'
+ *   No match:                              INSERT new athlete, search_status = 'active'
  *
  * Usage:
  *   node scripts/scrape_ips.js
  *   node scripts/scrape_ips.js --dry-run
  *
- * Requires: VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env.local
+ * Requires in .env.local:
+ *   VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, IPS_EMAIL, IPS_PASSWORD
  */
 
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import puppeteer from 'puppeteer';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -32,8 +33,10 @@ try {
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const IPS_EMAIL    = process.env.IPS_EMAIL;
+const IPS_PASSWORD = process.env.IPS_PASSWORD;
 const IPS_BASE     = 'https://icepartnersearch.com';
-const DELAY_MS     = 1500;
+const DELAY_MS     = 1200;
 const DRY_RUN      = process.argv.includes('--dry-run');
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -41,18 +44,45 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-async function fetchHtml(url) {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'EdgeMatch/0.1 (partner-matching research; contact: edgematch-bot@example.com)' },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  return res.text();
+if (!IPS_EMAIL || !IPS_PASSWORD) {
+  console.error('[BLOCKED: need IPS_EMAIL and IPS_PASSWORD in .env.local]');
+  process.exit(1);
 }
 
 // ---------------------------------------------------------------------------
-// Parsers
+// Utilities
+// ---------------------------------------------------------------------------
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function normalize(s) {
+  if (!s) return '';
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function similarity(a, b) {
+  const na = normalize(a), nb = normalize(b);
+  if (!na || !nb) return 0;
+  const maxLen = Math.max(na.length, nb.length);
+  return 1 - levenshtein(na, nb) / maxLen;
+}
+
+// ---------------------------------------------------------------------------
+// Parsers (same as before)
 // ---------------------------------------------------------------------------
 
 function parseDiscipline(raw) {
@@ -93,42 +123,18 @@ function parseLocation(raw) {
   return { city: null, state: null, country: parts[0] };
 }
 
-/** Collect all bio IDs from the IPS search results page */
-async function collectBioIds() {
-  // Try pairs first, then ice dance
-  const urls = [
-    `${IPS_BASE}/searchbyqualities.php?submit=1&discipline=Pairs`,
-    `${IPS_BASE}/searchbyqualities.php?submit=1&discipline=Dance`,
-    `${IPS_BASE}/searchbyqualities.php?submit=1`,
-  ];
-
-  const ids = new Set();
-  for (const url of urls) {
-    try {
-      const html = await fetchHtml(url);
-      const matches = html.match(/showbio\.php\?i=(\d+)/g) ?? [];
-      for (const m of matches) {
-        const id = m.match(/\d+/)?.[0];
-        if (id) ids.add(id);
-      }
-      await sleep(500);
-    } catch (err) {
-      console.warn(`  Warning: could not fetch ${url}: ${err.message}`);
-    }
-  }
-  return [...ids];
-}
-
-/** Parse a single IPS bio page */
 function parseBio(html, id) {
   function getField(label) {
-    const re = new RegExp(`${label}[\\s\\S]*?<th[^>]*>([^<]+)<\\/th>`, 'i');
+    // Match <td>Label</td><th ...>Value</th> directly
+    const re = new RegExp(`<td[^>]*>${label}<\\/td>\\s*<th[^>]*>([^<]+)<\\/th>`, 'i');
     const m = html.match(re);
-    return m ? m[1].replace(/\u00a0/g, ' ').trim() : null;
+    return m ? m[1].replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ').trim() : null;
   }
 
-  const nameMatch = html.match(/<div[^>]*class="title"[^>]*><a[^>]*>([^<]+)<\/a>/i);
-  const name = nameMatch?.[1]?.trim() ?? null;
+  // Name is in <h1> or page title
+  const h1Match    = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+  const titleMatch = html.match(/<title>([^<]+?) - Ice Partner Search<\/title>/i);
+  const name = h1Match?.[1]?.trim() ?? titleMatch?.[1]?.trim() ?? null;
 
   const wantsBlock = html.match(/Wants to compete[\s\S]*?<\/td>/i)?.[0] ?? '';
   const disciplineRaw = wantsBlock.match(/<b>(Pairs|Dance)<\/b>/i)?.[1] ?? null;
@@ -167,44 +173,163 @@ function parseBio(html, id) {
     contact_note,
     source: 'icepartnersearch',
     source_url: `${IPS_BASE}/showbio.php?i=${id}`,
-    review_flag: !discipline || !skating_level || !height_cm || !name,
-    promoted: false,
   };
 }
 
 // ---------------------------------------------------------------------------
-// DB helpers (raw REST — no supabase-js dep needed)
+// Step 1: Puppeteer login — returns cookie string for fetch()
 // ---------------------------------------------------------------------------
 
-async function dbGet(path) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+async function loginAndGetCookies() {
+  console.log('Launching Puppeteer for IPS login...');
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      protocolTimeout: 120000,
+    });
+  } catch (err) {
+    console.warn(`  Puppeteer launch failed: ${err.message} -- proceeding without login`);
+    return '';
+  }
+
+  const page = await browser.newPage();
+  page.setDefaultNavigationTimeout(30000);
+  page.setDefaultTimeout(15000);
+
+  // Common login form selectors
+  const emailSel  = 'input[type="email"], input[name="email"], input[name="username"], input[id="email"]';
+  const passSel   = 'input[type="password"]';
+  const submitSel = 'button[type="submit"], input[type="submit"]';
+
+  let loggedIn = false;
+  let cookieStr = '';
+
+  try {
+    // Try navigating to a known login page directly
+    const loginPaths = ['/login.php', '/member_login.php', '/login', '/members/login', '/'];
+    for (const path of loginPaths) {
+      try {
+        await page.goto(`${IPS_BASE}${path}`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+        const emailInput = await page.$(emailSel).catch(() => null);
+        if (emailInput) break; // found a page with a login form
+      } catch { continue; }
+    }
+
+    const emailInput = await page.$(emailSel).catch(() => null);
+    if (emailInput) {
+      await emailInput.click({ clickCount: 3 });
+      await emailInput.type(IPS_EMAIL, { delay: 30 });
+      await page.type(passSel, IPS_PASSWORD, { delay: 30 });
+
+      const submitBtn = await page.$(submitSel).catch(() => null);
+      if (submitBtn) {
+        await Promise.all([
+          submitBtn.click(),
+          page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {}),
+        ]);
+      } else {
+        await Promise.all([
+          page.keyboard.press('Enter'),
+          page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {}),
+        ]);
+      }
+
+      loggedIn = true;
+      console.log(`  Logged in as ${IPS_EMAIL}`);
+    } else {
+      console.log('  No login form found -- proceeding with public access');
+    }
+
+    const cookies = await page.cookies();
+    cookieStr = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+  } catch (err) {
+    console.warn(`  Login attempt failed: ${err.message} -- proceeding without login`);
+  }
+
+  await browser.close().catch(() => {});
+
+  if (!loggedIn) {
+    console.log('  Using public (unauthenticated) scrape');
+  }
+
+  return cookieStr;
+}
+
+// ---------------------------------------------------------------------------
+// Step 2: Collect bio IDs (search pages)
+// ---------------------------------------------------------------------------
+
+async function collectBioIds(cookieStr) {
+  const headers = {
+    'User-Agent': 'EdgeMatch/0.1 (partner-matching research; contact: edgematch-bot@example.com)',
+    ...(cookieStr ? { Cookie: cookieStr } : {}),
+  };
+
+  const searchUrls = [
+    `${IPS_BASE}/searchbyqualities.php?submit=1&discipline=Pairs`,
+    `${IPS_BASE}/searchbyqualities.php?submit=1&discipline=Dance`,
+    `${IPS_BASE}/searchbyqualities.php?submit=1`,
+    `${IPS_BASE}/search`,
+    `${IPS_BASE}/skaters`,
+    `${IPS_BASE}/browse`,
+    `${IPS_BASE}/listings`,
+  ];
+
+  const ids = new Set();
+  for (const url of searchUrls) {
+    try {
+      const res = await fetch(url, { headers });
+      if (!res.ok) continue;
+      const html = await res.text();
+      const matches = html.match(/showbio\.php\?i=(\d+)/g) ?? [];
+      for (const m of matches) {
+        const id = m.match(/\d+/)?.[0];
+        if (id) ids.add(id);
+      }
+      await sleep(400);
+    } catch { /* ignore unreachable alternate paths */ }
+  }
+  return [...ids];
+}
+
+// ---------------------------------------------------------------------------
+// Step 3+4: Fetch each bio, parse, cross-reference athletes table
+// ---------------------------------------------------------------------------
+
+async function fetchHtml(url, cookieStr) {
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'EdgeMatch/0.1 (partner-matching research; contact: edgematch-bot@example.com)',
+      ...(cookieStr ? { Cookie: cookieStr } : {}),
+    },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  return res.text();
+}
+
+async function findMatchingAthlete(name) {
+  // ilike search on first name token
+  const firstName = name.split(/\s+/)[0];
+  const url = `${SUPABASE_URL}/rest/v1/athletes?name=ilike.*${encodeURIComponent(firstName)}*&select=id,name,search_status&limit=50`;
+  const res = await fetch(url, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
   });
-  if (!res.ok) throw new Error(`GET ${path}: HTTP ${res.status}`);
-  return res.json();
-}
+  if (!res.ok) return null;
+  const rows = await res.json();
 
-async function dbPost(path, body, prefer = 'resolution=ignore-duplicates,return=minimal') {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    method: 'POST',
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: prefer,
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`POST ${path}: HTTP ${res.status} — ${t}`);
+  let best = null;
+  let bestSim = 0;
+  for (const row of rows ?? []) {
+    const sim = similarity(name, row.name);
+    if (sim > bestSim) { bestSim = sim; best = row; }
   }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  return bestSim >= 0.85 ? best : null;
 }
 
-async function dbPatch(path, body) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+async function updateSearchStatus(athleteId) {
+  await fetch(`${SUPABASE_URL}/rest/v1/athletes?id=eq.${athleteId}`, {
     method: 'PATCH',
     headers: {
       apikey: SUPABASE_KEY,
@@ -212,27 +337,61 @@ async function dbPatch(path, body) {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal',
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ search_status: 'active' }),
   });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`PATCH ${path}: HTTP ${res.status} — ${t}`);
-  }
 }
 
-async function rpc(fn, params) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+async function insertAthlete(record) {
+  const athlete = {
+    name: record.name,
+    discipline: record.discipline,
+    skating_level: record.skating_level,
+    partner_role: record.partner_role ?? 'either',
+    height_cm: record.height_cm,
+    location_city: record.location_city,
+    location_state: record.location_state,
+    location_country: record.location_country ?? 'US',
+    age: record.age,
+    source: record.source,
+    source_url: record.source_url,
+    search_status: 'active',
+  };
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/athletes?on_conflict=source_url`, {
     method: 'POST',
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json',
+      Prefer: 'resolution=ignore-duplicates,return=representation',
     },
-    body: JSON.stringify(params),
+    body: JSON.stringify(athlete),
   });
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`RPC ${fn}: HTTP ${res.status} — ${t}`);
+    if (!t.includes('23505') && !t.includes('duplicate')) {
+      throw new Error(`Insert failed: ${t}`);
+    }
+  }
+
+  // Score new athlete against existing ones
+  const text = await res.text().catch(() => '');
+  let newId = null;
+  try {
+    const parsed = JSON.parse(text);
+    newId = Array.isArray(parsed) ? parsed[0]?.id : parsed?.id;
+  } catch { /* no id */ }
+
+  if (newId) {
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/score_new_athlete`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ new_athlete_id: newId }),
+    }).catch(err => console.warn(`    Score RPC failed: ${err.message}`));
   }
 }
 
@@ -241,46 +400,35 @@ async function rpc(fn, params) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log('Collecting IcePartnerSearch bio IDs...');
-  let ids;
-  try {
-    ids = await collectBioIds();
-  } catch (err) {
-    console.error(`Failed to collect bio IDs: ${err.message}`);
-    console.error('IPS may be login-gated. Exiting cleanly.');
-    process.exit(0);
-  }
+  // Step 1: Login
+  const cookieStr = await loginAndGetCookies();
+
+  // Step 2: Collect bio IDs
+  console.log('\nCollecting IPS skater listing...');
+  const ids = await collectBioIds(cookieStr);
 
   if (ids.length === 0) {
-    console.log('No bio IDs found — IPS may be login-gated or empty. Exiting.');
+    console.log('No bio IDs found -- IPS may be fully login-gated or empty. Exiting.');
     process.exit(0);
   }
   console.log(`Found ${ids.length} profiles on IPS`);
 
-  // Load existing source_urls to skip already-known athletes
-  const existing = await dbGet('raw_athletes?select=source_url&source=eq.icepartnersearch&limit=5000');
-  const knownUrls = new Set((existing ?? []).map(r => r.source_url));
-  console.log(`Already have ${knownUrls.size} IPS athletes in raw_athletes`);
-
-  let scraped = 0;
-  let inserted = 0;
-  let skipped = 0;
-  let errors = 0;
+  // Step 3+4: Fetch each bio and cross-reference
+  let totalScraped   = 0;
+  let matched        = 0;
+  let inserted       = 0;
+  let unparseable    = 0;
+  let errors         = 0;
 
   for (let i = 0; i < ids.length; i++) {
     const id = ids[i];
-    const sourceUrl = `${IPS_BASE}/showbio.php?i=${id}`;
-
-    if (knownUrls.has(sourceUrl)) {
-      skipped++;
-      continue;
-    }
+    const bioUrl = `${IPS_BASE}/showbio.php?i=${id}`;
 
     await sleep(DELAY_MS);
 
     let html;
     try {
-      html = await fetchHtml(sourceUrl);
+      html = await fetchHtml(bioUrl, cookieStr);
     } catch (err) {
       console.warn(`  [skip] bio ${id}: ${err.message}`);
       errors++;
@@ -288,93 +436,69 @@ async function main() {
     }
 
     const record = parseBio(html, id);
-    scraped++;
+    totalScraped++;
 
     if (!record.name) {
-      console.log(`  [skip] bio ${id}: no name found`);
+      unparseable++;
       continue;
     }
 
-    // Only pairs and ice dance
     if (!record.discipline) {
+      // Not pairs or ice dance -- skip
       continue;
     }
 
-    console.log(`  [new]  ${record.name} | ${record.discipline} | ${record.skating_level ?? 'unknown level'} | ${record.location_state ?? record.location_country}`);
+    if (DRY_RUN) {
+      console.log(`  [dry-run] ${record.name} | ${record.discipline} | ${record.skating_level ?? 'no level'} | ${record.location_state ?? record.location_country ?? 'unknown'}`);
+      continue;
+    }
 
-    if (!DRY_RUN) {
+    // Skip new-insert if required fields are missing (existing matched athletes update regardless)
+    const canInsert = !!record.skating_level;
+
+    // Cross-reference athletes table
+    let matchedAthlete = null;
+    try {
+      matchedAthlete = await findMatchingAthlete(record.name);
+    } catch (err) {
+      console.warn(`  [error] lookup for ${record.name}: ${err.message}`);
+      errors++;
+      continue;
+    }
+
+    if (matchedAthlete) {
+      // Athlete already exists -- ensure they show as actively searching
+      if (matchedAthlete.search_status !== 'active') {
+        await updateSearchStatus(matchedAthlete.id).catch(() => {});
+        console.log(`  [matched] ${record.name} -> id=${matchedAthlete.id} (set active)`);
+      } else {
+        console.log(`  [matched] ${record.name} -> id=${matchedAthlete.id} (already active)`);
+      }
+      matched++;
+    } else if (canInsert) {
+      // New athlete -- insert
       try {
-        await dbPost('raw_athletes', record);
+        await insertAthlete(record);
+        console.log(`  [new]     ${record.name} | ${record.discipline} | ${record.skating_level} | ${record.location_state ?? record.location_country}`);
         inserted++;
       } catch (err) {
-        if (!err.message.includes('23505') && !err.message.includes('duplicate')) {
-          console.error(`    Insert error: ${err.message}`);
-          errors++;
-        }
+        console.error(`  [error] insert ${record.name}: ${err.message}`);
+        errors++;
       }
     } else {
-      inserted++;
+      console.log(`  [skip]    ${record.name} | no skating level on IPS profile`);
+      unparseable++;
     }
   }
 
-  console.log(`\nScrape complete: ${scraped} new profiles fetched, ${inserted} inserted, ${skipped} already known, ${errors} errors`);
-
-  if (DRY_RUN) { console.log('(dry run — no DB writes)'); return; }
-
-  // Promote validated raw_athletes to athletes table
-  console.log('\nPromoting validated raw athletes...');
-  const unpromoted = await dbGet(
-    'raw_athletes?promoted=eq.false&review_flag=eq.false&discipline=not.is.null&skating_level=not.is.null&height_cm=not.is.null&name=not.is.null&source=eq.icepartnersearch&limit=500'
-  );
-
-  let promoted = 0;
-  let scored = 0;
-
-  for (const raw of unpromoted ?? []) {
-    const athlete = {
-      name: raw.name,
-      discipline: raw.discipline,
-      skating_level: raw.skating_level,
-      partner_role: raw.partner_role ?? 'either',
-      height_cm: raw.height_cm,
-      location_city: raw.location_city,
-      location_state: raw.location_state,
-      location_country: raw.location_country ?? 'US',
-      age: raw.age,
-      source: raw.source,
-      source_url: raw.source_url,
-      search_status: 'active',
-    };
-
-    try {
-      // Insert athlete; if duplicate source_url exists, skip
-      const newAthletes = await dbPost(
-        'athletes?on_conflict=source_url',
-        athlete,
-        'resolution=ignore-duplicates,return=representation'
-      );
-
-      const newAthlete = Array.isArray(newAthletes) ? newAthletes[0] : newAthletes;
-      if (newAthlete?.id) {
-        // Mark raw as promoted
-        await dbPatch(`raw_athletes?id=eq.${raw.id}`, { promoted: true });
-        promoted++;
-
-        // Score against all existing athletes
-        try {
-          await rpc('score_new_athlete', { new_athlete_id: newAthlete.id });
-          scored++;
-          console.log(`  Promoted + scored: ${raw.name}`);
-        } catch (scoreErr) {
-          console.warn(`  Promoted but score failed for ${raw.name}: ${scoreErr.message}`);
-        }
-      }
-    } catch (err) {
-      console.error(`  Promote error for ${raw.name}: ${err.message}`);
-    }
-  }
-
-  console.log(`\nPromotion complete: ${promoted} athletes added, ${scored} scored`);
+  // Step 5: Summary
+  console.log('\n--- IPS Scrape Summary ---');
+  console.log(`Total scraped:  ${totalScraped}`);
+  console.log(`Matched:        ${matched}`);
+  console.log(`New:            ${inserted}`);
+  console.log(`Unparseable:    ${unparseable}`);
+  console.log(`Errors:         ${errors}`);
+  if (DRY_RUN) console.log('(dry run -- no DB writes)');
 }
 
 main().catch(err => { console.error('Fatal:', err.message); process.exit(1); });
